@@ -1,0 +1,64 @@
+.paymentRow {
+  border-top: 1px solid #eee7da;
+  padding: 17px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+}
+
+.paymentRow > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.paymentRow b {
+  font-family: var(--font-serif);
+  color: var(--maroon);
+  font-size: 13px;
+}
+
+.paymentRow span,
+.paymentRow small {
+  font-size: 9px;
+  color: #83766f;
+}
+
+.paymentRow > div:last-child {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.compact {
+  padding: 9px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.compact svg {
+  width: 13px;
+}
+
+.pendingPill {
+  background: #fff3d3;
+  color: #9a7629;
+  padding: 7px 10px;
+  font-size: 8px;
+  border-radius: 15px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+@media (max-width: 800px) {
+  .paymentRow {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .paymentRow > div:last-child {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}

@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGradDelivered" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0c2014"/>
+      <stop offset="50%" stop-color="#143622"/>
+      <stop offset="100%" stop-color="#08150d"/>
+    </linearGradient>
+    <linearGradient id="goldBoxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffe699"/>
+      <stop offset="50%" stop-color="#d4af37"/>
+      <stop offset="100%" stop-color="#996515"/>
+    </linearGradient>
+    <linearGradient id="velvetBase" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#801b33"/>
+      <stop offset="100%" stop-color="#3b0814"/>
+    </linearGradient>
+    <filter id="glowDelivered" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <style>
+    @keyframes unboxGlow {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 6px rgba(255,215,0,0.5)); }
+      50% { transform: scale(1.05); filter: drop-shadow(0 0 16px rgba(255,215,0,0.9)); }
+    }
+    @keyframes confettiFloat1 {
+      0% { transform: translateY(0) rotate(0deg); opacity: 0.2; }
+      50% { transform: translateY(-12px) rotate(180deg); opacity: 1; }
+      100% { transform: translateY(-24px) rotate(360deg); opacity: 0.2; }
+    }
+    @keyframes confettiFloat2 {
+      0% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
+      50% { transform: translateY(-16px) rotate(-180deg); opacity: 1; }
+      100% { transform: translateY(-30px) rotate(-360deg); opacity: 0.3; }
+    }
+    @keyframes starPulse {
+      0%, 100% { transform: scale(0.9); }
+      50% { transform: scale(1.15); }
+    }
+    .unboxGroup {
+      transform-origin: 160px 115px;
+      animation: unboxGlow 2.5s ease-in-out infinite;
+    }
+    .cf1 { animation: confettiFloat1 3s ease-in-out infinite; }
+    .cf2 { animation: confettiFloat2 2.7s ease-in-out infinite 0.5s; }
+    .cf3 { animation: confettiFloat1 3.2s ease-in-out infinite 1.2s; }
+    .starPill {
+      transform-origin: 160px 48px;
+      animation: starPulse 2.2s ease-in-out infinite;
+    }
+  </style>
+
+  <!-- Background Canvas -->
+  <rect width="320" height="200" rx="12" fill="url(#bgGradDelivered)" stroke="#22c55e" stroke-width="1.5" stroke-opacity="0.4"/>
+
+  <!-- Radial Golden Aura Behind Gift Box -->
+  <circle cx="160" cy="115" r="70" fill="#ffd700" opacity="0.1" filter="url(#glowDelivered)"/>
+
+  <!-- 5-Star Celebration Badge on Top -->
+  <g class="starPill">
+    <rect x="105" y="36" width="110" height="24" rx="12" fill="#143622" stroke="url(#goldBoxGrad)" stroke-width="1.5"/>
+    <!-- 5 Golden Stars -->
+    <g fill="#ffd700" transform="translate(118, 43)">
+      <polygon points="6,0 8,4 12,4 9,7 10,11 6,8 2,11 3,7 0,4 4,4" />
+      <polygon points="20,0 22,4 26,4 23,7 24,11 20,8 16,11 17,7 14,4 18,4" />
+      <polygon points="34,0 36,4 40,4 37,7 38,11 34,8 30,11 31,7 28,4 32,4" />
+      <polygon points="48,0 50,4 54,4 51,7 52,11 48,8 44,11 45,7 42,4 46,4" />
+      <polygon points="62,0 64,4 68,4 65,7 66,11 62,8 58,11 59,7 56,4 60,4" />
+    </g>
+  </g>
+
+  <!-- Open Keepsake Box with Radiating Jewellery Glow -->
+  <g class="unboxGroup">
+    <!-- Box Base -->
+    <rect x="105" y="105" width="110" height="50" rx="6" fill="url(#velvetBase)" stroke="url(#goldBoxGrad)" stroke-width="1.8"/>
+    <rect x="108" y="108" width="104" height="44" rx="4" fill="none" stroke="#ffe28a" stroke-width="0.8" opacity="0.5"/>
+
+    <!-- Open Lifted Lid (Angled) -->
+    <path d="M 98 92 L 222 76 L 225 90 L 101 106 Z" fill="url(#goldBoxGrad)" stroke="#fff" stroke-width="1"/>
+
+    <!-- Inner Velvet Pillow & Sparkle -->
+    <ellipse cx="160" cy="125" rx="42" ry="14" fill="#6d1b29" stroke="#d4af37" stroke-width="1"/>
+
+    <!-- Sparkling Gold Saaj / Nath Jewellery inside -->
+    <path d="M 135 125 Q 160 134 185 125" fill="none" stroke="#ffd700" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="160" cy="128" r="3" fill="#ff4b72" stroke="#ffd700" stroke-width="1"/>
+    <circle cx="145" cy="126" r="2" fill="#ffd700"/>
+    <circle cx="175" cy="126" r="2" fill="#ffd700"/>
+
+    <!-- Radiant Burst Beams from Inside Box -->
+    <line x1="160" y1="110" x2="160" y2="78" stroke="#ffe28a" stroke-width="2" stroke-linecap="round"/>
+    <line x1="140" y1="115" x2="120" y2="88" stroke="#ffe28a" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="180" y1="115" x2="200" y2="88" stroke="#ffe28a" stroke-width="1.8" stroke-linecap="round"/>
+  </g>
+
+  <!-- Celebration Confetti Particles -->
+  <g class="cf1">
+    <rect x="55" y="70" width="6" height="6" rx="1" fill="#ffd700" transform="rotate(45 55 70)"/>
+    <rect x="250" y="90" width="5" height="5" rx="1" fill="#22c55e" transform="rotate(30 250 90)"/>
+    <circle cx="70" cy="130" r="3" fill="#ff4b72"/>
+  </g>
+  <g class="cf2">
+    <polygon points="265,60 268,66 274,66 270,70 271,76 265,72 259,76 261,70 256,66 262,66" fill="#ffd700"/>
+    <rect x="45" y="110" width="5" height="5" rx="1" fill="#38bdf8" transform="rotate(20 45 110)"/>
+    <circle cx="270" cy="140" r="3" fill="#ffd700"/>
+  </g>
+  <g class="cf3">
+    <polygon points="75,55 77,60 82,60 78,63 79,68 75,65 71,68 72,63 68,60 73,60" fill="#22c55e"/>
+    <rect x="235" y="125" width="6" height="6" rx="1" fill="#ff4b72" transform="rotate(15 235 125)"/>
+  </g>
+</svg>

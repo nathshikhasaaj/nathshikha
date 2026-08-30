@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Color Palette */
+  --maroon: #7a1a28;
+  --maroon2: #921d31;
+  --gold: #c9a659;
+  --gold2: #e0bd70;
+  --cream: #fbf7ef;
+  --char: #2b2324;
+  --white: #fffdf9;
+  --line: #dfcfaa;
+
+  /* Figma Palette Tokens */
+  --figma-cream: #fbf7f0;
+  --figma-maroon: #7a1a28;
+  --figma-gold: #c69a59;
+  --figma-soft-gold: #deba7e;
+  --figma-charcoal: #2b2324;
+
+  /* Status Colors */
+  --status-paid-bg: #e2f2df;
+  --status-paid-text: #35713a;
+  --status-pending-bg: #f8edcf;
+  --status-pending-text: #8d6a1d;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 10px rgba(66, 16, 26, 0.08);
+  --shadow-md: 0 8px 24px rgba(72, 32, 22, 0.08);
+  --shadow-lg: 0 15px 40px rgba(109, 26, 37, 0.12);
+  --shadow-gold: 0 8px 20px rgba(95, 34, 43, 0.12);
+
+  /* Fonts */
+  --font-serif: 'Cinzel', Georgia, serif;
+  --font-sans: 'Inter', Arial, sans-serif;
+}

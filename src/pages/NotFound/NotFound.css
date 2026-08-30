@@ -1,0 +1,17 @@
+.notFoundPage {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notFoundContent {
+  text-align: center;
+}
+
+.notFoundContent h2 {
+  font-family: var(--font-serif);
+  color: var(--maroon);
+  font-size: 32px;
+  margin-bottom: 20px;
+}

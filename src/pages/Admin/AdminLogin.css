@@ -1,0 +1,81 @@
+.adminLogin {
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.adminLoginCard {
+  max-width: 460px;
+  width: 100%;
+  margin: auto;
+  background: #fff;
+  border: 1px solid #e3d6bb;
+  padding: 35px;
+  box-shadow: 0 10px 30px rgba(91, 42, 26, 0.05);
+  text-align: center;
+  border-radius: 8px;
+}
+
+.adminBadge {
+  width: 50px;
+  height: 50px;
+  margin: 0 auto 15px;
+  border: 1px solid var(--gold);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--maroon);
+}
+
+.adminBadge svg {
+  width: 22px;
+  height: 22px;
+}
+
+.adminLoginCard h2 {
+  font-family: var(--font-serif);
+  color: var(--maroon);
+  font-weight: 500;
+  margin: 0 0 8px;
+}
+
+.adminLoginCard p {
+  font-size: 11px;
+  color: #85766e;
+  line-height: 1.7;
+  margin: 0 0 15px;
+}
+
+.adminLoginCard code {
+  background: #f8f1e2;
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-size: 10px;
+}
+
+.adminLoginCard form {
+  display: grid;
+  gap: 12px;
+  text-align: left;
+  margin: 22px 0;
+}
+
+.adminLoginCard input {
+  padding: 12px;
+  border: 1px solid #ddd0b8;
+  background: #fffdf9;
+  outline: none;
+  font-size: 11px;
+  border-radius: 4px;
+}
+
+.adminLoginCard .goldBtn {
+  width: 100%;
+}
+
+.adminLoginCard .back {
+  justify-content: center;
+  margin: 0;
+}

@@ -1,0 +1,20 @@
+.topbar {
+  height: 30px;
+  background: #f3e7ca;
+  color: #6c521f;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  overflow: hidden;
+  padding: 0 10px;
+}
+
+@media (max-width: 420px) {
+  .topbar {
+    font-size: 9px;
+  }
+}

@@ -1,0 +1,109 @@
+.globalFloatingWhatsApp {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.globalFloatingWhatsApp:hover {
+  transform: scale(1.08) translateY(-2px);
+}
+
+.whatsAppIconCircle {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #25d366;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 18px rgba(37, 211, 102, 0.45);
+  border: 2px solid #ffffff;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.whatsAppIconCircle::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1.5px solid #25d366;
+  opacity: 0.6;
+  animation: waPulse 2.5s infinite;
+}
+
+@keyframes waPulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+.waSvgIcon {
+  fill: #ffffff;
+}
+
+.floatingWhatsAppTooltip {
+  background: #1c1815;
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(228, 199, 134, 0.3);
+  opacity: 0;
+  transform: translateX(10px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  white-space: nowrap;
+}
+
+.floatingWhatsAppTooltip small {
+  color: var(--gold, #b8860b);
+  font-size: 9.5px;
+  font-weight: 600;
+}
+
+.globalFloatingWhatsApp:hover .floatingWhatsAppTooltip {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@media (max-width: 768px) {
+  .globalFloatingWhatsApp {
+    bottom: 74px;
+    right: 18px;
+  }
+
+  .whatsAppIconCircle {
+    width: 48px;
+    height: 48px;
+  }
+
+  .waSvgIcon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .floatingWhatsAppTooltip {
+    display: none;
+  }
+}

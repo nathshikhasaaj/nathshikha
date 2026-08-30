@@ -1,0 +1,12 @@
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--figma-cream);
+  color: var(--char);
+  font-family: var(--font-sans);
+}
+
+.app > main {
+  flex: 1;
+}

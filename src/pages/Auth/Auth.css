@@ -1,0 +1,29 @@
+.authContainer {
+  max-width: 520px;
+  margin: auto;
+}
+
+.authContainer form {
+  background: #fff;
+  padding: 30px;
+  border: 1px solid #e4d8bf;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-radius: 6px;
+  box-shadow: var(--shadow-sm);
+}
+
+.authContainer input {
+  padding: 13px;
+  border: 1px solid #ddd0b8;
+  background: #fffdf9;
+  outline: none;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.authContainer .goldBtn,
+.authContainer .outlineBtn {
+  width: 100%;
+}

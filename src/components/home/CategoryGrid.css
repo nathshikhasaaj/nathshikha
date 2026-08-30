@@ -1,0 +1,68 @@
+.catGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(16px, 2.4vw, 32px);
+  position: relative;
+}
+
+.cat {
+  text-align: center;
+  position: relative;
+  background: transparent !important;
+  transition: transform 0.25s ease;
+}
+
+.cat:hover {
+  transform: translateY(-5px);
+}
+
+.cat:after {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border: 1px solid rgba(201, 166, 89, 0.19);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.cat img {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--figma-soft-gold);
+  padding: 6px;
+  background: #fffdf9;
+  box-shadow: 0 8px 24px rgba(72, 32, 22, 0.08);
+  position: relative;
+  z-index: 1;
+}
+
+.cat span {
+  font-family: var(--font-serif);
+  font-size: clamp(12px, 1.3vw, 17px);
+  display: block;
+  margin-top: 14px;
+  color: var(--figma-charcoal);
+  position: relative;
+  z-index: 2;
+}
+
+@media (max-width: 900px) {
+  .catGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 28px 14px;
+  }
+}
+
+@media (max-width: 700px) {
+  .cat img {
+    padding: 4px;
+  }
+}
+
+@media (max-width: 420px) {
+  .cat span {
+    font-size: 11px;
+  }
+}

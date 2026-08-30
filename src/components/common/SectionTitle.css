@@ -1,0 +1,46 @@
+.sectionTitle {
+  position: relative;
+  text-align: center;
+  margin-bottom: 34px;
+}
+
+.sectionTitle h2 {
+  font-family: var(--font-serif);
+  color: var(--maroon);
+  font-weight: 500;
+  font-size: 28px;
+  margin: 0 0 7px;
+  letter-spacing: 0.02em;
+}
+
+.sectionTitle p {
+  color: #7f6e68;
+  font-size: 12px;
+  margin: 0;
+}
+
+.sectionTitle > span {
+  display: block;
+  width: 96px;
+  height: 1px;
+  background: var(--figma-gold);
+  margin: 12px auto 0;
+  position: relative;
+}
+
+.sectionTitle > span:after {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--figma-gold);
+  left: 50%;
+  top: -3px;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+@media (max-width: 700px) {
+  .sectionTitle h2 {
+    font-size: 24px;
+  }
+}

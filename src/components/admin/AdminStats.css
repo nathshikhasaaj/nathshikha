@@ -1,0 +1,143 @@
+.adminStatsGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  max-width: 1200px;
+  margin: 0 auto 20px;
+}
+
+.statCard {
+  background: #ffffff;
+  border: 1px solid #e7ddc8;
+  border-radius: 8px;
+  padding: 14px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 2px 8px rgba(79, 61, 56, 0.04);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.statCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(79, 61, 56, 0.08);
+  border-color: var(--gold);
+}
+
+.statCardAlert {
+  border-color: #f1c08d;
+  background: #fffdfa;
+}
+
+.statCardAlert::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #d97706;
+}
+
+.statIconWrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.iconBlue {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.iconOrange {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.iconMaroon {
+  background: #fdf2f2;
+  color: var(--maroon);
+}
+
+.iconGreen {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.iconPurple {
+  background: #faf5ff;
+  color: #7e22ce;
+}
+
+.iconTeal {
+  background: #f0fdfa;
+  color: #0f766e;
+}
+
+.iconGold {
+  background: #fefce8;
+  color: #ca8a04;
+}
+
+.statInfo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.statLabel {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #796b65;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.statValue {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--char);
+  font-family: var(--font-serif);
+  line-height: 1.2;
+  margin: 2px 0 1px;
+}
+
+.statValueAlert {
+  color: #c2410c;
+}
+
+.statHint {
+  font-size: 9.5px;
+  color: #9e8e86;
+}
+
+@media (max-width: 1150px) {
+  .adminStatsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .adminStatsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .adminStatsGrid {
+    grid-template-columns: 1fr;
+  }
+}

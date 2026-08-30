@@ -1,0 +1,96 @@
+.successPage {
+  display: grid;
+  place-items: center;
+  min-height: 70vh;
+}
+
+.successCard {
+  max-width: 700px;
+  width: 100%;
+  background: #fffdf9;
+  border: 1px solid #e3d6bb;
+  padding: 45px;
+  text-align: center;
+  box-shadow: 0 15px 40px rgba(109, 26, 37, 0.06);
+  border-radius: 8px;
+}
+
+.successIcon {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 18px;
+  background: var(--maroon);
+  color: #fff;
+  border: 2px solid var(--gold);
+  font-size: 28px;
+}
+
+.successCard h1 {
+  font-family: var(--font-serif);
+  color: var(--maroon);
+  font-weight: 500;
+  font-size: 30px;
+  margin: 12px 0;
+}
+
+.successCard p {
+  color: #766963;
+  line-height: 1.7;
+  font-size: 12px;
+}
+
+.successSummary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid #e7dcc8;
+  border-bottom: 1px solid #e7dcc8;
+  margin: 25px 0;
+  padding: 16px 0;
+  gap: 10px;
+}
+
+.successSummary span {
+  font-size: 10px;
+  color: #8b7d75;
+}
+
+.successSummary b {
+  display: block;
+  color: var(--maroon);
+  margin-top: 5px;
+  font-size: 12px;
+}
+
+.successNote {
+  background: #f8f1e2;
+  padding: 12px;
+  border-radius: 4px;
+}
+
+.successActions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+@media (max-width: 900px) {
+  .successCard {
+    padding: 30px 20px;
+  }
+
+  .successSummary {
+    grid-template-columns: 1fr;
+  }
+
+  .successActions {
+    flex-direction: column;
+  }
+
+  .successActions > * {
+    width: 100%;
+  }
+}

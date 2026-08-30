@@ -1,0 +1,312 @@
+.reviewPageContainer {
+  max-width: 680px;
+  margin: 0 auto;
+  padding-bottom: 60px;
+}
+
+.reviewCardWrapper {
+  background: #ffffff;
+  border: 1px solid #ebdcc6;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(79, 61, 56, 0.06);
+  overflow: hidden;
+}
+
+/* Product Hero */
+.reviewProductHero {
+  display: flex;
+  gap: 18px;
+  padding: 22px 26px;
+  background: #fdfaf4;
+  border-bottom: 1px solid #f0e6d6;
+  align-items: center;
+}
+
+.reviewProductHeroImg {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1.5px solid #ebdcc6;
+}
+
+.reviewProductHeroInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.reviewOrderNo {
+  font-size: 11px;
+  font-family: monospace;
+  font-weight: 700;
+  color: #8c786c;
+}
+
+.reviewProductHeroInfo h2 {
+  margin: 0;
+  font-family: var(--font-serif, 'Playfair Display', serif);
+  font-size: 20px;
+  color: var(--maroon, #6d1b29);
+}
+
+.reviewHeroPrice {
+  font-size: 14px;
+  color: var(--gold, #b8860b);
+  font-weight: 700;
+}
+
+.verifiedDeliveryPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #198754;
+  font-size: 11.5px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+/* Main Form */
+.reviewMainForm {
+  padding: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.reviewFormGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reviewGroupLabel {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #4a3d36;
+}
+
+/* Star Picker in Page */
+.pageStarPicker {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #fdfcf9;
+  border: 1.5px solid #ebdcc6;
+  border-radius: 8px;
+  padding: 14px 18px;
+}
+
+.pageStarPickerRow {
+  display: flex;
+  gap: 6px;
+}
+
+.pageStarBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s;
+}
+
+.pageStarBtn:hover {
+  transform: scale(1.2);
+}
+
+.pageStarRatingText {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gold, #b8860b);
+}
+
+/* Inputs */
+.pageReviewInput,
+.pageReviewTextarea {
+  padding: 12px 14px;
+  border: 1.5px solid #d8c6af;
+  border-radius: 6px;
+  font-size: 13.5px;
+  font-family: inherit;
+  outline: none;
+  background: #fdfcf9;
+  color: var(--char, #1c1815);
+  transition: all 0.2s;
+}
+
+.pageReviewInput:focus,
+.pageReviewTextarea:focus {
+  border-color: var(--maroon, #6d1b29);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(109, 27, 41, 0.08);
+}
+
+/* Photo Upload */
+.pagePhotoUploadZone {
+  border: 2px dashed #d8c6af;
+  background: #fdfaf4;
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagePhotoUploadZone:hover {
+  border-color: var(--gold, #b8860b);
+  background: #fbf5e6;
+}
+
+.pageUploadPrompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: #68574e;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pageUploadPrompt small {
+  font-size: 11.5px;
+  font-weight: normal;
+  color: #94837b;
+}
+
+.pageUploadingStatus {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--maroon, #6d1b29);
+  font-weight: 600;
+}
+
+.pagePhotoUploadedBox {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #f4faf6;
+  border: 1px solid #b7ebd0;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.pagePhotoPreviewThumb {
+  width: 60px;
+  height: 60px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid #cbe9d8;
+}
+
+.pagePhotoMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pagePhotoSuccess {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: #198754;
+  font-weight: 600;
+}
+
+.pagePhotoRemoveBtn {
+  background: none;
+  border: none;
+  color: #dc3545;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: underline;
+}
+
+/* Submit Button */
+.pageReviewSubmitBtn {
+  padding: 14px 28px !important;
+  font-size: 14px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+/* Error & Success States */
+.reviewLoadingCard,
+.reviewErrorCard,
+.reviewSuccessCard {
+  background: #ffffff;
+  border: 1px solid #ebdcc6;
+  border-radius: 10px;
+  padding: 40px 30px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(79, 61, 56, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.reviewErrorCard h2,
+.reviewSuccessCard h1 {
+  margin: 0;
+  font-family: var(--font-serif, 'Playfair Display', serif);
+  color: var(--maroon, #6d1b29);
+}
+
+.reviewSuccessHeart {
+  background: #fdf2f4;
+  padding: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.successBadgeWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #eef9f2;
+  border: 1px solid #b7ebd0;
+  padding: 6px 14px;
+  border-radius: 20px;
+  color: #198754;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.successActions {
+  margin-top: 10px;
+}
+
+@media (max-width: 600px) {
+  .reviewProductHero {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+  }
+
+  .reviewProductHeroInfo {
+    align-items: center;
+  }
+
+  .pageStarPicker {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

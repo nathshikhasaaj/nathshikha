@@ -1,0 +1,148 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGradShipped" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0e1328"/>
+      <stop offset="50%" stop-color="#162044"/>
+      <stop offset="100%" stop-color="#080c1a"/>
+    </linearGradient>
+    <linearGradient id="vanBody" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="50%" stop-color="#f0ede6"/>
+      <stop offset="100%" stop-color="#dcd5c7"/>
+    </linearGradient>
+    <linearGradient id="goldAccShipped" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffe699"/>
+      <stop offset="50%" stop-color="#d4af37"/>
+      <stop offset="100%" stop-color="#8a6b18"/>
+    </linearGradient>
+    <linearGradient id="maroonStripe" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6d1b29"/>
+      <stop offset="100%" stop-color="#3a0d18"/>
+    </linearGradient>
+    <filter id="glowShipped" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <style>
+    @keyframes vanBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+    @keyframes wheelSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes roadMove {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-40px); }
+    }
+    @keyframes beaconPulse {
+      0%, 100% { transform: scale(1); opacity: 0.8; filter: drop-shadow(0 0 2px #38bdf8); }
+      50% { transform: scale(1.3); opacity: 1; filter: drop-shadow(0 0 8px #38bdf8); }
+    }
+    @keyframes speedLinesAnim {
+      0% { transform: translateX(0); opacity: 0.3; }
+      50% { opacity: 0.9; }
+      100% { transform: translateX(-30px); opacity: 0.3; }
+    }
+    .vanGroup {
+      animation: vanBounce 1.2s ease-in-out infinite;
+    }
+    .wheelLeft {
+      transform-origin: 122px 145px;
+      animation: wheelSpin 1s linear infinite;
+    }
+    .wheelRight {
+      transform-origin: 208px 145px;
+      animation: wheelSpin 1s linear infinite;
+    }
+    .roadGroup {
+      animation: roadMove 0.8s linear infinite;
+    }
+    .gpsBeacon {
+      transform-origin: 250px 50px;
+      animation: beaconPulse 1.8s ease-in-out infinite;
+    }
+    .speedTrails {
+      animation: speedLinesAnim 0.9s linear infinite;
+    }
+  </style>
+
+  <!-- Background Canvas -->
+  <rect width="320" height="200" rx="12" fill="url(#bgGradShipped)" stroke="#38bdf8" stroke-width="1.5" stroke-opacity="0.4"/>
+
+  <!-- Speed Lines behind Van -->
+  <g class="speedTrails" stroke="#38bdf8" stroke-width="1.5" stroke-linecap="round" opacity="0.6">
+    <line x1="45" y1="95" x2="80" y2="95"/>
+    <line x1="30" y1="110" x2="70" y2="110"/>
+    <line x1="50" y1="125" x2="85" y2="125"/>
+  </g>
+
+  <!-- GPS Locator Beacon on Top Right -->
+  <g class="gpsBeacon">
+    <circle cx="250" cy="50" r="16" fill="none" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="3,2"/>
+    <circle cx="250" cy="50" r="10" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+    <!-- Pin Icon -->
+    <path d="M 250 38 C 244 38 240 42 240 48 C 240 54 250 62 250 62 C 250 62 260 54 260 48 C 260 42 256 38 250 38 Z" fill="url(#goldAccShipped)" stroke="#fff" stroke-width="0.8"/>
+    <circle cx="250" cy="46" r="2.5" fill="#3a0d18"/>
+  </g>
+
+  <!-- Moving Road Track -->
+  <g>
+    <!-- Road Surface -->
+    <rect x="20" y="152" width="280" height="4" rx="2" fill="#334155"/>
+    <!-- Animated Dashed Lane -->
+    <g class="roadGroup" stroke="#d4af37" stroke-width="2" stroke-linecap="round">
+      <line x1="30" y1="162" x2="55" y2="162"/>
+      <line x1="75" y1="162" x2="100" y2="162"/>
+      <line x1="120" y1="162" x2="145" y2="162"/>
+      <line x1="165" y1="162" x2="190" y2="162"/>
+      <line x1="210" y1="162" x2="235" y2="162"/>
+      <line x1="255" y1="162" x2="280" y2="162"/>
+      <line x1="300" y1="162" x2="325" y2="162"/>
+    </g>
+  </g>
+
+  <!-- Express Courier Delivery Van -->
+  <g class="vanGroup">
+    <!-- Van Body Shadow -->
+    <ellipse cx="165" cy="150" rx="70" ry="8" fill="#000" opacity="0.4"/>
+
+    <!-- Main Van Chassis -->
+    <g transform="translate(90, 80)">
+      <!-- Cargo Body -->
+      <rect x="0" y="0" width="100" height="58" rx="6" fill="url(#vanBody)" stroke="#d4af37" stroke-width="1.5"/>
+
+      <!-- Cab / Front Windshield -->
+      <path d="M 100 18 L 125 18 C 132 18 138 24 140 32 L 144 58 L 100 58 Z" fill="url(#vanBody)" stroke="#d4af37" stroke-width="1.5"/>
+      <path d="M 105 24 L 122 24 C 126 24 130 28 131 34 L 133 42 L 105 42 Z" fill="#38bdf8" opacity="0.75" stroke="#1e293b" stroke-width="1"/>
+
+      <!-- Royal Nathshikha Stripe -->
+      <rect x="0" y="34" width="100" height="12" fill="url(#maroonStripe)"/>
+      <text x="50" y="43" fill="#ffd700" font-family="'Playfair Display', serif" font-size="7" font-weight="bold" text-anchor="middle" letter-spacing="0.5">NATHSHIKHA</text>
+
+      <!-- Headlight Beam -->
+      <polygon points="144,48 180,42 180,58 144,54" fill="#fef08a" opacity="0.35"/>
+      <circle cx="142" cy="50" r="3" fill="#fef08a" stroke="#d4af37" stroke-width="1"/>
+    </g>
+
+    <!-- Wheels with Gold Hubcaps -->
+    <!-- Left Wheel -->
+    <g class="wheelLeft">
+      <circle cx="122" cy="145" r="13" fill="#1e293b" stroke="#64748b" stroke-width="2"/>
+      <circle cx="122" cy="145" r="7" fill="url(#goldAccShipped)" stroke="#fff" stroke-width="1"/>
+      <line x1="122" y1="135" x2="122" y2="155" stroke="#3a0d18" stroke-width="1.2"/>
+      <line x1="112" y1="145" x2="132" y2="145" stroke="#3a0d18" stroke-width="1.2"/>
+    </g>
+
+    <!-- Right Wheel -->
+    <g class="wheelRight">
+      <circle cx="208" cy="145" r="13" fill="#1e293b" stroke="#64748b" stroke-width="2"/>
+      <circle cx="208" cy="145" r="7" fill="url(#goldAccShipped)" stroke="#fff" stroke-width="1"/>
+      <line x1="208" y1="135" x2="208" y2="155" stroke="#3a0d18" stroke-width="1.2"/>
+      <line x1="198" y1="145" x2="218" y2="145" stroke="#3a0d18" stroke-width="1.2"/>
+    </g>
+  </g>
+</svg>

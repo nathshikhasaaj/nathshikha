@@ -1,0 +1,116 @@
+/* Mobile Sticky Footer Navigation Bar */
+.mobileStickyFooter {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobileStickyFooter {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    align-items: center;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 58px;
+    background: linear-gradient(180deg, #380b15 0%, #1f040b 100%);
+    border-top: 1.5px solid var(--gold, #d4af37);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.35);
+    z-index: 990;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .mobileFooterTab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #eedcc4;
+    text-decoration: none;
+    background: transparent;
+    border: none;
+    padding: 4px 2px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobileFooterTab:active {
+    transform: scale(0.92);
+  }
+
+  .tabIconWrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 2px;
+    transition: transform 0.2s ease;
+  }
+
+  .tabLabel {
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    line-height: 1;
+    color: #dfceb8;
+    transition: color 0.15s ease;
+  }
+
+  /* Active Tab State */
+  .mobileFooterTab.active {
+    color: var(--gold, #ffd700);
+  }
+
+  .mobileFooterTab.active .tabIconWrap {
+    transform: translateY(-2px);
+    color: #ffd700;
+  }
+
+  .mobileFooterTab.active .tabLabel {
+    color: #ffd700;
+    font-weight: 700;
+  }
+
+  /* Cart Badge */
+  .cartIconWrap {
+    position: relative;
+  }
+
+  .mobileCartBadge {
+    position: absolute;
+    top: -6px;
+    right: -10px;
+    background: #e63946;
+    color: #ffffff;
+    font-size: 9px;
+    font-weight: 800;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
+    border: 1.5px solid #1f040b;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+    animation: badgePop 0.3s ease-out;
+  }
+
+  @keyframes badgePop {
+    0% { transform: scale(0.5); opacity: 0; }
+    70% { transform: scale(1.2); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* Adjust page bottom padding on mobile so sticky footer doesn't overlap content */
+  body,
+  .page,
+  .app {
+    padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+  }
+}

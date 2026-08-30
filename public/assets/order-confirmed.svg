@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGradConfirmed" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a1a12"/>
+      <stop offset="50%" stop-color="#142c20"/>
+      <stop offset="100%" stop-color="#06120c"/>
+    </linearGradient>
+    <linearGradient id="shieldGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffe699"/>
+      <stop offset="50%" stop-color="#d4af37"/>
+      <stop offset="100%" stop-color="#8a6b18"/>
+    </linearGradient>
+    <linearGradient id="greenBadge" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22c55e"/>
+      <stop offset="100%" stop-color="#15803d"/>
+    </linearGradient>
+    <filter id="glowConfirmed" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <style>
+    @keyframes checkPop {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(34,197,94,0.5)); }
+      50% { transform: scale(1.06); filter: drop-shadow(0 0 12px rgba(34,197,94,0.9)); }
+    }
+    @keyframes raysSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes floatParticle {
+      0% { transform: translateY(0) scale(0.6); opacity: 0.2; }
+      50% { transform: translateY(-10px) scale(1.2); opacity: 1; }
+      100% { transform: translateY(-20px) scale(0.6); opacity: 0.2; }
+    }
+    .checkGroup {
+      transform-origin: 160px 96px;
+      animation: checkPop 2.2s ease-in-out infinite;
+    }
+    .raysGroup {
+      transform-origin: 160px 96px;
+      animation: raysSpin 20s linear infinite;
+    }
+    .cp1 { animation: floatParticle 2.8s infinite; transform-origin: 65px 50px; }
+    .cp2 { animation: floatParticle 3.2s infinite 0.9s; transform-origin: 255px 65px; }
+    .cp3 { animation: floatParticle 2.4s infinite 1.4s; transform-origin: 235px 145px; }
+    .cp4 { animation: floatParticle 2.6s infinite 0.4s; transform-origin: 85px 140px; }
+  </style>
+
+  <!-- Background Canvas -->
+  <rect width="320" height="200" rx="12" fill="url(#bgGradConfirmed)" stroke="#22c55e" stroke-width="1.5" stroke-opacity="0.4"/>
+
+  <!-- Rotating Radiant Sunburst Rays -->
+  <g class="raysGroup" opacity="0.12">
+    <line x1="160" y1="16" x2="160" y2="176" stroke="#ffd700" stroke-width="2"/>
+    <line x1="80" y1="96" x2="240" y2="96" stroke="#ffd700" stroke-width="2"/>
+    <line x1="103" y1="39" x2="217" y2="153" stroke="#ffd700" stroke-width="2"/>
+    <line x1="103" y1="153" x2="217" y2="39" stroke="#ffd700" stroke-width="2"/>
+  </g>
+
+  <!-- Central Crest Group -->
+  <g class="checkGroup">
+    <!-- Outer Gold Ornamental Halo -->
+    <circle cx="160" cy="96" r="54" fill="none" stroke="url(#shieldGold)" stroke-width="2" stroke-dasharray="6,4"/>
+    <circle cx="160" cy="96" r="48" fill="#142c20" stroke="url(#shieldGold)" stroke-width="2.5" filter="url(#glowConfirmed)"/>
+
+    <!-- Royal Emerald Shield Inner -->
+    <path d="M 160 56 Q 192 56 192 84 C 192 112 160 134 160 134 C 160 134 128 112 128 84 Q 128 56 160 56 Z" fill="url(#greenBadge)" stroke="#ffe699" stroke-width="1.5"/>
+
+    <!-- Gold Trim Filigree Arc -->
+    <path d="M 138 82 Q 160 70 182 82" fill="none" stroke="#ffd700" stroke-width="1.2" opacity="0.6"/>
+
+    <!-- Verified White/Gold Checkmark -->
+    <path d="M 145 92 L 155 103 L 176 80" fill="none" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Verified Crown on Top -->
+    <path d="M 150 48 L 153 39 L 157 43 L 160 36 L 163 43 L 167 39 L 170 48 Z" fill="url(#shieldGold)"/>
+    <circle cx="160" cy="35" r="1.5" fill="#ffe28a"/>
+  </g>
+
+  <!-- Laurel Wreath Leaves (Left & Right) -->
+  <g fill="url(#shieldGold)" opacity="0.8">
+    <!-- Left Wreath -->
+    <ellipse cx="108" cy="80" rx="3.5" ry="7" transform="rotate(-30 108 80)"/>
+    <ellipse cx="104" cy="98" rx="3.5" ry="7" transform="rotate(-15 104 98)"/>
+    <ellipse cx="108" cy="116" rx="3.5" ry="7" transform="rotate(15 108 116)"/>
+    <ellipse cx="118" cy="132" rx="3.5" ry="7" transform="rotate(40 118 132)"/>
+    <!-- Right Wreath -->
+    <ellipse cx="212" cy="80" rx="3.5" ry="7" transform="rotate(30 212 80)"/>
+    <ellipse cx="216" cy="98" rx="3.5" ry="7" transform="rotate(15 216 98)"/>
+    <ellipse cx="212" cy="116" rx="3.5" ry="7" transform="rotate(-15 212 116)"/>
+    <ellipse cx="202" cy="132" rx="3.5" ry="7" transform="rotate(-40 202 132)"/>
+  </g>
+
+  <!-- Floating Golden & Emerald Sparkles -->
+  <g class="cp1">
+    <path d="M 65 50 Q 65 42 60 42 Q 65 42 65 34 Q 65 42 70 42 Q 65 42 65 50 Z" fill="#ffd700"/>
+  </g>
+  <g class="cp2">
+    <path d="M 255 65 Q 255 58 250 58 Q 255 58 255 51 Q 255 58 260 58 Q 255 58 255 65 Z" fill="#86efac"/>
+  </g>
+  <g class="cp3">
+    <path d="M 235 145 Q 235 139 231 139 Q 235 139 235 133 Q 235 139 239 139 Q 235 139 235 145 Z" fill="#ffd700"/>
+  </g>
+  <g class="cp4">
+    <path d="M 85 140 Q 85 134 81 134 Q 85 134 85 128 Q 85 134 89 134 Q 85 134 85 140 Z" fill="#86efac"/>
+  </g>
+</svg>

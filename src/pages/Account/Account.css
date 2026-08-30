@@ -1,0 +1,57 @@
+.accountGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  max-width: 1000px;
+  margin: auto;
+}
+
+.accountGrid a,
+.accountGrid button {
+  background: #fff;
+  border: 1px solid #e3d6bb;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-radius: 6px;
+  text-align: left;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+}
+
+.accountGrid a:hover,
+.accountGrid button:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.accountGrid svg {
+  color: var(--gold);
+  width: 25px;
+  height: 25px;
+}
+
+.accountGrid b {
+  font-family: var(--font-serif);
+  color: var(--maroon);
+  font-size: 14px;
+}
+
+.accountGrid span {
+  font-size: 10px;
+  color: #8c7f78;
+}
+
+@media (max-width: 900px) {
+  .accountGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 420px) {
+  .accountGrid {
+    grid-template-columns: 1fr;
+  }
+}

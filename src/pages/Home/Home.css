@@ -1,0 +1,66 @@
+.homePage {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--cream);
+  background-image: url('/assets/mandala.svg');
+  background-size: 420px 420px;
+  background-position: center top;
+  background-repeat: repeat;
+}
+
+.homePage > section {
+  position: relative;
+  z-index: 1;
+}
+
+.section {
+  padding: 65px 7vw;
+}
+
+.patterned {
+  background-color: transparent;
+  background-image: url('/assets/mandala.svg');
+  background-size: 420px 420px;
+  background-position: center top;
+  background-repeat: repeat;
+}
+
+.cream {
+  background-color: #fffdf9;
+  background-image: url('/assets/mandala.svg');
+  background-size: 420px 420px;
+  background-position: 0 0;
+  background-repeat: repeat;
+}
+
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+@media (max-width: 900px) {
+  .homePage {
+    background-size: 320px 320px;
+  }
+
+  .homePage > .section.cream,
+  .homePage > .section.patterned {
+    background-size: 320px 320px;
+  }
+
+  .section {
+    padding: 48px 18px;
+  }
+
+  .productGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+}
+
+@media (max-width: 420px) {
+  .productGrid {
+    gap: 8px;
+  }
+}

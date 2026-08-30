@@ -1,0 +1,1397 @@
+.ordersPageContainer {
+  max-width: 900px;
+  margin: 0 auto;
+  padding-bottom: 60px;
+}
+
+/* ============================================================ */
+/* 1. LIVE ORDER TRACKER WIDGET */
+/* ============================================================ */
+.liveOrderTrackerWidget {
+  background: #ffffff;
+  border: 1.5px solid #ebdcc6;
+  border-radius: 10px;
+  padding: 24px 28px;
+  margin-bottom: 35px;
+  box-shadow: 0 4px 20px rgba(79, 61, 56, 0.05);
+}
+
+.trackerHeader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.trackerIconWrap {
+  background: #fbf5e6;
+  border: 1px solid #ebdcc6;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.trackerHeader h3 {
+  margin: 0 0 3px;
+  font-family: var(--font-serif, 'Playfair Display', serif);
+  font-size: 20px;
+  color: var(--maroon, #6d1b29);
+}
+
+.trackerHeader p {
+  margin: 0;
+  font-size: 12.5px;
+  color: #7a6b63;
+}
+
+/* Mode Selector Tabs */
+.trackerModeTabs {
+  display: flex;
+  background: #f4ede2;
+  border-radius: 6px;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 18px;
+  width: fit-content;
+}
+
+.trackerModeTab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6e5c52;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.trackerModeTab.active {
+  background: #ffffff;
+  color: var(--maroon, #6d1b29);
+  font-weight: 700;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.contactSuccessNotice {
+  margin-top: 14px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.orderTrackerForm {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 14px;
+  align-items: flex-end;
+}
+
+.trackerInputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.trackerInputGroup label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #5c4d44;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.inputFieldWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fdfcf9;
+  border: 1.5px solid #d8c6af;
+  border-radius: 6px;
+  padding: 10px 14px;
+  transition: all 0.2s;
+}
+
+.inputFieldWrap:focus-within {
+  border-color: var(--maroon, #6d1b29);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(109, 27, 41, 0.08);
+}
+
+.inputFieldWrap svg {
+  color: #8c7b72;
+}
+
+.inputFieldWrap input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 13px;
+  width: 100%;
+  color: var(--char, #1c1815);
+  font-family: inherit;
+}
+
+.trackerSubmitBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 11px 22px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  height: 43px;
+  white-space: nowrap;
+}
+
+.trackErrorNotice {
+  margin-top: 14px;
+  background: #fff5f5;
+  border: 1px solid #fed7d7;
+  color: #c53030;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Track Result Card */
+.trackResultCard {
+  margin-top: 24px;
+  background: #fdfaf4;
+  border: 1.5px solid #decab2;
+  border-radius: 8px;
+  padding: 22px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.trackResultHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.trackResultEyebrow {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--gold, #b8860b);
+  margin-bottom: 2px;
+}
+
+.trackResultHeader h4 {
+  margin: 0;
+  font-family: monospace;
+  font-size: 18px;
+  color: var(--maroon, #6d1b29);
+}
+
+.trackResultHeader small {
+  color: #8c7b72;
+  font-size: 11.5px;
+}
+
+.trackResultHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.closeTrackBtn {
+  background: #ffffff;
+  border: 1px solid #ebdcc6;
+  color: #8c786c;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.closeTrackBtn:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+/* Courier Tracking Banner */
+.courierTrackingBanner {
+  background: #ffffff;
+  border: 1px solid #ebdcc6;
+  border-radius: 8px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 18px 0;
+}
+
+.courierInfoLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.courierPartnerName {
+  display: block;
+  font-size: 12.5px;
+  color: #4a3d36;
+}
+
+.consignmentNo {
+  display: block;
+  font-size: 12px;
+  color: #796a62;
+}
+
+.consignmentNo code {
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--maroon, #6d1b29);
+  background: #fbf5e6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #ebdcc6;
+}
+
+.courierTrackLinkBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fbf7ee;
+  border: 1px solid #ebdcc6;
+  color: var(--maroon, #6d1b29);
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 7px 14px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.courierTrackLinkBtn:hover {
+  background: var(--gold, #b8860b);
+  color: #ffffff;
+  border-color: var(--gold, #b8860b);
+}
+
+/* Destination & Financial Grid */
+.trackMetaSummaryGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 16px 0;
+  padding: 14px;
+  background: #ffffff;
+  border: 1px solid #ebdcc6;
+  border-radius: 6px;
+}
+
+.metaSummaryCol {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.metaColLabel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #8c786c;
+  text-transform: uppercase;
+}
+
+.metaSummaryCol p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--char, #1c1815);
+  line-height: 1.4;
+}
+
+.shippingMethodBadge {
+  font-size: 11px;
+  color: #6b5c54;
+}
+
+.metaSummaryCol.financialCol {
+  text-align: right;
+  align-items: flex-end;
+}
+
+.metaSummaryCol.financialCol b {
+  font-size: 16px;
+  color: var(--maroon, #6d1b29);
+}
+
+.metaSummaryCol.financialCol small {
+  font-size: 11px;
+  color: #8c786c;
+}
+
+/* Tracked Items */
+.trackResultItemsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.itemsListTitle {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #5c4d44;
+}
+
+.trackItemRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  border: 1px solid #ebdcc6;
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.trackItemThumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  object-fit: cover;
+  border: 1px solid #ebdcc6;
+}
+
+.trackItemMeta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.trackItemMeta b {
+  font-size: 12px;
+  color: var(--char, #1c1815);
+}
+
+.trackItemMeta small {
+  font-size: 10.5px;
+  color: #8c786c;
+}
+
+.trackItemTotal {
+  font-size: 12px;
+  color: var(--maroon, #6d1b29);
+}
+
+/* ============================================================ */
+/* 2. ACCOUNT ORDERS SECTION */
+/* ============================================================ */
+.accountOrdersSection {
+  margin-top: 30px;
+}
+
+.accountOrdersSectionHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #ebdcc6;
+}
+
+.accountOrdersSectionHeader h2 {
+  margin: 0 0 2px;
+  font-family: var(--font-serif, 'Playfair Display', serif);
+  font-size: 22px;
+  color: var(--maroon, #6d1b29);
+}
+
+.accountOrdersSectionHeader p {
+  margin: 0;
+  font-size: 12.5px;
+  color: #7a6b63;
+}
+
+.refreshOrdersBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #ffffff;
+  border: 1px solid #d8c6af;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 11.5px;
+  color: #5c4d44;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.refreshOrdersBtn:hover {
+  border-color: var(--gold, #b8860b);
+  color: var(--maroon, #6d1b29);
+}
+
+/* Guest Login Prompt */
+.guestLoginPromptCard {
+  background: #ffffff;
+  border: 1.5px solid #ebdcc6;
+  border-radius: 8px;
+  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 2px 10px rgba(79, 61, 56, 0.03);
+}
+
+.promptIconWrap {
+  background: #fbf5e6;
+  border: 1px solid #ebdcc6;
+  color: var(--maroon, #6d1b29);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.promptContent {
+  flex: 1;
+}
+
+.promptContent h3 {
+  margin: 0 0 4px;
+  font-family: var(--font-serif, 'Playfair Display', serif);
+  font-size: 18px;
+  color: var(--maroon, #6d1b29);
+}
+
+.promptContent p {
+  margin: 0;
+  font-size: 12.5px;
+  color: #6e5e56;
+  line-height: 1.5;
+}
+
+.promptLoginBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 22px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+/* Order Card */
+.orderCard {
+  background: #fff;
+  border: 1px solid #e0d3b9;
+  padding: 22px;
+  max-width: 100%;
+  margin: 0 auto 16px;
+  border-radius: 6px;
+  box-shadow: var(--shadow-sm);
+}
+
+.orderCard small {
+  font-size: 10px;
+  color: #887970;
+  letter-spacing: 0.5px;
+}
+
+.orderCard h3 {
+  font-family: var(--font-serif);
+  color: var(--maroon);
+  font-weight: 500;
+  margin: 8px 0;
+}
+
+.status {
+  float: right;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.status.green {
+  background: #e2f2df;
+  color: #35713a;
+}
+
+.status.pending {
+  background: #f8edcf;
+  color: #8d6a1d;
+}
+
+.orderStatusInfoMsg {
+  margin-top: 10px;
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+
+.verifiedStatusText {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #15803d;
+  font-weight: 600;
+  background: #f0fdf4;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #bbf7d0;
+}
+
+.pendingStatusText {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #92400e;
+  font-weight: 600;
+  background: #fefce8;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #fde68a;
+}
+
+.orderCardShipmentRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fdfaf4;
+  border: 1px solid #ebdcc6;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  color: #4a3d36;
+  margin-bottom: 14px;
+}
+
+.orderCardShipmentRow code {
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--maroon, #6d1b29);
+}
+
+/* Combined Shipment Banner in Tracking Result */
+.combinedShipmentOrderBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #fdfaf4;
+  border: 1.5px solid #dfcfb2;
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin: 14px 0;
+  color: #5b2a1a;
+}
+
+.combinedBannerContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.combinedBannerTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.combinedBannerTitleRow strong {
+  font-size: 13px;
+  color: #5b2a1a;
+}
+
+.combinedPill {
+  background: #5b2a1a;
+  color: #d4af37;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.3px;
+}
+
+.combinedBannerContent p {
+  margin: 0;
+  font-size: 11.5px;
+  color: #706259;
+  line-height: 1.4;
+}
+
+/* Combined Shipment Row in Order Card */
+.orderCardCombinedShipmentRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fbf7ef;
+  border: 1px solid #e7d8c0;
+  border-left: 3px solid #5b2a1a;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  color: #5b2a1a;
+  margin-bottom: 10px;
+}
+
+.orderCardCombinedShipmentRow b {
+  color: #5b2a1a;
+  font-family: monospace;
+}
+
+.coShippedOrdersList {
+  color: #796a60;
+  font-size: 11px;
+  margin-left: 4px;
+}
+
+.progress {
+  display: flex;
+  justify-content: space-between;
+  margin: 24px 0;
+  position: relative;
+}
+
+.progress:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 7px;
+  border-top: 1px dashed #cdbf9f;
+}
+
+.progress span {
+  font-size: 9.5px;
+  color: #9a8e83;
+  background: #fff;
+  position: relative;
+  padding: 0 5px;
+}
+
+.progress .done {
+  color: var(--maroon);
+  font-weight: 700;
+}
+
+/* Delivered Order Product Reviews */
+.orderItemsReviewSection {
+  margin-top: 20px;
+  background: #fdfaf4;
+  border: 1px dashed #decab2;
+  border-radius: 6px;
+  padding: 14px 16px;
+}
+
+.reviewSectionBanner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--maroon, #6d1b29);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0e4d2;
+}
+
+.orderItemsReviewList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.orderItemReviewRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  border: 1px solid #ebdcc6;
+  border-radius: 6px;
+  padding: 10px 14px;
+}
+
+.orderReviewItemThumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 4px;
+  object-fit: cover;
+  border: 1px solid #ebdcc6;
+}
+
+.orderReviewItemDetails {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.orderReviewItemName {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--char, #1c1815);
+}
+
+.orderReviewItemMeta {
+  font-size: 11px;
+  color: #8c786c;
+}
+
+.orderReviewActionCol {
+  display: flex;
+  align-items: center;
+}
+
+.writeReviewTriggerBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  white-space: nowrap;
+}
+
+.existingReviewBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reviewDonePill {
+  background: #eef9f2;
+  border: 1px solid #b7ebd0;
+  color: #198754;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.editReviewTextBtn {
+  background: none;
+  border: none;
+  color: var(--maroon, #6d1b29);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 4px;
+  text-decoration: underline;
+}
+
+.editReviewTextBtn:hover {
+  color: var(--gold, #b8860b);
+}
+
+@media (max-width: 768px) {
+  .orderTrackerForm {
+    grid-template-columns: 1fr;
+  }
+
+  .guestLoginPromptCard {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+  }
+
+  .trackMetaSummaryGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .metaSummaryCol.financialCol {
+    text-align: left;
+    align-items: flex-start;
+  }
+
+  .courierTrackingBanner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .progress {
+    overflow-x: auto;
+  }
+
+  .progress span {
+    min-width: 80px;
+    text-align: center;
+  }
+
+  .orderItemReviewRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .orderReviewActionCol {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* ============================================================ */
+/* 3. 6-STAGE ORDER LIFECYCLE PROGRESS TRACKER */
+/* ============================================================ */
+.lifecycleProgressContainer {
+  margin: 18px 0 16px;
+  background: #fbf9f4;
+  border: 1px solid #ebdcc6;
+  border-radius: 8px;
+  padding: 14px 12px;
+}
+
+.lifecycleProgressBar {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  position: relative;
+  gap: 4px;
+}
+
+.lifecycleProgressBar::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: 8%;
+  right: 8%;
+  height: 2px;
+  background: #e2d4c0;
+  z-index: 1;
+}
+
+.lifecycleStep {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+}
+
+.stepDotWrapper {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #d8cab5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.stepCompleted .stepDotWrapper {
+  background: #198754;
+  border-color: #198754;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(25, 135, 84, 0.25);
+}
+
+.completedDot {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.stepCurrent .stepDotWrapper {
+  background: var(--maroon, #6d1b29);
+  border-color: var(--gold, #d4af37);
+  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.25);
+  animation: pulseDot 2s infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.currentDot {
+  color: var(--gold, #ffd700);
+  font-size: 14px;
+}
+
+.pendingDot {
+  color: #a39589;
+  font-size: 13px;
+}
+
+.stepTitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: #7a6b63;
+  line-height: 1.2;
+}
+
+.stepCompleted .stepTitle {
+  color: #198754;
+  font-weight: 700;
+}
+
+.stepCurrent .stepTitle {
+  color: var(--maroon, #6d1b29);
+  font-weight: 800;
+}
+
+@media (max-width: 600px) {
+  .lifecycleProgressBar {
+    grid-template-columns: repeat(3, 1fr);
+    row-gap: 16px;
+  }
+  .lifecycleProgressBar::before {
+    display: none;
+  }
+  .stepTitle {
+    font-size: 10px;
+  }
+}
+
+/* ============================================================ */
+/* 4. CRAFTING ANIMATION BANNER (MAKING STATUS) */
+/* ============================================================ */
+.craftingJewelleryBanner {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: linear-gradient(135deg, #2b0b14 0%, #150308 100%);
+  border: 1.5px solid #d4af37;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  box-shadow: 0 8px 24px rgba(109, 27, 41, 0.2);
+  color: #fff;
+  animation: fadeInBanner 0.3s ease-out;
+}
+
+@keyframes fadeInBanner {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.craftingVisualWrap {
+  width: 140px;
+  height: 90px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  background: #0d0205;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.craftingJewelleryGif {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.craftingBannerDetails {
+  flex: 1;
+}
+
+.craftingBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(212, 175, 55, 0.2);
+  border: 1px solid #d4af37;
+  color: #ffd700;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.craftingBannerDetails h4 {
+  margin: 0 0 4px;
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 17px;
+  color: #fff4d0;
+  letter-spacing: 0.3px;
+}
+
+.craftingBannerDetails p {
+  margin: 0;
+  font-size: 12px;
+  color: #f3e5ab;
+  line-height: 1.4;
+  opacity: 0.9;
+}
+
+@media (max-width: 550px) {
+  .craftingJewelleryBanner {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+  }
+  .craftingVisualWrap {
+    width: 100%;
+    max-width: 220px;
+    height: 120px;
+  }
+}
+
+/* ============================================================ */
+/* 5. STATUS NOTICES (PACKING, SHIPPED, DELIVERED, PENDING) */
+/* ============================================================ */
+.statusNoticeCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin: 12px 0;
+  font-size: 12.5px;
+}
+
+.statusNoticeCard h4 {
+  margin: 0 0 3px;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.statusNoticeCard p {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.packingNotice {
+  background: #fdfbf7;
+  border: 1px solid #ebdcc6;
+  color: #785303;
+}
+.packingNotice h4 { color: #573c02; }
+
+.shippedNotice {
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  color: #5b21b6;
+}
+.shippedNotice h4 { color: #4c1d95; }
+
+.deliveredNotice {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+.deliveredNotice h4 { color: #14532d; }
+
+.confirmedNotice {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+.confirmedNotice h4 { color: #14532d; }
+
+.pendingNotice {
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  color: #92400e;
+}
+.pendingNotice h4 { color: #78350f; }
+
+/* ============================================================ */
+/* 6. CANCELLATION & REFUND STATUS BANNERS */
+/* ============================================================ */
+.cancellationPendingBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #fffbeb;
+  border: 1.5px solid #fde68a;
+  border-left: 5px solid #f59e0b;
+  padding: 14px 16px;
+  border-radius: 8px;
+  margin: 12px 0;
+  color: #92400e;
+}
+
+.cancellationPendingBanner h4 {
+  margin: 0 0 3px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #b45309;
+}
+
+.cancellationPendingBanner p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.cancellationReasonNote {
+  display: inline-block;
+  margin-top: 5px;
+  font-size: 11.5px;
+  font-style: italic;
+  color: #78350f;
+  background: rgba(245, 158, 11, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.cancellationApprovedBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #eff6ff;
+  border: 1.5px solid #bfdbfe;
+  border-left: 5px solid #2563eb;
+  padding: 14px 16px;
+  border-radius: 8px;
+  margin: 12px 0;
+  color: #1e40af;
+}
+
+.cancellationApprovedBanner h4 {
+  margin: 0 0 3px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+.cancellationApprovedBanner p {
+  margin: 0;
+  font-size: 12.5px;
+}
+
+.cancellationRefundDetails {
+  display: flex;
+  gap: 16px;
+  margin-top: 6px;
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 6px 10px;
+  border-radius: 6px;
+  width: fit-content;
+}
+
+.statusPendingBadge {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 11px;
+}
+
+.cancellationRefundCompletedBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+  border-left: 5px solid #16a34a;
+  padding: 14px 16px;
+  border-radius: 8px;
+  margin: 12px 0;
+  color: #166534;
+}
+
+.cancellationRefundCompletedBanner h4 {
+  margin: 0 0 3px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #15803d;
+}
+
+.cancellationRefundCompletedBanner p {
+  margin: 0;
+  font-size: 12.5px;
+}
+
+/* ============================================================ */
+/* 7. CUSTOMER CANCELLATION FOOTER & WHATSAPP BOX */
+/* ============================================================ */
+.orderCardActionFooter {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed #ebdcc6;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.cancelOrderTriggerBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border: 1px solid #dc3545;
+  color: #dc3545;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cancelOrderTriggerBtn:hover {
+  background: #dc3545;
+  color: #fff;
+}
+
+.discussWhatsAppCancelBox {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: #f8faf9;
+  border: 1px solid #d1fae5;
+  padding: 10px 14px;
+  border-radius: 8px;
+}
+
+.discussWhatsAppLeft .discussTitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: #065f46;
+  display: block;
+}
+
+.discussWhatsAppLeft p {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  color: #4b5563;
+}
+
+.discussActionBtns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.waDiscussCancelBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #128c7e;
+  color: #ffffff !important;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 4px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.waDiscussCancelBtn:hover {
+  background: #075e54;
+}
+
+.instaDiscussBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  color: #ffffff !important;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 4px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity 0.15s ease;
+}
+
+.instaDiscussBtn:hover {
+  opacity: 0.92;
+}
+
+.fbDiscussBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #1877f2;
+  color: #ffffff !important;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 4px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity 0.15s ease;
+}
+
+.fbDiscussBtn:hover {
+  opacity: 0.92;
+  background: #166fe5;
+}
+
+.status.blue {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+@media (max-width: 650px) {
+  .discussWhatsAppCancelBox {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .discussActionBtns {
+    width: 100%;
+    flex-direction: column;
+  }
+  .waDiscussCancelBtn,
+  .instaDiscussBtn,
+  .fbDiscussBtn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+

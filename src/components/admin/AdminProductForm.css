@@ -1,0 +1,307 @@
+.adminForm {
+  display: grid;
+  gap: 12px;
+}
+
+.adminForm input,
+.adminForm textarea,
+.adminForm select {
+  padding: 12px;
+  border: 1px solid #ddd0b8;
+  background: #fffdf9;
+  outline: none;
+  font-size: 11.5px;
+  border-radius: 4px;
+  color: var(--char, #2c2523);
+}
+
+.adminForm textarea {
+  min-height: 95px;
+  resize: vertical;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* ==========================================================================
+   MULTI-IMAGE GALLERY SECTION
+   ========================================================================== */
+.adminMultiImageSection {
+  background: #fbf8f2;
+  border: 1px solid #e8decb;
+  border-radius: 6px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.multiImageHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sectionLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 11.5px;
+  color: #5c202a;
+}
+
+.multiImageHint {
+  font-size: 10px;
+  color: #8c7d75;
+}
+
+.uploadBox {
+  border: 1.5px dashed #cbb889;
+  background: #fffdf7;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #8b6d32;
+  font-size: 11px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.uploadBox:hover {
+  background: #fdf5e2;
+  border-color: #b8974a;
+}
+
+.uploadBox.uploading {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.uploadBox input {
+  display: none;
+}
+
+.uploadText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.uploadText b {
+  font-size: 11.5px;
+  color: #5c202a;
+}
+
+.uploadText span {
+  font-size: 10px;
+  color: #8b6d32;
+}
+
+.manualUrlBar {
+  display: flex;
+  gap: 8px;
+}
+
+.manualUrlBar input {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 11px;
+}
+
+.addUrlBtn {
+  padding: 8px 14px !important;
+  font-size: 11px !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Image Thumbnails Grid */
+.productImagesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.productImageCard {
+  background: #ffffff;
+  border: 1px solid #e2d7c3;
+  border-radius: 6px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.productImageCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+
+.productImageCard.isPrimaryCover {
+  border: 2px solid #b8860b;
+  background: #fffdf5;
+  box-shadow: 0 2px 8px rgba(184, 134, 11, 0.15);
+}
+
+.productImageThumbWrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #f0eae1;
+}
+
+.productImageThumbWrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.photoIndexBadge {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  background: rgba(30, 25, 20, 0.75);
+  color: #ffffff;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.primaryCoverBadge {
+  position: absolute;
+  bottom: 5px;
+  left: 5px;
+  background: #b8860b;
+  color: #ffffff;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.productImageActions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.makeCoverBtn {
+  background: #fdf5e2;
+  border: 1px solid #dfc793;
+  color: #8b6d32;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 4px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.makeCoverBtn:hover {
+  background: #b8860b;
+  color: #ffffff;
+  border-color: #b8860b;
+}
+
+.reorderBtnsGroup {
+  display: flex;
+  gap: 4px;
+}
+
+.reorderBtn {
+  flex: 1;
+  background: #f2ede4;
+  border: 1px solid #dcd3c4;
+  color: #5c524c;
+  padding: 4px;
+  border-radius: 3px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reorderBtn:hover:not(:disabled) {
+  background: #e2d9cb;
+}
+
+.reorderBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.deleteImgBtn {
+  background: #fdf2f2;
+  border: 1px solid #f2c6c6;
+  color: #c92a2a;
+  padding: 4px;
+  border-radius: 3px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.deleteImgBtn:hover {
+  background: #c92a2a;
+  color: #ffffff;
+  border-color: #c92a2a;
+}
+
+.noImagesWarning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff3cd;
+  border: 1px solid #ffeeba;
+  color: #856404;
+  padding: 10px 12px;
+  font-size: 11px;
+  border-radius: 4px;
+}
+
+.switchRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 10.5px;
+  color: #766861;
+  cursor: pointer;
+}
+
+.switchRow input {
+  accent-color: var(--maroon);
+  cursor: pointer;
+}
+
+@media (max-width: 800px) {
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+  .productImagesGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

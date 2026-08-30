@@ -1,0 +1,391 @@
+.adminCancellationModal {
+  background: #ffffff;
+  border: 1px solid #ebdcc6;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 540px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  animation: adminModalFadeIn 0.25s ease-out;
+}
+
+@keyframes adminModalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.adminCancelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 22px;
+  background: #fbf8f2;
+  border-bottom: 1px solid #ebdcc6;
+}
+
+.adminCancelHeaderTitle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.headerWarningIcon {
+  color: #d97706;
+}
+
+.adminCancelHeaderTitle h3 {
+  margin: 0;
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 1.15rem;
+  color: var(--maroon, #3a0d18);
+}
+
+.adminCancelHeaderTitle p {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  color: #7a6b65;
+  font-weight: 600;
+}
+
+.adminCancelBody {
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.orderMetaOverviewGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  background: #fdfbf7;
+  border: 1px solid #ebdcc6;
+  padding: 12px 16px;
+  border-radius: 8px;
+}
+
+.overviewItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.84rem;
+}
+
+.overviewLabel {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: #7a6b65;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.phoneContactRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.waChatPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #25d366;
+  color: #fff !important;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 12px;
+  text-decoration: none;
+}
+
+.statusHighlight {
+  color: var(--maroon, #6d1b29);
+}
+
+.amountHighlight {
+  color: #198754;
+  font-size: 0.95rem;
+}
+
+.customerReasonBox {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-left: 4px solid #f59e0b;
+  padding: 12px 14px;
+  border-radius: 6px;
+}
+
+.reasonTitle {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #92400e;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.reasonText {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #78350f;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.requestedDate {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: #a16207;
+}
+
+.decisionTypeSelector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.decisionBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1.5px solid #d4c8b8;
+  background: #fff;
+  transition: all 0.15s ease;
+}
+
+.decisionBtn.approveBtn.active {
+  background: #f0fdf4;
+  border-color: #198754;
+  color: #198754;
+  box-shadow: 0 0 0 2px rgba(25, 135, 84, 0.2);
+}
+
+.decisionBtn.rejectBtn.active {
+  background: #fdf2f2;
+  border-color: #dc3545;
+  color: #dc3545;
+  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2);
+}
+
+.approvalOptionsBox,
+.rejectionOptionsBox {
+  background: #fbf9f4;
+  border: 1px solid #ebdcc6;
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.boxHeading {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #5c4d44;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.refundTypeRadioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.refundRadioOption {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  background: #fff;
+  border: 1px solid #e2d4c0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.refundRadioOption input {
+  margin-top: 3px;
+}
+
+.refundRadioOption div {
+  display: flex;
+  flex-direction: column;
+}
+
+.refundRadioOption b {
+  font-size: 0.85rem;
+  color: #242021;
+}
+
+.refundRadioOption small {
+  font-size: 0.75rem;
+  color: #7a6b65;
+}
+
+.cancellationChargeInputRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #fff;
+  padding: 10px 12px;
+  border: 1px solid #d4c8b8;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+.cancellationChargeInputRow label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #242021;
+}
+
+.chargeInputWrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fbf9f4;
+  border: 1px solid #c9bcae;
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+
+.chargeInputWrap input {
+  width: 90px;
+  border: none;
+  background: transparent;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #242021;
+  text-align: right;
+}
+
+.chargeInputWrap input:focus {
+  outline: none;
+}
+
+.calculationSummaryBox {
+  background: #ffffff;
+  border: 1.5px solid #198754;
+  border-radius: 6px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.calcRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  color: #5c4d44;
+}
+
+.calcRow.chargeRow {
+  color: #dc3545;
+}
+
+.calcRow.finalRefundRow {
+  border-top: 1px dashed #c9bcae;
+  padding-top: 6px;
+  margin-top: 2px;
+  font-size: 0.92rem;
+  color: #198754;
+  font-weight: 700;
+}
+
+.finalRefundNumber {
+  font-size: 1.05rem;
+}
+
+.rejectNoticeInfo {
+  display: flex;
+  gap: 10px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  color: #495057;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.rejectNoticeInfo p {
+  margin: 0;
+}
+
+.approvedRefundInfoBox {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 12px 14px;
+  border-radius: 6px;
+  color: #1e40af;
+  margin-bottom: 12px;
+}
+
+.approvedRefundInfoBox h4 {
+  margin: 0 0 2px;
+  font-size: 0.92rem;
+}
+
+.approvedRefundInfoBox p {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.adminCancelError {
+  background: #fdf2f2;
+  border: 1px solid #f8d7da;
+  color: #dc3545;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.adminCancelActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.rejectSubmitBtn {
+  background: #dc3545 !important;
+  border-color: #dc3545 !important;
+  color: #fff !important;
+}
+
+.rejectSubmitBtn:hover {
+  background: #b02a37 !important;
+}
+
+.processRefundBtn {
+  background: #198754 !important;
+  border-color: #198754 !important;
+  color: #fff !important;
+}
+
+.processRefundBtn:hover {
+  background: #157347 !important;
+}

@@ -1,0 +1,38 @@
+{
+  "name": "nathshikha-final",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k -n API,WEB -c \"blue,magenta\" \"npm run server\" \"npm run client\"",
+    "client": "vite --host 0.0.0.0",
+    "server": "node server/index.js",
+    "start": "concurrently -k -n API,WEB -c \"blue,magenta\" \"npm run server\" \"npm run client\"",
+    "dev:all": "concurrently -k -n API,WEB -c \"blue,magenta\" \"npm run server\" \"npm run client\"",
+    "build": "vite build",
+    "preview": "vite preview",
+    "create-admin": "node server/create-admin.js"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "6.0.0",
+    "bcryptjs": "3.0.2",
+    "better-sqlite3": "12.4.1",
+    "concurrently": "9.2.1",
+    "cors": "2.8.5",
+    "dotenv": "17.2.1",
+    "express": "5.1.0",
+    "express-rate-limit": "^8.7.0",
+    "ffmpeg-static": "^5.3.0",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "9.0.2",
+    "lucide-react": "0.468.0",
+    "mongoose": "^9.9.3",
+    "multer": "2.0.2",
+    "qrcode.react": "4.2.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-router-dom": "7.18.2",
+    "sharp": "^0.35.4",
+    "vite": "8.0.0"
+  }
+}

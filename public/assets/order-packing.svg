@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGradPacking" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#180e22"/>
+      <stop offset="50%" stop-color="#2a163a"/>
+      <stop offset="100%" stop-color="#100818"/>
+    </linearGradient>
+    <linearGradient id="velvetBox" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#801b33"/>
+      <stop offset="50%" stop-color="#550e20"/>
+      <stop offset="100%" stop-color="#340612"/>
+    </linearGradient>
+    <linearGradient id="goldRibbon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff2aa"/>
+      <stop offset="50%" stop-color="#d4af37"/>
+      <stop offset="100%" stop-color="#996515"/>
+    </linearGradient>
+    <linearGradient id="lidGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#99223e"/>
+      <stop offset="100%" stop-color="#550e20"/>
+    </linearGradient>
+    <filter id="glowPacking" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <style>
+    @keyframes bowGlow {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(212,175,55,0.4)); }
+      50% { transform: scale(1.08); filter: drop-shadow(0 0 10px rgba(255,215,0,0.8)); }
+    }
+    @keyframes tagSway {
+      0%, 100% { transform: rotate(-4deg); }
+      50% { transform: rotate(8deg); }
+    }
+    @keyframes sparkleFloatPacking {
+      0% { transform: translateY(0) scale(0.6); opacity: 0.2; }
+      50% { transform: translateY(-8px) scale(1.2); opacity: 1; }
+      100% { transform: translateY(-16px) scale(0.6); opacity: 0.2; }
+    }
+    .bowGroup {
+      transform-origin: 160px 85px;
+      animation: bowGlow 2.4s ease-in-out infinite;
+    }
+    .tagGroup {
+      transform-origin: 195px 105px;
+      animation: tagSway 3s ease-in-out infinite;
+    }
+    .pk1 { animation: sparkleFloatPacking 2.5s infinite; transform-origin: 60px 45px; }
+    .pk2 { animation: sparkleFloatPacking 3.1s infinite 0.7s; transform-origin: 265px 55px; }
+    .pk3 { animation: sparkleFloatPacking 2.3s infinite 1.3s; transform-origin: 245px 145px; }
+    .pk4 { animation: sparkleFloatPacking 2.8s infinite 0.3s; transform-origin: 65px 145px; }
+  </style>
+
+  <!-- Background Canvas -->
+  <rect width="320" height="200" rx="12" fill="url(#bgGradPacking)" stroke="#c084fc" stroke-width="1.5" stroke-opacity="0.4"/>
+
+  <!-- Glowing Pedestal Shadow -->
+  <ellipse cx="160" cy="155" rx="85" ry="16" fill="#000" opacity="0.4"/>
+  <ellipse cx="160" cy="155" rx="65" ry="12" fill="#d4af37" opacity="0.1" filter="url(#glowPacking)"/>
+
+  <!-- Luxury Velvet Box Body -->
+  <g transform="translate(100, 85)">
+    <!-- Main Box Container -->
+    <rect x="0" y="20" width="120" height="52" rx="6" fill="url(#velvetBox)" stroke="#d4af37" stroke-width="1.5"/>
+    <rect x="3" y="23" width="114" height="46" rx="4" fill="none" stroke="#ffe28a" stroke-width="0.8" stroke-opacity="0.4"/>
+
+    <!-- Vertical Ribbon on Box -->
+    <rect x="52" y="20" width="16" height="52" fill="url(#goldRibbon)"/>
+    <line x1="52" y1="20" x2="52" y2="72" stroke="#fff" stroke-width="0.8" opacity="0.5"/>
+    <line x1="68" y1="20" x2="68" y2="72" stroke="#996515" stroke-width="0.8" opacity="0.6"/>
+
+    <!-- Box Lid -->
+    <rect x="-5" y="8" width="130" height="16" rx="4" fill="url(#lidGrad)" stroke="#d4af37" stroke-width="1.5"/>
+    <rect x="50" y="8" width="20" height="16" fill="url(#goldRibbon)"/>
+
+    <!-- Lid Trim Highlight -->
+    <line x1="-3" y1="10" x2="123" y2="10" stroke="#ff8da1" stroke-width="1" opacity="0.5"/>
+  </g>
+
+  <!-- Inspection / Hallmark Certificate Tag -->
+  <g class="tagGroup">
+    <line x1="195" y1="105" x2="215" y2="120" stroke="#d4af37" stroke-width="1.5"/>
+    <!-- Tag Body -->
+    <g transform="translate(205, 115) rotate(15)">
+      <polygon points="0,0 26,0 34,14 26,28 0,28" fill="#fffdf7" stroke="#d4af37" stroke-width="1.2"/>
+      <circle cx="6" cy="14" r="2.5" fill="#3a0d18"/>
+      <text x="17" y="12" fill="#7a081b" font-family="sans-serif" font-size="6" font-weight="bold" text-anchor="middle">QC</text>
+      <text x="17" y="21" fill="#15803d" font-family="sans-serif" font-size="7" font-weight="bold" text-anchor="middle">PASS ✓</text>
+    </g>
+  </g>
+
+  <!-- Golden Satin Ribbon Bow on Top of Box -->
+  <g class="bowGroup">
+    <!-- Left Loop -->
+    <path d="M 160 88 C 140 70 120 78 135 94 C 145 102 158 92 160 88 Z" fill="url(#goldRibbon)" stroke="#ffe699" stroke-width="1"/>
+    <!-- Right Loop -->
+    <path d="M 160 88 C 180 70 200 78 185 94 C 175 102 162 92 160 88 Z" fill="url(#goldRibbon)" stroke="#ffe699" stroke-width="1"/>
+    <!-- Ribbon Center Knot -->
+    <circle cx="160" cy="90" r="5.5" fill="url(#goldRibbon)" stroke="#fff" stroke-width="1"/>
+    <!-- Ribbon Tails -->
+    <path d="M 158 93 Q 148 110 142 120 L 148 118 L 154 122 Q 160 108 160 93 Z" fill="url(#goldRibbon)"/>
+    <path d="M 162 93 Q 172 110 178 120 L 172 118 L 166 122 Q 160 108 160 93 Z" fill="url(#goldRibbon)"/>
+  </g>
+
+  <!-- Floating Sparkles -->
+  <g class="pk1">
+    <path d="M 60 45 Q 60 38 55 38 Q 60 38 60 31 Q 60 38 65 38 Q 60 38 60 45 Z" fill="#ffd700"/>
+  </g>
+  <g class="pk2">
+    <path d="M 265 55 Q 265 48 260 48 Q 265 48 265 41 Q 265 48 270 48 Q 265 48 265 55 Z" fill="#c084fc"/>
+  </g>
+  <g class="pk3">
+    <path d="M 245 145 Q 245 139 240 139 Q 245 139 245 133 Q 245 139 250 139 Q 245 139 245 145 Z" fill="#ffd700"/>
+  </g>
+  <g class="pk4">
+    <path d="M 65 145 Q 65 139 60 139 Q 65 139 65 133 Q 65 139 70 139 Q 65 139 65 145 Z" fill="#ffe28a"/>
+  </g>
+</svg>

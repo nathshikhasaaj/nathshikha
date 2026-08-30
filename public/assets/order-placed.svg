@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGradPlaced" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e0c12"/>
+      <stop offset="50%" stop-color="#2c111c"/>
+      <stop offset="100%" stop-color="#14060b"/>
+    </linearGradient>
+    <linearGradient id="goldParchment" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fffdf7"/>
+      <stop offset="100%" stop-color="#faeed6"/>
+    </linearGradient>
+    <linearGradient id="goldAcc" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffe28a"/>
+      <stop offset="50%" stop-color="#d4af37"/>
+      <stop offset="100%" stop-color="#996515"/>
+    </linearGradient>
+    <linearGradient id="waxSeal" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c91834"/>
+      <stop offset="100%" stop-color="#7a081b"/>
+    </linearGradient>
+    <filter id="glowPlaced" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <style>
+    @keyframes quillWrite {
+      0%, 100% { transform: rotate(-5deg) translate(0, 0); }
+      50% { transform: rotate(10deg) translate(8px, -4px); }
+    }
+    @keyframes sealPulse {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 3px rgba(212,175,55,0.4)); }
+      50% { transform: scale(1.08); filter: drop-shadow(0 0 8px rgba(255,215,0,0.8)); }
+    }
+    @keyframes sparkleFloat {
+      0% { transform: translateY(0) scale(0.6); opacity: 0.2; }
+      50% { transform: translateY(-8px) scale(1.2); opacity: 1; }
+      100% { transform: translateY(-16px) scale(0.6); opacity: 0.2; }
+    }
+    @keyframes lineDraw {
+      0%, 100% { width: 40px; }
+      50% { width: 95px; }
+    }
+    .quillGroup {
+      transform-origin: 195px 125px;
+      animation: quillWrite 2.8s ease-in-out infinite;
+    }
+    .sealGroup {
+      transform-origin: 160px 145px;
+      animation: sealPulse 2.2s ease-in-out infinite;
+    }
+    .sp1 { animation: sparkleFloat 2.5s infinite; transform-origin: 50px 45px; }
+    .sp2 { animation: sparkleFloat 3s infinite 0.7s; transform-origin: 270px 60px; }
+    .sp3 { animation: sparkleFloat 2.2s infinite 1.3s; transform-origin: 240px 150px; }
+    .animLine { animation: lineDraw 2.8s ease-in-out infinite; }
+  </style>
+
+  <!-- Background Canvas -->
+  <rect width="320" height="200" rx="12" fill="url(#bgGradPlaced)" stroke="#d4af37" stroke-width="1.5" stroke-opacity="0.5"/>
+
+  <!-- Radial Glow Behind Document -->
+  <circle cx="160" cy="100" r="75" fill="#d4af37" opacity="0.08" filter="url(#glowPlaced)"/>
+
+  <!-- Parchment Order Receipt -->
+  <g transform="translate(85, 30)">
+    <!-- Document Base with Gold Shadow -->
+    <rect x="2" y="2" width="146" height="136" rx="6" fill="#000" opacity="0.3"/>
+    <rect x="0" y="0" width="146" height="136" rx="6" fill="url(#goldParchment)" stroke="#d4af37" stroke-width="1.5"/>
+
+    <!-- Gold Header Bar -->
+    <path d="M 0 6 Q 0 0 6 0 L 140 0 Q 146 0 146 6 L 146 22 L 0 22 Z" fill="url(#goldAcc)"/>
+    <text x="73" y="15" fill="#3a0d18" font-family="'Playfair Display', serif" font-size="9" font-weight="bold" text-anchor="middle" letter-spacing="1">NATHSHIKHA</text>
+
+    <!-- Document Decorative Inner Border -->
+    <rect x="6" y="28" width="134" height="102" rx="3" fill="none" stroke="#d4af37" stroke-width="0.8" stroke-dasharray="3,2" stroke-opacity="0.6"/>
+
+    <!-- Document Text Simulation Lines -->
+    <line x1="16" y1="40" x2="60" y2="40" stroke="#7a081b" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="16" y1="52" x2="110" y2="52" stroke="#8a7364" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="16" y1="63" x2="125" y2="63" stroke="#bba695" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="16" y1="74" x2="105" y2="74" stroke="#bba695" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="16" y1="85" x2="90" y2="85" stroke="#bba695" stroke-width="1.5" stroke-linecap="round"/>
+
+    <!-- Animated Signature Line -->
+    <rect x="16" y="100" height="2" fill="url(#goldAcc)" rx="1" class="animLine"/>
+  </g>
+
+  <!-- Wax Seal Stamp -->
+  <g class="sealGroup">
+    <circle cx="160" cy="140" r="18" fill="url(#waxSeal)" stroke="#ffd700" stroke-width="1.2"/>
+    <circle cx="160" cy="140" r="14" fill="none" stroke="#ffe28a" stroke-width="0.8" stroke-dasharray="2,1"/>
+    <!-- Royal Monogram / Crown in Seal -->
+    <path d="M 152 144 L 154 135 L 158 139 L 160 133 L 162 139 L 166 135 L 168 144 Z" fill="#ffd700"/>
+    <circle cx="160" cy="141" r="1.5" fill="#fff"/>
+  </g>
+
+  <!-- Golden Feather Quill Pen -->
+  <g class="quillGroup">
+    <!-- Quill Shaft -->
+    <path d="M 195 125 C 205 105 220 70 245 45 C 235 65 225 95 200 128 Z" fill="url(#goldAcc)"/>
+    <!-- Feather Strands -->
+    <path d="M 245 45 C 230 48 215 62 208 85 C 218 80 230 70 245 45 Z" fill="#ffeaa7" opacity="0.8"/>
+    <!-- Nib -->
+    <polygon points="193,127 197,124 191,131" fill="#3a0d18"/>
+  </g>
+
+  <!-- Golden Sparkles -->
+  <g class="sp1">
+    <path d="M 50 45 Q 50 35 45 35 Q 50 35 50 25 Q 50 35 55 35 Q 50 35 50 45 Z" fill="#ffd700"/>
+  </g>
+  <g class="sp2">
+    <path d="M 270 60 Q 270 52 265 52 Q 270 52 270 44 Q 270 52 275 52 Q 270 52 270 60 Z" fill="#ffe28a"/>
+  </g>
+  <g class="sp3">
+    <path d="M 240 150 Q 240 144 236 144 Q 240 144 240 138 Q 240 144 244 144 Q 240 144 240 150 Z" fill="#ffd700"/>
+  </g>
+</svg>

@@ -1,0 +1,297 @@
+.suggestionLayout {
+  max-width: 1100px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.suggestionInfoCard {
+  background: var(--maroon);
+  color: #fff4e6;
+  padding: 35px 30px;
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+}
+
+.suggestionInfoCard h3 {
+  font-family: var(--font-serif);
+  color: #f8e3b4;
+  font-size: 24px;
+  margin: 0 0 10px;
+}
+
+.suggestionInfoCard p {
+  font-size: 13px;
+  line-height: 1.8;
+  color: #eed9bd;
+  margin: 0 0 25px;
+}
+
+.suggestionSteps {
+  display: grid;
+  gap: 18px;
+  margin: 25px 0;
+}
+
+.suggestionStep {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 14px 16px;
+  border-radius: 6px;
+  border: 1px solid rgba(222, 186, 126, 0.2);
+}
+
+.stepNum {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 12px;
+  flex: none;
+}
+
+.suggestionStep h4 {
+  margin: 0 0 4px;
+  color: #fde8be;
+  font-family: var(--font-serif);
+  font-size: 13px;
+}
+
+.suggestionStep p {
+  margin: 0;
+  font-size: 11px;
+  color: #ecd7c3;
+  line-height: 1.5;
+}
+
+.suggestionFormCard {
+  background: var(--white);
+  border: 1px solid var(--line);
+  padding: 35px 30px;
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+}
+
+.suggestionFormCard h3 {
+  font-family: var(--font-serif);
+  color: var(--maroon);
+  font-size: 22px;
+  margin: 0 0 8px;
+}
+
+.suggestionFormCard p {
+  font-size: 12px;
+  color: #7b6e67;
+  margin: 0 0 20px;
+}
+
+.suggestionForm {
+  display: grid;
+  gap: 14px;
+}
+
+.suggestionForm input,
+.suggestionForm textarea,
+.suggestionForm select {
+  padding: 13px;
+  border: 1px solid #ddd0b8;
+  background: #fffdf9;
+  outline: none;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.suggestionForm textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.uploadDesignBox {
+  border: 2px dashed #d8b877;
+  background: #fbf6ec;
+  padding: 20px;
+  border-radius: 6px;
+  text-align: center;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #8b6d32;
+  font-size: 11px;
+  transition: all 0.2s ease;
+}
+
+.uploadDesignBox:hover {
+  background: #f8edd7;
+  border-color: var(--gold);
+}
+
+.uploadDesignBox svg {
+  width: 28px;
+  height: 28px;
+  color: var(--gold);
+}
+
+.uploadDesignBox input {
+  display: none;
+}
+
+.uploadPreviewContainer {
+  position: relative;
+  width: 100%;
+  margin-top: 10px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+
+.uploadPreviewContainer img {
+  width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+  background: #000;
+  display: block;
+}
+
+.removeImageBtn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(122, 26, 40, 0.85);
+  color: #fff;
+  border: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.suggestionSuccessCard {
+  max-width: 650px;
+  margin: 30px auto;
+  background: #fff;
+  border: 1px solid #e3d6bb;
+  padding: 40px 30px;
+  text-align: center;
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+}
+
+.suggestionSuccessIcon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--maroon);
+  color: #fff;
+  border: 2px solid var(--gold);
+  display: grid;
+  place-items: center;
+  margin: 0 auto 15px;
+}
+
+.suggestionSuccessCard h2 {
+  font-family: var(--font-serif);
+  color: var(--maroon);
+  font-size: 26px;
+  margin: 10px 0;
+}
+
+.suggestionSuccessCard p {
+  color: #6d5f59;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.suggestionSummaryBox {
+  background: #fbf7ee;
+  border: 1px solid #e3c985;
+  padding: 16px;
+  border-radius: 6px;
+  margin: 20px 0;
+  text-align: left;
+  font-size: 12px;
+}
+
+.suggestionSummaryBox b {
+  color: var(--maroon);
+}
+
+.suggestionSuccessActions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 25px;
+}
+
+.whatsappShareBtn {
+  background: #25d366;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.whatsappShareBtn:hover {
+  opacity: 0.9;
+}
+
+.instagramShareBtn {
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-decoration: none;
+}
+
+.instagramShareBtn:hover {
+  opacity: 0.92;
+}
+
+.facebookShareBtn {
+  background: #1877f2;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-decoration: none;
+}
+
+.facebookShareBtn:hover {
+  opacity: 0.92;
+  background: #166fe5;
+}
+
+@media (max-width: 900px) {
+  .suggestionLayout {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+}

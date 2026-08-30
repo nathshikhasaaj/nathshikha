@@ -1,0 +1,352 @@
+/* Review Modal Overlay & Container */
+.reviewModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 24, 21, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 16px;
+  animation: fadeInModal 0.2s ease;
+}
+
+@keyframes fadeInModal {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.reviewModal {
+  background: #ffffff;
+  border: 1px solid #ebdcc6;
+  border-radius: 10px;
+  max-width: 520px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 16px 40px rgba(79, 61, 56, 0.18);
+  display: flex;
+  flex-direction: column;
+}
+
+.reviewModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid #f2e9dc;
+  background: #fdfaf4;
+}
+
+.reviewEyebrow {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: var(--gold, #b8860b);
+  margin-bottom: 2px;
+}
+
+.reviewModalHeader h2 {
+  margin: 0;
+  font-family: var(--font-serif, 'Playfair Display', serif);
+  font-size: 19px;
+  color: var(--maroon, #6d1b29);
+}
+
+.reviewModalCloseBtn {
+  background: none;
+  border: none;
+  color: #8c786c;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.reviewModalCloseBtn:hover {
+  background: #f0e6d6;
+  color: var(--char, #1c1815);
+}
+
+/* Product Info Card */
+.reviewProductInfoCard {
+  display: flex;
+  gap: 14px;
+  padding: 14px 22px;
+  background: #faf6ee;
+  border-bottom: 1px solid #f0e6d6;
+  align-items: center;
+}
+
+.reviewProductThumb {
+  width: 60px;
+  height: 60px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid #e5d8c4;
+}
+
+.reviewProductMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.reviewOrderTag {
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c786c;
+  font-family: monospace;
+}
+
+.reviewProductName {
+  margin: 0;
+  font-size: 14px;
+  color: var(--char, #1c1815);
+  font-weight: 700;
+}
+
+.reviewProductPrice {
+  font-size: 12px;
+  color: var(--maroon, #6d1b29);
+  font-weight: 600;
+}
+
+.verifiedBadgeInline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #198754;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* Form Body */
+.reviewFormBody {
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.reviewFormError {
+  background: #fff5f5;
+  border: 1px solid #fed7d7;
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: #c53030;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reviewFormSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.reviewSectionLabel {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #4a3d36;
+}
+
+.reqStar {
+  color: #dc3545;
+}
+
+/* Star Picker */
+.starPickerWrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fdfcf9;
+  border: 1px solid #ebdcc6;
+  border-radius: 6px;
+  padding: 10px 14px;
+}
+
+.starPickerRow {
+  display: flex;
+  gap: 4px;
+}
+
+.starBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s;
+}
+
+.starBtn:hover {
+  transform: scale(1.15);
+}
+
+.starRatingLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold, #b8860b);
+}
+
+/* Inputs */
+.reviewInput,
+.reviewTextarea {
+  padding: 10px 12px;
+  border: 1.5px solid #d8c6af;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  background: #fdfcf9;
+  color: var(--char, #1c1815);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.reviewInput:focus,
+.reviewTextarea:focus {
+  border-color: var(--maroon, #6d1b29);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(109, 27, 41, 0.08);
+}
+
+.reviewTextarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
+/* Photo Upload */
+.photoUploadDropzone {
+  border: 1.5px dashed #d8c6af;
+  background: #fdfaf4;
+  border-radius: 6px;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photoUploadDropzone:hover {
+  border-color: var(--gold, #b8860b);
+  background: #faf4e8;
+}
+
+.uploadPrompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: #705e55;
+  font-size: 12.5px;
+}
+
+.uploadPrompt svg {
+  color: var(--gold, #b8860b);
+}
+
+.uploadPrompt small {
+  font-size: 11px;
+  color: #9c8b82;
+}
+
+.uploadingState {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--maroon, #6d1b29);
+}
+
+.uploadedPhotoPreviewBox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f4faf6;
+  border: 1px solid #b7ebd0;
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.uploadedPhotoThumb {
+  width: 50px;
+  height: 50px;
+  border-radius: 4px;
+  object-fit: cover;
+  border: 1px solid #cbe9d8;
+}
+
+.photoMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.photoSuccessText {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #198754;
+  font-weight: 600;
+}
+
+.removePhotoBtn {
+  background: none;
+  border: none;
+  color: #dc3545;
+  font-size: 11.5px;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  text-decoration: underline;
+}
+
+/* Modal Actions */
+.reviewModalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.reviewCancelBtn {
+  padding: 9px 18px !important;
+  font-size: 12px !important;
+}
+
+.reviewSubmitBtn {
+  padding: 9px 24px !important;
+  font-size: 12px !important;
+}
+
+.spinIcon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}

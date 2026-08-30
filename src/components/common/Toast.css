@@ -1,0 +1,35 @@
+.toast {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 100;
+  background: var(--maroon);
+  color: #fff7ec;
+  border: 1px solid var(--gold);
+  padding: 13px 18px;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  border-radius: 4px;
+  animation: toastFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes toastFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 900px) {
+  .toast {
+    right: 12px;
+    left: 12px;
+    bottom: 12px;
+    text-align: center;
+  }
+}

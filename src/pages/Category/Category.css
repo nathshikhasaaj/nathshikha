@@ -1,0 +1,18 @@
+.categoryProductGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+@media (max-width: 900px) {
+  .categoryProductGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+}
+
+@media (max-width: 420px) {
+  .categoryProductGrid {
+    gap: 8px;
+  }
+}

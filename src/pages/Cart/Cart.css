@@ -1,0 +1,149 @@
+.cartLayout {
+  display: grid;
+  grid-template-columns: 1.5fr 0.7fr;
+  gap: 35px;
+  max-width: 1050px;
+  margin: auto;
+}
+
+.cartList {
+  display: flex;
+  flex-direction: column;
+}
+
+.cartItem {
+  display: flex;
+  gap: 16px;
+  background: #fff;
+  border: 1px solid #e7dcc8;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+}
+
+.cartItem img {
+  width: 115px;
+  height: 115px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.cartItem > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.cartItem h3 {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  margin: 4px 0;
+  font-size: 15px;
+  color: var(--char);
+}
+
+.cartItem strong {
+  color: var(--maroon);
+  font-size: 14px;
+}
+
+.qty {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.qty button {
+  border: 1px solid var(--line);
+  background: transparent;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.15s ease;
+}
+
+.qty button:hover {
+  background: #fbf5e8;
+  border-color: var(--gold);
+}
+
+.qty svg {
+  width: 13px;
+}
+
+.qty .trash {
+  margin-left: 12px;
+  color: #a33;
+}
+
+.qty .trash:hover {
+  background: #fdf0f0;
+  border-color: #d33;
+}
+
+.summary {
+  background: #fff;
+  border: 1px solid #e3d6bb;
+  padding: 24px;
+  height: max-content;
+  border-radius: 6px;
+  box-shadow: var(--shadow-sm);
+}
+
+.summary h3 {
+  font-family: var(--font-serif);
+  color: var(--maroon);
+  margin-top: 0;
+  font-size: 16px;
+}
+
+.summary p {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #6f625d;
+  margin: 10px 0;
+}
+
+.shippingCalculatedText {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #8c7355;
+  font-style: italic;
+  letter-spacing: 0.1px;
+}
+
+.summary hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 16px 0;
+}
+
+.summary .total {
+  font-size: 15px;
+  color: var(--maroon);
+  font-weight: 700;
+}
+
+.summary .goldBtn {
+  width: 100%;
+  margin-top: 16px;
+}
+
+@media (max-width: 900px) {
+  .cartLayout {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+
+  .cartItem img {
+    width: 90px;
+    height: 90px;
+  }
+}
