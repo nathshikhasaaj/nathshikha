@@ -18,9 +18,9 @@ fs.mkdirSync(uploadsDir, { recursive: true });
 
 const upload = multer({
   dest: uploadsDir,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB max
   fileFilter: (req, file, cb) =>
-    cb(null, /^image\/(jpeg|png|webp|gif)$/.test(file.mimetype))
+    cb(null, /^image\/(jpeg|png|webp|gif|heic|avif)$/i.test(file.mimetype))
 });
 
 const router = express.Router();

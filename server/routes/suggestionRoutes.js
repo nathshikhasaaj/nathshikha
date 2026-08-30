@@ -20,7 +20,7 @@ fs.mkdirSync(uploadsDir, { recursive: true });
 
 const upload = multer({
   dest: uploadsDir,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB limit
   fileFilter: (req, file, cb) =>
     cb(null, /^image\/(jpeg|png|webp|gif)$/i.test(file.mimetype))
 });

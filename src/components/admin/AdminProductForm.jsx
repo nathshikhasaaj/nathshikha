@@ -181,7 +181,7 @@ export default function AdminProductForm({
             <Upload size={20} />
             <div className="uploadText">
               <b>{busy ? 'Processing & Watermarking…' : 'Choose Multiple Photos to Upload'}</b>
-              <span>Auto-watermarks Nathshikha logo (JPG, PNG, WEBP, up to 10MB each)</span>
+              <span>Auto-watermarks Nathshikha logo (JPG, PNG, WEBP, up to 20MB each)</span>
             </div>
             <input
               ref={fileInputRef}
