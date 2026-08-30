@@ -50,17 +50,17 @@
   }
 
   .section {
-    padding: 48px 18px;
+    padding: 48px 16px;
   }
 
   .productGrid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 14px 12px;
   }
 }
 
 @media (max-width: 420px) {
   .productGrid {
-    gap: 8px;
+    gap: 12px 10px;
   }
 }

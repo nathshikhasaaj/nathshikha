@@ -223,7 +223,7 @@
 }
 
 .btnSpinner {
-  animation: spin 0.8s linear infinite;
+  animation: cardBtnSpin 0.8s linear infinite;
 }
 
 .btnCheckIcon {
@@ -236,40 +236,59 @@
   100% { transform: scale(1); }
 }
 
-@keyframes spin {
+@keyframes cardBtnSpin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 
 @media (max-width: 900px) {
-  .card h3 {
-    font-size: 12px;
+  .cardBody {
+    padding: 12px 10px 14px;
   }
 
-  .cardBody {
-    padding: 8px 8px 10px;
+  .card h3 {
+    font-size: 13px;
+    line-height: 1.38;
+    min-height: 2.8em;
+    margin: 4px 0 6px;
+  }
+
+  .card strong {
+    font-size: 15px;
+  }
+
+  .bagBtn {
+    font-size: 11px;
+    padding: 9px 6px;
+    min-height: 40px;
+    letter-spacing: 0.5px;
   }
 }
 
 @media (max-width: 480px) {
   .pic img {
-    aspect-ratio: 1;
+    aspect-ratio: 1.02;
+  }
+
+  .cardBody {
+    padding: 11px 9px 13px;
   }
 
   .card h3 {
-    font-size: 11.5px;
-    margin: 3px 0;
-    min-height: 2.6em;
+    font-size: 12.5px;
+    line-height: 1.35;
+    margin: 3px 0 5px;
+    min-height: 2.7em;
   }
 
   .card strong {
-    font-size: 13px;
+    font-size: 14.5px;
   }
 
   .bagBtn {
-    font-size: 9.5px;
-    padding: 8px 4px;
-    min-height: 38px;
-    letter-spacing: 0.3px;
+    font-size: 10.5px;
+    padding: 9px 4px;
+    min-height: 40px;
+    letter-spacing: 0.4px;
   }
 }

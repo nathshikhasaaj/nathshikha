@@ -247,16 +247,35 @@
   }
 
   .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     min-width: auto;
   }
 
   .brand-logo {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
   }
 
   .brand span {
-    display: none;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .brand b {
+    font-family: var(--font-serif);
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    line-height: 1.1;
+    color: #fff8ee;
+  }
+
+  .brand small {
+    font-size: 7.5px;
+    letter-spacing: 1px;
+    color: #f0d9a3;
+    margin-top: 1px;
   }
 
   .header nav,

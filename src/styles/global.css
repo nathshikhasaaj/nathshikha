@@ -134,39 +134,63 @@ select {
 .page {
   padding: 70px 7vw;
   min-height: 70vh;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 @media (max-width: 900px) {
   .page {
-    padding: 48px 18px;
+    padding: 36px 16px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 }
 
 /* Empty State */
 .empty {
-  min-height: 300px;
+  min-height: 220px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
   color: #8d7c74;
   text-align: center;
+  padding: 24px 16px;
+  box-sizing: border-box;
 }
 
 .empty > svg {
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   color: var(--gold);
 }
 
 .empty.small {
-  min-height: 180px;
+  min-height: 120px;
+  padding: 16px 12px;
+  gap: 8px;
 }
 
 .empty p {
   margin: 0;
   font-size: 13px;
+}
+
+@media (max-width: 768px) {
+  .empty {
+    min-height: 160px;
+    padding: 16px 12px;
+    gap: 10px;
+  }
+
+  .empty.small {
+    min-height: 100px;
+    padding: 12px 8px;
+    gap: 6px;
+  }
 }
 
 /* Back Link */

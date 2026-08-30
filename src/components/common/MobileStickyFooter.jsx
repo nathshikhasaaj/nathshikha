@@ -40,7 +40,7 @@ export default function MobileStickyFooter({ searchOpen, setSearchOpen }) {
         aria-label="Home"
       >
         <div className="tabIconWrap">
-          <Home size={19} />
+          <Home size={20} />
         </div>
         <span className="tabLabel">{lang === 'mr' ? 'मुख्यपृष्ठ' : 'Home'}</span>
       </Link>
@@ -52,7 +52,7 @@ export default function MobileStickyFooter({ searchOpen, setSearchOpen }) {
         aria-label="Shop All Jewellery"
       >
         <div className="tabIconWrap">
-          <Sparkles size={19} />
+          <Sparkles size={20} />
         </div>
         <span className="tabLabel">{lang === 'mr' ? 'दागिने' : 'Shop'}</span>
       </Link>
@@ -65,7 +65,7 @@ export default function MobileStickyFooter({ searchOpen, setSearchOpen }) {
         aria-label="Search Catalogue"
       >
         <div className="tabIconWrap">
-          <Search size={19} />
+          <Search size={20} />
         </div>
         <span className="tabLabel">{lang === 'mr' ? 'शोधा' : 'Search'}</span>
       </button>
@@ -77,7 +77,7 @@ export default function MobileStickyFooter({ searchOpen, setSearchOpen }) {
         aria-label="Track Order Status"
       >
         <div className="tabIconWrap">
-          <Truck size={19} />
+          <Truck size={20} />
         </div>
         <span className="tabLabel">{lang === 'mr' ? 'ट्रॅक' : 'Track'}</span>
       </Link>
@@ -89,7 +89,7 @@ export default function MobileStickyFooter({ searchOpen, setSearchOpen }) {
         aria-label={`Shopping Bag (${cartCount} items)`}
       >
         <div className="tabIconWrap cartIconWrap">
-          <ShoppingBag size={19} />
+          <ShoppingBag size={20} />
           {cartCount > 0 && <span key={cartCount} className="mobileCartBadge">{cartCount}</span>}
         </div>
         <span className="tabLabel">{lang === 'mr' ? 'बॅग' : 'Bag'}</span>
@@ -102,7 +102,7 @@ export default function MobileStickyFooter({ searchOpen, setSearchOpen }) {
         aria-label="My Account"
       >
         <div className="tabIconWrap">
-          <User size={19} />
+          <User size={20} />
         </div>
         <span className="tabLabel">{user ? (lang === 'mr' ? 'खाते' : 'Account') : (lang === 'mr' ? 'लॉगिन' : 'Login')}</span>
       </Link>

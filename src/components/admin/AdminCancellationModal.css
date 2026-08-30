@@ -389,3 +389,34 @@
 .processRefundBtn:hover {
   background: #157347 !important;
 }
+
+@media (max-width: 600px) {
+  .adminCancellationModal {
+    max-width: 100%;
+    border-radius: 0;
+    height: 100vh;
+    max-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .adminCancelBody {
+    max-height: calc(100vh - 70px);
+    padding: 16px 14px;
+    gap: 14px;
+  }
+
+  .orderMetaOverviewGrid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .adminCancelActions {
+    flex-direction: column-reverse;
+  }
+
+  .adminCancelActions button {
+    width: 100%;
+    height: 42px;
+  }
+}

@@ -68,11 +68,36 @@
 }
 
 .shipmentTableContainer {
+  width: 100%;
+  max-width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  display: block;
+  box-sizing: border-box;
+  margin: 0;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold, #d4af37) #fbf7ee;
+}
+
+.shipmentTableContainer::-webkit-scrollbar {
+  height: 8px;
+}
+
+.shipmentTableContainer::-webkit-scrollbar-track {
+  background: #fbf7ee;
+  border-radius: 4px;
+}
+
+.shipmentTableContainer::-webkit-scrollbar-thumb {
+  background: var(--gold, #d4af37);
+  border-radius: 4px;
+  border: 1.5px solid #fbf7ee;
 }
 
 .shipmentOperationalTable {
   width: 100%;
+  min-width: 1000px;
   border-collapse: collapse;
   font-size: 12px;
   text-align: left;
@@ -233,4 +258,177 @@
 .shipmentEmpty {
   padding: 36px 20px;
   text-align: center;
+}
+
+/* Mobile vs Desktop View Switching */
+.desktopOnlyShipmentTable {
+  display: block;
+}
+
+.mobileShipmentsList {
+  display: none;
+}
+
+.mobileShipmentCard {
+  background: #ffffff;
+  border: 1px solid #ebdcc5;
+  border-radius: 10px;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 2px 8px rgba(79, 61, 56, 0.04);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.mobileShipmentCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid #f2e9dc;
+  padding-bottom: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mobileShipmentOrderNo {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--maroon, #7a1a28);
+  display: block;
+}
+
+.mobileShipmentDate {
+  font-size: 11px;
+  color: #7d6b63;
+}
+
+.mobileShipmentCustomerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mobileShipmentCustName {
+  font-size: 13.5px;
+  color: #2c1e18;
+  display: block;
+}
+
+.mobileShipmentCustPhone {
+  font-size: 11.5px;
+  color: #6b5c54;
+}
+
+.mobileTrackingBlock {
+  background: #fbf7ee;
+  border: 1px solid #eedfc9;
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mobilePartnerRow,
+.mobileTrackingIdRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mobileTrackingLabel {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #7a685e;
+  width: 75px;
+  flex-shrink: 0;
+}
+
+.mobileTrackingIdRow .trackingCode {
+  word-break: break-all;
+  font-size: 11.5px;
+}
+
+.mobileShipmentActionsRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px dashed #eedfc9;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mobileShipmentActionsRow .mobileActionBtn {
+  width: 100%;
+  height: 38px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  border-radius: 6px !important;
+  padding: 0 10px !important;
+  touch-action: manipulation;
+  box-sizing: border-box;
+}
+
+@media (max-width: 850px) {
+  .desktopOnlyShipmentTable {
+    display: none !important;
+  }
+
+  .adminShipmentSection {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .shipmentTableCard {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .shipmentTableHeader {
+    padding: 0 2px 10px;
+    background: transparent;
+    border: none;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .mobileShipmentsList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 480px) {
+  .mobileShipmentActionsRow {
+    grid-template-columns: 1fr;
+  }
 }

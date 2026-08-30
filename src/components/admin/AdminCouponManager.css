@@ -652,25 +652,84 @@
 
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
+  .adminCouponManager {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
   .couponSectionHeader {
-    padding: 18px 20px;
+    padding: 16px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .couponStatsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .couponStatCard {
+    padding: 12px 10px;
+    gap: 8px;
+    min-width: 0;
+    overflow: hidden;
   }
 
   .formGrid {
     grid-template-columns: 1fr;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .couponControlBar {
     flex-direction: column;
     align-items: stretch;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .couponControlBar .searchBox {
     max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .couponsTableContainer {
-    margin: 0 -16px -16px;
-    padding: 0 16px 16px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 600px) {
+  .couponModal {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .couponModalBody {
+    padding: 16px 14px;
+    max-height: calc(100vh - 65px);
+  }
+
+  .modalActions {
+    flex-direction: column-reverse;
+  }
+
+  .modalActions button {
+    width: 100%;
+    height: 42px;
   }
 }

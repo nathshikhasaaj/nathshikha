@@ -614,12 +614,36 @@
   color: #a57e36;
 }
 
+.dynamicRatingSummaryLink {
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.dynamicRatingSummaryLink:hover {
+  opacity: 0.85;
+}
+
+.productPriceBlock {
+  margin: 6px 0 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .detailInfo .price {
   font-size: 28px;
   color: var(--maroon, #5b2a1a);
   font-weight: 800;
-  margin: 6px 0 16px 0;
+  margin: 0;
   letter-spacing: -0.5px;
+  line-height: 1.15;
+}
+
+.priceTaxNotice {
+  font-size: 11.5px;
+  color: #8c7a72;
+  font-weight: 500;
 }
 
 .detailInfo p {
@@ -738,35 +762,42 @@
 
 .detailActions {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 12px;
   width: 100%;
-  flex-wrap: wrap;
+  box-sizing: border-box;
+  margin-top: 10px;
 }
 
-.detailActions .goldBtn {
-  flex: 1;
-  min-width: 170px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 48px;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.8px;
-  border-radius: 6px;
+.detailAddBagBtn,
+.buyNowBtn {
+  width: 100%;
+  height: 50px !important;
+  min-height: 50px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 8px !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.8px !important;
+  padding: 0 20px !important;
+  box-sizing: border-box !important;
   cursor: pointer;
   border: none;
-  background: var(--gold-grad, linear-gradient(135deg, #d4af37 0%, #aa7c11 100%));
-  color: #2c140d;
-  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
   transition: all 0.2s ease;
   touch-action: manipulation;
 }
 
-.detailActions .goldBtn:hover {
+.detailAddBagBtn {
+  background: var(--gold-grad, linear-gradient(135deg, #d4af37 0%, #aa7c11 100%)) !important;
+  color: #2c140d !important;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3) !important;
+}
+
+.detailAddBagBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.45);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.45) !important;
 }
 
 .detailAddBagBtn--added {
@@ -777,28 +808,19 @@
 
 /* Buy Now Button */
 .buyNowBtn {
-  flex: 1;
-  min-width: 170px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 48px;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.8px;
-  border-radius: 6px;
-  cursor: pointer;
-  border: none;
-  background: linear-gradient(135deg, #7a1a28 0%, #540e1b 100%);
-  color: #fff8ee;
-  box-shadow: 0 4px 15px rgba(84, 14, 27, 0.35);
-  transition: all 0.2s ease;
-  touch-action: manipulation;
+  background: linear-gradient(135deg, #7a1a28 0%, #540e1b 100%) !important;
+  color: #fff8ee !important;
+  box-shadow: 0 4px 15px rgba(84, 14, 27, 0.35) !important;
 }
 
 .buyNowBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(84, 14, 27, 0.45);
+  box-shadow: 0 6px 20px rgba(84, 14, 27, 0.45) !important;
+}
+
+.detailAddBagBtn:active,
+.buyNowBtn:active {
+  transform: translateY(0);
 }
 
 /* Wishlist Button */
@@ -855,6 +877,19 @@
   color: #ffffff !important;
   transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(37, 211, 102, 0.25);
+}
+
+.detailSecondaryActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.detailSecondaryActions .detailWishlistBtn,
+.detailSecondaryActions .productWhatsAppBtn {
+  flex: 1;
+  min-width: 0;
 }
 
 /* ============================================================ */
@@ -1315,14 +1350,30 @@
 
   .detailActions {
     flex-direction: column;
+    gap: 10px;
   }
 
-  .detailActions .goldBtn,
-  .buyNowBtn,
-  .detailWishlistBtn,
-  .productWhatsAppBtn {
+  .detailAddBagBtn,
+  .buyNowBtn {
     width: 100%;
     min-width: 100%;
+    height: 50px !important;
+    min-height: 50px !important;
+  }
+
+  .detailSecondaryActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .detailSecondaryActions .detailWishlistBtn,
+  .detailSecondaryActions .productWhatsAppBtn {
+    width: 100%;
+    min-width: 0;
+    height: 44px;
+    font-size: 12px !important;
   }
 
   .productGalleryLayout {
@@ -1353,5 +1404,80 @@
     width: 32px;
     height: 32px;
   }
+
+  .ratingOverviewCard {
+    padding: 20px 16px;
+    margin-bottom: 24px;
+  }
+
+  .reviewCard {
+    padding: 18px 16px;
+  }
+
+  .reviewComment {
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: #4a3832;
+  }
 }
+
+/* ============================================================ */
+/* RELATED PRODUCTS SECTION                                     */
+/* ============================================================ */
+.relatedProductsSection {
+  margin-top: 60px;
+  padding-top: 40px;
+  border-top: 1px solid #ebdcc6;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.relatedHeader {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.relatedEyebrow {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--gold, #b8860b);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.relatedTitle {
+  font-family: var(--font-serif);
+  font-size: 26px;
+  color: var(--maroon, #5b2a1a);
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+
+.relatedSubtitle {
+  font-size: 13px;
+  color: #7a6b65;
+  margin: 0;
+}
+
+.relatedGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  .relatedGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px 12px;
+  }
+
+  .relatedTitle {
+    font-size: 22px;
+  }
+}
+
 

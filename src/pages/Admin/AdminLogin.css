@@ -79,3 +79,27 @@
   justify-content: center;
   margin: 0;
 }
+
+@media (max-width: 480px) {
+  .adminLogin {
+    padding: 24px 14px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .adminLoginCard {
+    padding: 24px 16px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .adminLoginCard input {
+    font-size: 13px;
+    padding: 11px 12px;
+  }
+
+  .adminLoginCard .goldBtn {
+    height: 44px;
+    font-size: 12.5px;
+  }
+}

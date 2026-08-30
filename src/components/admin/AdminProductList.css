@@ -158,3 +158,25 @@
   opacity: 0.65;
   background: #faf8f5;
 }
+
+@media (max-width: 600px) {
+  .adminProduct {
+    grid-template-columns: 50px 1fr auto;
+    padding: 10px 4px;
+    gap: 10px;
+  }
+
+  .adminProductInfo b {
+    font-size: 12.5px;
+  }
+
+  .adminProductInfo small {
+    font-size: 11px;
+  }
+
+  .actionBtn {
+    padding: 8px;
+    min-width: 32px;
+    min-height: 32px;
+  }
+}

@@ -34,25 +34,30 @@
 
 .features b {
   font-family: var(--font-serif);
-  font-size: 12px;
-  color: #6b4d48;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #4a3430;
 }
 
 .features small {
-  font-size: 9px;
-  color: #998d86;
+  font-size: 12px;
+  color: #7f6e66;
+  line-height: 1.4;
 }
 
 @media (max-width: 900px) {
   .features {
     grid-template-columns: repeat(2, 1fr);
-    gap: 35px 10px;
-    padding: 35px 18px;
+    gap: 24px 14px;
+    padding: 36px 16px;
+  }
+
+  .features b {
+    font-size: 13px;
+  }
+
+  .features small {
+    font-size: 11.5px;
   }
 }
 
-@media (max-width: 420px) {
-  .features b {
-    font-size: 10px;
-  }
-}

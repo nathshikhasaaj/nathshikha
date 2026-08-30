@@ -409,3 +409,33 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 600px) {
+  .createOrderModalContainer {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    border: none;
+  }
+
+  .createOrderForm {
+    padding: 14px 16px;
+    gap: 14px;
+    max-height: calc(100vh - 65px);
+  }
+
+  .formColumn {
+    padding: 12px;
+  }
+
+  .modalActions {
+    flex-direction: column-reverse;
+  }
+
+  .modalActions button {
+    width: 100%;
+    height: 42px;
+  }
+}

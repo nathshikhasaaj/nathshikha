@@ -115,15 +115,15 @@ export default function AdminOrderDetailsModal({
   };
 
   return (
-    <div className="modalOverlay" onClick={onClose}>
+    <div className="orderDetailsOverlay" onClick={onClose}>
       <div
-        className="orderDetailsModal"
+        className="orderDetailsContainer"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
       >
         {/* Modal Header */}
-        <div className="modalHeader">
+        <div className="orderDetailsHeader">
           <div className="modalHeaderTitle">
             <div className="modalBadge">
               <Package size={18} />
@@ -746,6 +746,50 @@ export default function AdminOrderDetailsModal({
                 <b>{money(order.total)}</b>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Sticky Action Footer */}
+        <div className="orderDetailsFooter">
+          <div className="statusChangerRow">
+            <span className="statusChangerLabel">Update Status:</span>
+            <select
+              value={order.order_status}
+              onChange={(e) => onStatusChange && onStatusChange(order, e.target.value)}
+              className={`orderStatusSelect statusSelect_${order.order_status}`}
+            >
+              <option value="placed">Order Received</option>
+              <option value="confirmed">Order Confirmed</option>
+              <option value="making">Artisan Crafting</option>
+              <option value="packing">QC & Packaging</option>
+              <option value="shipped">Dispatched & In Transit</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+
+          <div className="modalFooterActions">
+            {cleanPhone && (
+              <a
+                href={`https://wa.me/${cleanPhone}?text=Hi%20${encodeURIComponent(
+                  order.name
+                )}%2C%20regarding%20your%20Nathshikha%20order%20%23${order.order_no}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="goldBtn compact modalWaBtn"
+                title="Chat on WhatsApp"
+              >
+                <MessageSquare size={13} />
+                <span>WhatsApp Customer</span>
+              </a>
+            )}
+            <button
+              type="button"
+              className="outlineBtn compact modalCloseBottomBtn"
+              onClick={onClose}
+            >
+              Close
+            </button>
           </div>
         </div>
       </div>

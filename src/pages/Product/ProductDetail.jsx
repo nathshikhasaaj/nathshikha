@@ -31,6 +31,7 @@ import { api } from '../../services/api';
 import { useCart } from '../../context/CartContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { money } from '../../utils/formatters';
+import ProductCard from '../../components/product/ProductCard';
 import './ProductDetail.css';
 
 // Helper to render star rating
@@ -507,6 +508,7 @@ export default function ProductDetail() {
   const [reviewsLoading, setReviewsLoading] = useState(true);
   const [sort, setSort] = useState('newest');
   const [lightboxPhoto, setLightboxPhoto] = useState(null);
+  const [relatedProducts, setRelatedProducts] = useState([]);
 
   const isFavorite = isInWishlist(product?.id || product?._id);
 
@@ -520,6 +522,20 @@ export default function ProductDetail() {
       })
       .catch(() => setProduct(null))
       .finally(() => setLoading(false));
+  }, [id]);
+
+  useEffect(() => {
+    api('/products')
+      .then((all) => {
+        if (Array.isArray(all)) {
+          const currentId = String(id);
+          const filtered = all
+            .filter((p) => String(p.id || p._id) !== currentId)
+            .slice(0, 4);
+          setRelatedProducts(filtered);
+        }
+      })
+      .catch(() => {});
   }, [id]);
 
   useEffect(() => {
@@ -608,24 +624,27 @@ export default function ProductDetail() {
           {product.tag && <span className="eyebrow">{product.tag}</span>}
           <h1>{product.name}</h1>
 
-          {/* Dynamic Ratings Badge */}
+          {/* Dynamic Ratings Badge with smooth scroll link */}
           <div className="stars">
             {totalReviews > 0 ? (
-              <div className="dynamicRatingSummary">
+              <a href="#customer-reviews" className="dynamicRatingSummary dynamicRatingSummaryLink">
                 <RenderStars rating={averageRating} size={16} />
                 <em>
                   <b>{averageRating}</b> ({totalReviews} {totalReviews === 1 ? 'review' : 'reviews'})
                 </em>
-              </div>
+              </a>
             ) : (
-              <div className="dynamicRatingSummary emptyRating">
+              <a href="#customer-reviews" className="dynamicRatingSummary emptyRating dynamicRatingSummaryLink">
                 <RenderStars rating={5} size={15} />
                 <em>Be the first to review</em>
-              </div>
+              </a>
             )}
           </div>
 
-          <div className="price">{money(product.price)}</div>
+          <div className="productPriceBlock">
+            <span className="price">{money(product.price)}</span>
+            <span className="priceTaxNotice">Inclusive of all taxes · Free Pan-India Delivery on ₹2,999+</span>
+          </div>
 
           {/* Live stock and craft readiness badge */}
           <div className="productStockStatus">
@@ -701,27 +720,29 @@ export default function ProductDetail() {
               {t('buy_now', 'BUY NOW')}
             </button>
 
-            <button
-              className={`detailWishlistBtn ${isFavorite ? 'detailWishlistBtn--active' : ''}`}
-              type="button"
-              onClick={handleWishlist}
-              aria-label={isFavorite ? 'Remove from wishlist' : 'Add to wishlist'}
-            >
-              <Heart size={18} fill={isFavorite ? 'currentColor' : 'none'} />
-              <span>{isFavorite ? t('wishlisted', 'Wishlisted ♥') : t('add_to_wishlist', 'Wishlist')}</span>
-            </button>
+            <div className="detailSecondaryActions">
+              <button
+                className={`detailWishlistBtn ${isFavorite ? 'detailWishlistBtn--active' : ''}`}
+                type="button"
+                onClick={handleWishlist}
+                aria-label={isFavorite ? 'Remove from wishlist' : 'Add to wishlist'}
+              >
+                <Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} style={{ marginRight: 5 }} />
+                <span>{isFavorite ? t('wishlisted', 'Wishlisted ♥') : t('add_to_wishlist', 'Wishlist')}</span>
+              </button>
 
-            <a
-              className="outlineBtn productWhatsAppBtn"
-              href={`https://wa.me/918999335607?text=${encodeURIComponent(
-                `Hello! I want to inquire about ${product.name} (₹${product.price}) on Nathshikha.`
-              )}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <MessageSquare size={15} style={{ marginRight: 6 }} />
-              {t('ask_on_whatsapp', 'Ask on WhatsApp')}
-            </a>
+              <a
+                className="outlineBtn productWhatsAppBtn"
+                href={`https://wa.me/918999335607?text=${encodeURIComponent(
+                  `Hello! I want to inquire about ${product.name} (₹${product.price}) on Nathshikha.`
+                )}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <MessageSquare size={15} style={{ marginRight: 5 }} />
+                <span>{t('ask_on_whatsapp', 'WhatsApp')}</span>
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -896,6 +917,21 @@ export default function ProductDetail() {
             <img src={lightboxPhoto} alt="Customer jewellery preview" className="fullReviewPhoto" />
           </div>
         </div>
+      )}
+      {/* RELATED / MATCHING HANDCRAFTED PIECES */}
+      {relatedProducts.length > 0 && (
+        <section className="relatedProductsSection">
+          <div className="relatedHeader">
+            <span className="relatedEyebrow">✦ MATCHING PIECES</span>
+            <h2 className="relatedTitle">You May Also Adore</h2>
+            <p className="relatedSubtitle">Handcrafted Maharashtrian designs to complete your royal look.</p>
+          </div>
+          <div className="relatedGrid">
+            {relatedProducts.map((rel) => (
+              <ProductCard key={rel.id || rel._id} p={rel} />
+            ))}
+          </div>
+        </section>
       )}
     </main>
   );
