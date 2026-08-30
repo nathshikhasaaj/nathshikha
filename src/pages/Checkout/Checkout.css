@@ -1,6 +1,8 @@
 .checkoutPage {
   max-width: 1100px;
   margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .guestBanner {
@@ -1231,5 +1233,22 @@
 
   .successModalActions {
     flex-direction: column;
+  }
+}
+
+@media (max-width: 600px) {
+  .checkout form {
+    padding: 16px 14px;
+    gap: 12px;
+  }
+
+  .checkout form input,
+  .checkout form textarea {
+    font-size: 16px;
+    padding: 11px 12px;
+  }
+
+  .guestBanner {
+    padding: 12px 14px;
   }
 }

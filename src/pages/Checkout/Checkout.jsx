@@ -961,9 +961,14 @@ export default function Checkout() {
             disabled={loading}
             type="submit"
           >
-            {loading
-              ? t('processing', 'PROCESSING…')
-              : `✓ I HAVE PAID · ${money(grandTotal)}`}
+            {loading ? (
+              <>
+                <Loader2 size={16} className="btnSpinner" style={{ marginRight: 8 }} />
+                <span>{t('processing', 'PROCESSING ORDER…')}</span>
+              </>
+            ) : (
+              <span>✓ {t('i_have_paid', 'I HAVE PAID')} · {money(grandTotal)}</span>
+            )}
           </button>
         </div>
       </div>

@@ -4,6 +4,9 @@
   padding: 65px 7vw;
   position: relative;
   overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .testimonials:before,

@@ -1,18 +1,24 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingBag, Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { money } from '../../utils/formatters';
 import SectionTitle from '../../components/common/SectionTitle';
 import './Cart.css';
 
+const FREE_SHIPPING_THRESHOLD = 2999;
+
 export default function Cart() {
   const { cart, updateCartQty, removeFromCart, subtotal, shipping, total } = useCart();
   const { t } = useLanguage();
 
+  const isFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
+  const freeShippingLeft = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
+  const freeShippingProgress = Math.min(100, Math.round((subtotal / FREE_SHIPPING_THRESHOLD) * 100));
+
   return (
-    <main className="page">
+    <main className="page cartPageMain">
       <SectionTitle
         title={t('your_bag', 'Your Bag')}
         sub={t('your_bag_sub', 'Your handcrafted treasures are almost home.')}
@@ -21,21 +27,56 @@ export default function Cart() {
       {cart.length > 0 ? (
         <div className="cartLayout">
           <div className="cartList">
+            {/* Free Shipping Progress Indicator */}
+            <div className="freeShippingBarCard">
+              <div className="freeShippingTextRow">
+                {isFreeShipping ? (
+                  <span className="freeShippingUnlocked">
+                    <CheckCircle2 size={15} color="#2e7d32" />
+                    <strong>{t('free_shipping_unlocked', "You've unlocked FREE Pan-India Delivery! 🎉")}</strong>
+                  </span>
+                ) : (
+                  <span className="freeShippingNeeded">
+                    <Sparkles size={15} color="var(--gold, #b8860b)" />
+                    <span>
+                      Add <strong>{money(freeShippingLeft)}</strong> more for <strong>FREE Delivery</strong>
+                    </span>
+                  </span>
+                )}
+              </div>
+              <div className="freeShippingTrack">
+                <div
+                  className={`freeShippingProgress ${isFreeShipping ? 'freeShippingProgress--full' : ''}`}
+                  style={{ width: `${freeShippingProgress}%` }}
+                ></div>
+              </div>
+            </div>
+
             {cart.map((p) => (
               <div className="cartItem" key={p.id}>
-                <img src={p.img} alt={p.name} />
-                <div>
+                <Link to={`/product/${p.id}`} className="cartItemImgLink">
+                  <img src={p.img || '/assets/thushi.jpg'} alt={p.name} />
+                </Link>
+                <div className="cartItemDetails">
                   <div>
-                    <h3>{p.name}</h3>
-                    <strong>{money(p.price)}</strong>
+                    <Link to={`/product/${p.id}`}>
+                      <h3>{p.name}</h3>
+                    </Link>
+                    <div className="cartItemPriceRow">
+                      <strong className="cartItemUnitPrice">{money(p.price)}</strong>
+                      {p.qty > 1 && (
+                        <span className="cartItemTotalSub">({money(p.price * p.qty)})</span>
+                      )}
+                    </div>
                   </div>
+
                   <div className="qty">
                     <button
                       type="button"
                       onClick={() => updateCartQty(p.id, -1)}
                       aria-label="Decrease quantity"
                     >
-                      <Minus />
+                      <Minus size={13} />
                     </button>
                     <b>{p.qty}</b>
                     <button
@@ -43,15 +84,16 @@ export default function Cart() {
                       onClick={() => updateCartQty(p.id, 1)}
                       aria-label="Increase quantity"
                     >
-                      <Plus />
+                      <Plus size={13} />
                     </button>
                     <button
                       className="trash"
                       type="button"
                       onClick={() => removeFromCart(p.id)}
-                      aria-label="Remove item"
+                      aria-label={`Remove ${p.name} from bag`}
+                      title="Remove item"
                     >
-                      <Trash2 />
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>
@@ -68,7 +110,11 @@ export default function Cart() {
             <p>
               <span>{t('shipping', 'Shipping')}</span>
               <span className="shippingCalculatedText">
-                {t('calculated_on_checkout', 'Calculated on checkout')}
+                {isFreeShipping ? (
+                  <b style={{ color: '#2e7d32' }}>FREE</b>
+                ) : (
+                  t('calculated_on_checkout', 'Calculated on checkout')
+                )}
               </span>
             </p>
             <hr />
@@ -76,20 +122,35 @@ export default function Cart() {
               <span>{t('total', 'Total')}</span>
               <b>{money(subtotal)}</b>
             </p>
-            <Link className="goldBtn" to="/checkout">
-              {t('proceed_checkout', 'PROCEED TO CHECKOUT')}
+            <Link className="goldBtn cartCheckoutBtn" to="/checkout">
+              <span>{t('proceed_checkout', 'PROCEED TO CHECKOUT')}</span>
+              <ArrowRight size={15} />
             </Link>
           </aside>
+
+          {/* Sticky Mobile Checkout Bar for Thumb-Reach UX */}
+          <div className="mobileStickyCartBar">
+            <div className="mobileStickyCartPrice">
+              <small>{t('total', 'Total')}</small>
+              <strong>{money(subtotal)}</strong>
+            </div>
+            <Link className="mobileStickyCheckoutBtn" to="/checkout">
+              <span>{t('checkout', 'CHECKOUT')}</span>
+              <ArrowRight size={15} />
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="empty">
-          <ShoppingBag />
-          <p>{t('bag_empty', 'Your bag is empty.')}</p>
-          <Link className="goldBtn" to="/shop">
-            {t('start_shopping', 'START SHOPPING')}
+          <ShoppingBag size={48} color="var(--gold, #b8860b)" style={{ marginBottom: 12 }} />
+          <h2>{t('bag_empty', 'Your bag is empty')}</h2>
+          <p>{t('bag_empty_sub', 'Discover handcrafted Maharashtrian jewellery designed for every auspicious moment.')}</p>
+          <Link className="goldBtn" to="/shop" style={{ marginTop: 16 }}>
+            {t('start_shopping', 'EXPLORE COLLECTIONS')}
           </Link>
         </div>
       )}
     </main>
   );
 }
+

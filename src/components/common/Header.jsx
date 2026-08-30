@@ -63,6 +63,18 @@ export default function Header({ searchOpen, setSearchOpen }) {
     };
   }, []);
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
+
   const collectionSubMenus = [
     { title: t('nav_all_jewellery', 'All Jewellery'), path: '/shop' },
     { title: t('nav_signature_collections', 'Signature Collections'), path: '/category/Signature' },
@@ -178,7 +190,7 @@ export default function Header({ searchOpen, setSearchOpen }) {
           {/* Cart Icon */}
           <Link className="icon count" to="/cart" aria-label="Shopping bag">
             <ShoppingBag />
-            {cartCount > 0 && <i>{cartCount}</i>}
+            {cartCount > 0 && <i key={cartCount}>{cartCount}</i>}
           </Link>
 
           {/* Profile / Account Icon */}
@@ -195,7 +207,13 @@ export default function Header({ searchOpen, setSearchOpen }) {
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="mobileMenu">
+        <>
+          <div
+            className="mobileMenuBackdrop"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-hidden="true"
+          />
+          <div className="mobileMenu">
           <div className="menuHead">
             <b>{t('menu', 'Menu')}</b>
             <button className="icon" onClick={() => setMobileMenuOpen(false)} aria-label="Close menu">
@@ -293,6 +311,7 @@ export default function Header({ searchOpen, setSearchOpen }) {
             </button>
           )}
         </div>
+      </>
       )}
     </>
   );

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   ShieldCheck,
@@ -19,7 +19,13 @@ import {
   RotateCcw,
   ChevronLeft,
   ChevronRight,
-  Images
+  Images,
+  Minus,
+  Plus,
+  Heart,
+  Check,
+  Loader2,
+  Zap
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { useCart } from '../../context/CartContext';
@@ -482,12 +488,16 @@ function ProductZoomLightbox({ images, activeIndex, setActiveIndex, alt, onClose
 
 export default function ProductDetail() {
   const { id } = useParams();
-  const { addToCart } = useCart();
+  const navigate = useNavigate();
+  const { addToCart, toggleWishlist, isInWishlist } = useCart();
   const { t } = useLanguage();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fullscreenZoom, setFullscreenZoom] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [qty, setQty] = useState(1);
+  const [isAdding, setIsAdding] = useState(false);
+  const [justAdded, setJustAdded] = useState(false);
 
   // Reviews state
   const [reviewsData, setReviewsData] = useState({
@@ -498,12 +508,15 @@ export default function ProductDetail() {
   const [sort, setSort] = useState('newest');
   const [lightboxPhoto, setLightboxPhoto] = useState(null);
 
+  const isFavorite = isInWishlist(product?.id || product?._id);
+
   useEffect(() => {
     setLoading(true);
     api(`/products/${id}`)
       .then((data) => {
         setProduct(data);
         setActiveIndex(0);
+        setQty(1);
       })
       .catch(() => setProduct(null))
       .finally(() => setLoading(false));
@@ -516,6 +529,30 @@ export default function ProductDetail() {
       .catch(() => {})
       .finally(() => setReviewsLoading(false));
   }, [id, sort]);
+
+  const handleAddToCart = () => {
+    if (isAdding || !product) return;
+    setIsAdding(true);
+    addToCart(product, qty);
+    setTimeout(() => {
+      setIsAdding(false);
+      setJustAdded(true);
+    }, 200);
+    setTimeout(() => {
+      setJustAdded(false);
+    }, 2000);
+  };
+
+  const handleBuyNow = () => {
+    if (!product) return;
+    addToCart(product, qty, { showToast: false });
+    navigate('/checkout');
+  };
+
+  const handleWishlist = () => {
+    if (!product) return;
+    toggleWishlist(product);
+  };
 
   if (loading) {
     return (
@@ -590,6 +627,12 @@ export default function ProductDetail() {
 
           <div className="price">{money(product.price)}</div>
 
+          {/* Live stock and craft readiness badge */}
+          <div className="productStockStatus">
+            <span className="stockDot"></span>
+            <span>{t('in_stock_ready', 'In Stock • Handcrafted & Ready to Dispatch')}</span>
+          </div>
+
           <p>{product.description}</p>
 
           <div className="trust">
@@ -601,15 +644,73 @@ export default function ProductDetail() {
             </span>
           </div>
 
+          {/* Quantity Selector */}
+          <div className="productQtySelectorRow">
+            <span className="qtyLabel">{t('quantity', 'Quantity')}:</span>
+            <div className="qtyControls">
+              <button
+                type="button"
+                onClick={() => setQty((prev) => Math.max(1, prev - 1))}
+                disabled={qty <= 1}
+                aria-label="Decrease quantity"
+              >
+                <Minus size={14} />
+              </button>
+              <span className="qtyValue">{qty}</span>
+              <button
+                type="button"
+                onClick={() => setQty((prev) => Math.min(10, prev + 1))}
+                aria-label="Increase quantity"
+              >
+                <Plus size={14} />
+              </button>
+            </div>
+          </div>
+
           <div className="detailActions">
             <button
-              className="goldBtn"
+              className={`goldBtn detailAddBagBtn ${justAdded ? 'detailAddBagBtn--added' : ''}`}
               type="button"
-              onClick={() => addToCart(product)}
+              onClick={handleAddToCart}
+              disabled={isAdding}
             >
-              <ShoppingBag size={15} style={{ marginRight: 6 }} />
-              {t('add_to_bag', 'ADD TO BAG')}
+              {isAdding ? (
+                <>
+                  <Loader2 size={16} className="btnSpinner" style={{ marginRight: 6 }} />
+                  {t('adding', 'ADDING...')}
+                </>
+              ) : justAdded ? (
+                <>
+                  <Check size={16} style={{ marginRight: 6 }} />
+                  {t('added_to_bag_done', 'ADDED TO BAG ✓')}
+                </>
+              ) : (
+                <>
+                  <ShoppingBag size={16} style={{ marginRight: 6 }} />
+                  {t('add_to_bag', 'ADD TO BAG')}
+                </>
+              )}
             </button>
+
+            <button
+              className="buyNowBtn"
+              type="button"
+              onClick={handleBuyNow}
+            >
+              <Zap size={16} style={{ marginRight: 6 }} />
+              {t('buy_now', 'BUY NOW')}
+            </button>
+
+            <button
+              className={`detailWishlistBtn ${isFavorite ? 'detailWishlistBtn--active' : ''}`}
+              type="button"
+              onClick={handleWishlist}
+              aria-label={isFavorite ? 'Remove from wishlist' : 'Add to wishlist'}
+            >
+              <Heart size={18} fill={isFavorite ? 'currentColor' : 'none'} />
+              <span>{isFavorite ? t('wishlisted', 'Wishlisted ♥') : t('add_to_wishlist', 'Wishlist')}</span>
+            </button>
+
             <a
               className="outlineBtn productWhatsAppBtn"
               href={`https://wa.me/918999335607?text=${encodeURIComponent(

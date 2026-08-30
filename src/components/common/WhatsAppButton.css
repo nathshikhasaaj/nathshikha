@@ -89,8 +89,8 @@
 
 @media (max-width: 768px) {
   .globalFloatingWhatsApp {
-    bottom: 74px;
-    right: 18px;
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    right: 16px;
   }
 
   .whatsAppIconCircle {

@@ -1,29 +1,120 @@
 .authContainer {
-  max-width: 520px;
+  max-width: 480px;
   margin: auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.authContainer form {
-  background: #fff;
-  padding: 30px;
+.authFormCard {
+  background: #ffffff;
+  padding: 32px 28px;
   border: 1px solid #e4d8bf;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(79, 61, 56, 0.05);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.authErrorBanner {
+  background: #fdf2f2;
+  border: 1px solid #f8b4b4;
+  color: #9b1c1c;
+  padding: 10px 14px;
   border-radius: 6px;
-  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.authInputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.authInputGroup label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a3c36;
 }
 
 .authContainer input {
-  padding: 13px;
+  padding: 12px 14px;
   border: 1px solid #ddd0b8;
   background: #fffdf9;
   outline: none;
-  font-size: 12px;
+  font-size: 13px;
   border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.authContainer .goldBtn,
-.authContainer .outlineBtn {
-  width: 100%;
+.authContainer input:focus {
+  border-color: var(--gold, #b8860b);
+  box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.12);
 }
+
+.passwordInputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.passwordInputWrap input {
+  padding-right: 42px;
+}
+
+.passwordToggleBtn {
+  position: absolute;
+  right: 10px;
+  background: transparent;
+  border: none;
+  color: #8c7d75;
+  cursor: pointer;
+  padding: 6px;
+  display: grid;
+  place-items: center;
+  touch-action: manipulation;
+}
+
+.passwordToggleBtn:hover {
+  color: var(--maroon, #7a1a28);
+}
+
+.authSubmitBtn {
+  width: 100%;
+  height: 46px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.authSwitchBtn {
+  width: 100%;
+  height: 44px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+@media (max-width: 600px) {
+  .authFormCard {
+    padding: 22px 16px;
+  }
+
+  .authContainer input {
+    font-size: 16px;
+  }
+}
+

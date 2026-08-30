@@ -90,7 +90,7 @@ export default function MobileStickyFooter({ searchOpen, setSearchOpen }) {
       >
         <div className="tabIconWrap cartIconWrap">
           <ShoppingBag size={19} />
-          {cartCount > 0 && <span className="mobileCartBadge">{cartCount}</span>}
+          {cartCount > 0 && <span key={cartCount} className="mobileCartBadge">{cartCount}</span>}
         </div>
         <span className="tabLabel">{lang === 'mr' ? 'बॅग' : 'Bag'}</span>
       </Link>

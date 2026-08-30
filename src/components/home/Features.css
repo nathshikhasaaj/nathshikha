@@ -4,6 +4,9 @@
   grid-template-columns: repeat(4, 1fr);
   padding: 45px 8vw;
   border-bottom: 7px solid var(--maroon);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .features > div {

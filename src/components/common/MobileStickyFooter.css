@@ -12,6 +12,9 @@
     bottom: 0;
     left: 0;
     right: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     height: 58px;
     background: linear-gradient(180deg, #380b15 0%, #1f040b 100%);
     border-top: 1.5px solid var(--gold, #d4af37);
@@ -28,6 +31,7 @@
     align-items: center;
     justify-content: center;
     height: 100%;
+    min-height: 48px;
     color: #eedcc4;
     text-decoration: none;
     background: transparent;
@@ -107,10 +111,9 @@
     100% { transform: scale(1); opacity: 1; }
   }
 
-  /* Adjust page bottom padding on mobile so sticky footer doesn't overlap content */
-  body,
-  .page,
-  .app {
-    padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+  /* Adjust main content bottom padding on mobile so sticky footer doesn't overlap content */
+  .app > main,
+  .page {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
   }
 }
