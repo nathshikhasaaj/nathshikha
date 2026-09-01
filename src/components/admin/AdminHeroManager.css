@@ -1,0 +1,566 @@
+.adminHeroManager {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+/* Header */
+.heroManagerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  background: #ffffff;
+  padding: 20px 24px;
+  border-radius: 12px;
+  border: 1px solid #eee1cf;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+.heroManagerHeader h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #3b0e17;
+  margin: 0 0 4px 0;
+}
+
+.heroManagerHeader p {
+  font-size: 13px;
+  color: #7a6a58;
+  margin: 0;
+}
+
+.heroHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.heroPrimaryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #5b0e1c;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.heroPrimaryBtn:hover {
+  background: #731223;
+  transform: translateY(-1px);
+}
+
+.heroSecondaryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fbf8f2;
+  color: #5b0e1c;
+  border: 1px solid #d4af37;
+  padding: 9px 15px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.heroSecondaryBtn:hover {
+  background: #f5eedf;
+}
+
+/* Slides Grid */
+.heroSlidesAdminGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 22px;
+}
+
+.heroSlideAdminCard {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #ebdccb;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.heroSlideAdminCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.heroSlideAdminCard.inactive {
+  opacity: 0.7;
+  border-style: dashed;
+}
+
+/* Card Image Wrap */
+.heroCardImageWrap {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  background: #24080e;
+  overflow: hidden;
+}
+
+.heroCardThumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 10%;
+  display: block;
+}
+
+.heroCardBadge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(36, 8, 14, 0.85);
+  color: #f1d590;
+  border: 1px solid rgba(228, 199, 134, 0.4);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 10px;
+  display: flex;
+  flex-direction: column;
+  backdrop-filter: blur(4px);
+}
+
+.heroCardBadge span {
+  font-size: 8px;
+  letter-spacing: 1px;
+  opacity: 0.8;
+}
+
+.heroCardBadge strong {
+  font-size: 11px;
+}
+
+.heroCardVisibilityBadge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+.badgeActive {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #e6f7ec;
+  color: #1b7a43;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  border: 1px solid #a3e0b9;
+}
+
+.badgeHidden {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #fdf2f2;
+  color: #b82b2b;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  border: 1px solid #f5b7b7;
+}
+
+.heroQuickUploadBtn {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(36, 8, 14, 0.85);
+  color: #f1d590;
+  border: 1px solid #d4af37;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+.heroQuickUploadBtn:hover {
+  background: #d4af37;
+  color: #24080e;
+}
+
+/* Card Body */
+.heroCardBody {
+  padding: 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.heroCardTag {
+  font-size: 9.5px;
+  letter-spacing: 1px;
+  color: #a46d1b;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.heroCardTitle {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 600;
+  color: #24080e;
+  margin: 0 0 6px 0;
+  line-height: 1.25;
+}
+
+.heroCardHighlight {
+  font-size: 11px;
+  color: #7c5011;
+  background: #fcf6ea;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  border: 1px solid #ebd9b8;
+}
+
+.heroCardDesc {
+  font-size: 12px;
+  color: #665a4c;
+  line-height: 1.45;
+  margin: 0 0 10px 0;
+  flex: 1;
+}
+
+.heroCardMeta {
+  font-size: 10.5px;
+  color: #8c7e6c;
+  padding-top: 8px;
+  border-top: 1px solid #f2e9dc;
+}
+
+.heroCardMeta code {
+  background: #f4ede3;
+  padding: 2px 5px;
+  border-radius: 3px;
+  color: #5b0e1c;
+}
+
+/* Card Footer */
+.heroCardFooter {
+  padding: 10px 16px;
+  background: #fbf8f4;
+  border-top: 1px solid #ebdccb;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.heroCardActionBtn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: #fff;
+  border: 1px solid #d4c5b3;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #4a3e31;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.heroCardActionBtn:hover {
+  background: #f0e6d8;
+  border-color: #baa894;
+}
+
+.heroCardActionBtn.editBtn {
+  background: #5b0e1c;
+  color: #fff;
+  border-color: #5b0e1c;
+}
+
+.heroCardActionBtn.editBtn:hover {
+  background: #731223;
+}
+
+.heroCardActionBtn.deleteBtn {
+  flex: 0 0 auto;
+  color: #c93b3b;
+  padding: 7px 10px;
+}
+
+.heroCardActionBtn.deleteBtn:hover {
+  background: #fdf2f2;
+  border-color: #e59999;
+}
+
+/* ============================================================ */
+/* MODAL STYLES                                                 */
+/* ============================================================ */
+.heroModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.heroModalContent {
+  background: #ffffff;
+  border-radius: 14px;
+  max-width: 680px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-sizing: border-box;
+}
+
+.heroModalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 24px;
+  border-bottom: 1px solid #eee1cf;
+  background: #fcf9f5;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.heroModalHeader h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 17px;
+  margin: 0;
+  color: #3b0e17;
+}
+
+.heroModalCloseBtn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #887865;
+  padding: 4px 8px;
+}
+
+.heroModalForm {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.formGroup label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a3e31;
+}
+
+.formGroup input,
+.formGroup textarea {
+  padding: 9px 12px;
+  border: 1px solid #d4c5b3;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #24080e;
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+}
+
+.formGroup input:focus,
+.formGroup textarea:focus {
+  outline: none;
+  border-color: #a46d1b;
+}
+
+.heroModalImagePicker {
+  border: 2px dashed #d4c5b3;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fbf8f4;
+}
+
+.heroModalImagePreview {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.heroModalImagePreview img {
+  width: 90px;
+  height: 110px;
+  object-fit: cover;
+  object-position: center top;
+  border-radius: 6px;
+  border: 1px solid #d4af37;
+}
+
+.heroChangeImgBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border: 1px solid #d4af37;
+  color: #5b0e1c;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.heroModalDropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 24px;
+  cursor: pointer;
+  color: #7a6a58;
+  text-align: center;
+}
+
+.heroModalDropzone span {
+  font-size: 13px;
+  font-weight: 600;
+  color: #3b0e17;
+}
+
+.heroModalDropzone small {
+  font-size: 11px;
+}
+
+.formGroupCheckbox {
+  display: flex;
+  align-items: center;
+}
+
+.formGroupCheckbox label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #3b0e17;
+  cursor: pointer;
+}
+
+.heroModalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid #eee1cf;
+}
+
+.heroModalCancelBtn {
+  background: #fff;
+  border: 1px solid #d4c5b3;
+  padding: 9px 18px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.heroModalSaveBtn {
+  background: #5b0e1c;
+  color: #fff;
+  border: none;
+  padding: 9px 20px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.heroModalSaveBtn:hover {
+  background: #731223;
+}
+
+/* Delete Confirm Modal */
+.heroConfirmModal {
+  background: #ffffff;
+  border-radius: 12px;
+  max-width: 440px;
+  width: 100%;
+  padding: 26px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.heroConfirmModal h3 {
+  font-size: 18px;
+  color: #24080e;
+  margin: 12px 0 8px 0;
+}
+
+.heroConfirmModal p {
+  font-size: 13px;
+  color: #665a4c;
+  margin: 0 0 20px 0;
+}
+
+.heroConfirmActions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.heroDeleteConfirmBtn {
+  background: #d9534f;
+  color: #fff;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.heroDeleteConfirmBtn:hover {
+  background: #c9302c;
+}

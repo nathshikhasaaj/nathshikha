@@ -81,13 +81,13 @@
 
 .cardMultiPhotoBadge {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  background: rgba(30, 20, 15, 0.78);
+  bottom: 8px;
+  right: 8px;
+  background: rgba(30, 20, 15, 0.82);
   backdrop-filter: blur(4px);
   color: #f7dfa5;
   border: 1px solid rgba(247, 223, 165, 0.35);
-  padding: 3px 6px;
+  padding: 3px 7px;
   font-size: 9px;
   font-weight: 700;
   z-index: 2;
@@ -95,7 +95,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 .heart {

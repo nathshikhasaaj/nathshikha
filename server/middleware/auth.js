@@ -95,7 +95,37 @@ export function safeUser(u) {
     id: u.id || (u._id ? u._id.toString() : ''),
     name: u.name,
     email: u.email,
-    role: u.role
+    role: u.role,
+    phone: u.phone || '',
+    defaultAddress: u.defaultAddress || null,
+    default_address: u.defaultAddress || null,
+    giftAddresses: (u.giftAddresses || []).map((ga) => ({
+      id: ga._id ? ga._id.toString() : (ga.id || ''),
+      recipientName: ga.recipientName,
+      recipient_name: ga.recipientName,
+      recipientPhone: ga.recipientPhone,
+      recipient_phone: ga.recipientPhone,
+      addressLine1: ga.addressLine1,
+      address_line1: ga.addressLine1,
+      addressLine2: ga.addressLine2 || '',
+      address_line2: ga.addressLine2 || '',
+      city: ga.city,
+      state: ga.state,
+      pincode: ga.pincode,
+      isDefault: Boolean(ga.isDefault),
+      is_default: Boolean(ga.isDefault)
+    })),
+    gift_addresses: (u.giftAddresses || []).map((ga) => ({
+      id: ga._id ? ga._id.toString() : (ga.id || ''),
+      recipient_name: ga.recipientName,
+      recipient_phone: ga.recipientPhone,
+      address_line1: ga.addressLine1,
+      address_line2: ga.addressLine2 || '',
+      city: ga.city,
+      state: ga.state,
+      pincode: ga.pincode,
+      is_default: Boolean(ga.isDefault)
+    }))
   };
 }
 

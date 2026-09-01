@@ -129,7 +129,26 @@ export default function AdminOrderDetailsModal({
               <Package size={18} />
             </div>
             <div>
-              <h3>Order #{order.order_no}</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <h3>Order #{order.order_no}</h3>
+                {(order.is_gift || order.isGift) && (
+                  <span
+                    style={{
+                      background: '#fce7f3',
+                      color: '#9d174d',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      padding: '2px 8px',
+                      borderRadius: 4,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4
+                    }}
+                  >
+                    🎁 Gift Order
+                  </span>
+                )}
+              </div>
               <p>
                 Placed on{' '}
                 {new Date(order.created_at || order.createdAt).toLocaleString(
@@ -348,53 +367,105 @@ export default function AdminOrderDetailsModal({
 
           {/* 3-Column Info Grid */}
           <div className="detailsGrid">
-            {/* 1. Customer Details Box */}
+            {/* 1. Customer / Recipient Details Box */}
             <div className="detailsSectionCard">
               <div className="sectionHeader">
                 <User size={16} />
-                <h3>Customer Details</h3>
+                <h3>{(order.is_gift || order.isGift) ? 'Delivery Recipient & Buyer Details' : 'Customer Details'}</h3>
               </div>
               <div className="infoList">
-                <div className="infoItem">
-                  <span className="infoLabel">Full Name</span>
-                  <span className="infoVal"><b>{order.name}</b></span>
-                </div>
+                {(order.is_gift || order.isGift) ? (
+                  <>
+                    <div className="infoItem">
+                      <span className="infoLabel">Recipient Name (Gift)</span>
+                      <span className="infoVal"><b>{order.recipient_name || order.recipientName || order.name}</b></span>
+                    </div>
 
-                <div className="infoItem">
-                  <span className="infoLabel">Phone Number</span>
-                  <span className="infoVal phoneVal">
-                    <Phone size={13} />
-                    <span>{order.phone}</span>
-                    {cleanPhone && (
-                      <a
-                        href={`https://wa.me/${cleanPhone}?text=Hi%20${encodeURIComponent(
-                          order.name
-                        )}%2C%20regarding%20your%20Nathshikha%20order%20%23${order.order_no}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="whatsappDirectLink"
-                        title="Chat on WhatsApp"
-                      >
-                        <MessageSquare size={13} /> WhatsApp
-                      </a>
-                    )}
-                  </span>
-                </div>
+                    <div className="infoItem">
+                      <span className="infoLabel">Recipient Phone</span>
+                      <span className="infoVal phoneVal">
+                        <Phone size={13} />
+                        <span>{order.recipient_phone || order.recipientPhone || order.phone}</span>
+                        {cleanPhone && (
+                          <a
+                            href={`https://wa.me/${(order.recipient_phone || order.recipientPhone || order.phone).replace(/\D/g, '')}?text=Hi%20${encodeURIComponent(
+                              order.recipient_name || order.name
+                            )}%2C%20regarding%20your%20Nathshikha%20gift%20delivery%20%23${order.order_no}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="whatsappDirectLink"
+                            title="Chat with Recipient"
+                          >
+                            <MessageSquare size={13} /> WhatsApp
+                          </a>
+                        )}
+                      </span>
+                    </div>
 
-                <div className="infoItem">
-                  <span className="infoLabel">Email Address</span>
-                  <span className="infoVal">
-                    <Mail size={13} /> {order.email || 'Not provided'}
-                  </span>
-                </div>
+                    <div className="infoItem">
+                      <span className="infoLabel">Delivery Address</span>
+                      <span className="infoVal addressVal">
+                        <MapPin size={13} />
+                        <span>{order.address}</span>
+                      </span>
+                    </div>
 
-                <div className="infoItem">
-                  <span className="infoLabel">Delivery Address</span>
-                  <span className="infoVal addressVal">
-                    <MapPin size={13} />
-                    <span>{order.address}</span>
-                  </span>
-                </div>
+                    <div className="infoItem" style={{ borderTop: '1px dashed #e2e8f0', paddingTop: 8, marginTop: 4 }}>
+                      <span className="infoLabel">Ordered / Paid By (Buyer)</span>
+                      <span className="infoVal"><b>{order.customer_name || order.customerName || 'Customer'}</b></span>
+                    </div>
+
+                    <div className="infoItem">
+                      <span className="infoLabel">Buyer Phone & Email</span>
+                      <span className="infoVal" style={{ fontSize: '12px' }}>
+                        {order.customer_phone || order.customerPhone || '—'} · {order.customer_email || order.customerEmail || order.email || '—'}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="infoItem">
+                      <span className="infoLabel">Full Name</span>
+                      <span className="infoVal"><b>{order.name}</b></span>
+                    </div>
+
+                    <div className="infoItem">
+                      <span className="infoLabel">Phone Number</span>
+                      <span className="infoVal phoneVal">
+                        <Phone size={13} />
+                        <span>{order.phone}</span>
+                        {cleanPhone && (
+                          <a
+                            href={`https://wa.me/${cleanPhone}?text=Hi%20${encodeURIComponent(
+                              order.name
+                            )}%2C%20regarding%20your%20Nathshikha%20order%20%23${order.order_no}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="whatsappDirectLink"
+                            title="Chat on WhatsApp"
+                          >
+                            <MessageSquare size={13} /> WhatsApp
+                          </a>
+                        )}
+                      </span>
+                    </div>
+
+                    <div className="infoItem">
+                      <span className="infoLabel">Email Address</span>
+                      <span className="infoVal">
+                        <Mail size={13} /> {order.email || 'Not provided'}
+                      </span>
+                    </div>
+
+                    <div className="infoItem">
+                      <span className="infoLabel">Delivery Address</span>
+                      <span className="infoVal addressVal">
+                        <MapPin size={13} />
+                        <span>{order.address}</span>
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -744,6 +815,61 @@ export default function AdminOrderDetailsModal({
               <div className="summaryRow grandTotalRow">
                 <span>Grand Total:</span>
                 <b>{money(order.total)}</b>
+              </div>
+            </div>
+
+            {/* Email Notifications Management Section */}
+            <div className="adminEmailNotificationsCard" style={{
+              marginTop: 20,
+              padding: '16px 20px',
+              background: '#fdfbf7',
+              border: '1.5px solid #ebdcc6',
+              borderRadius: 8
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <h4 style={{ margin: 0, fontSize: 13.5, color: '#6d1b29', display: 'flex', alignItems: 'center', gap: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  <Mail size={15} /> Email Notifications & Delivery Status
+                </h4>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <select
+                    id="resendEmailSelect"
+                    defaultValue="ORDER_CONFIRMED"
+                    style={{ fontSize: 11, padding: '4px 8px', borderRadius: 4, border: '1px solid #d8c7b0', background: '#fff' }}
+                  >
+                    <option value="ORDER_PLACED">Order Placed Email</option>
+                    <option value="ORDER_CONFIRMED">Order Confirmed Email</option>
+                    <option value="ORDER_SHIPPED">Order Shipped Email</option>
+                    <option value="ORDER_DELIVERED">Order Delivered Email</option>
+                    <option value="CANCELLATION_APPROVED">Cancellation Approved Email</option>
+                    <option value="REFUND_COMPLETED">Refund Completed Email</option>
+                  </select>
+                  <button
+                    type="button"
+                    className="goldBtn compact"
+                    style={{ fontSize: 11, padding: '4px 10px', whiteSpace: 'nowrap' }}
+                    onClick={async () => {
+                      const select = document.getElementById('resendEmailSelect');
+                      const emailType = select ? select.value : 'ORDER_CONFIRMED';
+                      const orderId = order.id || order._id;
+                      try {
+                        const res = await api(`/admin/orders/${orderId}/resend-email`, {
+                          method: 'POST',
+                          body: JSON.stringify({ emailType })
+                        });
+                        alert(res.message || 'Email resent successfully!');
+                      } catch (err) {
+                        alert(err.message || 'Failed to resend email');
+                      }
+                    }}
+                  >
+                    Resend Email
+                  </button>
+                </div>
+              </div>
+              <div style={{ fontSize: 12, color: '#6e5d56', lineHeight: 1.5 }}>
+                <p style={{ margin: 0 }}>
+                  Recipient: <strong>{order.customer_email || order.email || 'customer@nathshikha.com'}</strong> · All emails are dispatched automatically using Nathshikha business Gmail SMTP.
+                </p>
               </div>
             </div>
           </div>

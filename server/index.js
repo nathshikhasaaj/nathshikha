@@ -16,16 +16,23 @@ import suggestionRoutes from './routes/suggestionRoutes.js';
 import couponRoutes from './routes/couponRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import hallOfFameRoutes from './routes/hallOfFameRoutes.js';
+import showcaseReviewRoutes from './routes/showcaseReviewRoutes.js';
+import heroSlideRoutes from './routes/heroSlideRoutes.js';
 import { Coupon } from './models/Coupon.js';
 import { Review } from './models/Review.js';
 import { Order } from './models/Order.js';
 import { HallOfFame } from './models/HallOfFame.js';
+import { ShowcaseReview } from './models/ShowcaseReview.js';
+import { HeroSlide, defaultHeroSlides } from './models/HeroSlide.js';
 import { noSqlSanitizer } from './middleware/securityMiddleware.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = Number(process.env.PORT || 4000);
 const UPI_ID = process.env.UPI_ID || 'shwetadarekar04-1@okhdfcbank';
+
+// Enable trust proxy for production reverse proxies (Nginx, Cloudflare, cPanel, Vercel)
+app.set('trust proxy', 1);
 
 const uploadsDir = path.resolve(__dirname, '../public/uploads');
 fs.mkdirSync(uploadsDir, { recursive: true });
@@ -252,6 +259,58 @@ async function seedDatabase() {
       console.log('✓ Hall of Fame initial stories seeded successfully.');
     }
 
+    // Seed initial Homepage Showcase / Google Reviews if empty
+    const showcaseCount = await ShowcaseReview.countDocuments();
+    if (showcaseCount === 0) {
+      console.log('Seeding initial homepage showcase reviews...');
+      await ShowcaseReview.insertMany([
+        {
+          customerName: 'Sneha Deshmukh',
+          rating: 5,
+          reviewText: 'The Kolhapuri Saaj I bought feels incredibly authentic. The antique finish and handcrafted details are breathtaking. Received countless compliments!',
+          image: '/assets/pearl-category.jpg',
+          isVisible: true
+        },
+        {
+          customerName: 'Priya Sharma-Patil',
+          rating: 5,
+          reviewText: 'Ordered the traditional Maharashtrian Antique Nath for my wedding. The craftsmanship and filigree work is pure heritage art. Absolutely delighted!',
+          image: '/assets/nath-category.jpg',
+          isVisible: true
+        },
+        {
+          customerName: 'Ananya Deshpande',
+          rating: 5,
+          reviewText: 'Exceptional quality Peshwai Thushi! The weight, luster of the pearls, and velvet packaging make it feel like an heirloom piece.',
+          image: '/assets/thushi-category.jpg',
+          isVisible: true
+        },
+        {
+          customerName: 'Kavita Joshi',
+          rating: 5,
+          reviewText: 'The Moti Tanmani set exceeded all my expectations. Fast dispatch, secure packaging, and genuine artisan care.',
+          image: null,
+          isVisible: true
+        },
+        {
+          customerName: 'Shweta Kulkarni',
+          rating: 5,
+          reviewText: 'Loved the prompt service and beautiful jewelry. A true tribute to authentic Maharashtrian traditions.',
+          image: null,
+          isVisible: true
+        }
+      ]);
+      console.log('✓ Initial homepage showcase reviews seeded successfully.');
+    }
+
+    // Seed initial Hero Slides if empty
+    const heroSlideCount = await HeroSlide.countDocuments();
+    if (heroSlideCount === 0) {
+      console.log('Seeding initial curated hero slides...');
+      await HeroSlide.insertMany(defaultHeroSlides);
+      console.log('✓ Initial hero slides seeded successfully.');
+    }
+
     const adminEmail = process.env.ADMIN_EMAIL;
     const adminPass = process.env.ADMIN_PASSWORD;
     if (adminEmail && adminPass) {
@@ -284,6 +343,8 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/suggestions', suggestionRoutes);
 app.use('/api/hall-of-fame', hallOfFameRoutes);
+app.use('/api/showcase-reviews', showcaseReviewRoutes);
+app.use('/api/hero-slides', heroSlideRoutes);
 
 // Static assets
 const dist = path.resolve(__dirname, '../dist');

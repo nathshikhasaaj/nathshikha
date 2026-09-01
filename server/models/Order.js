@@ -39,6 +39,42 @@ const orderSchema = new mongoose.Schema(
       ref: 'User',
       default: null
     },
+    isGift: {
+      type: Boolean,
+      default: false,
+      alias: 'is_gift'
+    },
+    recipientName: {
+      type: String,
+      default: null,
+      trim: true,
+      alias: 'recipient_name'
+    },
+    recipientPhone: {
+      type: String,
+      default: null,
+      trim: true,
+      alias: 'recipient_phone'
+    },
+    customerName: {
+      type: String,
+      default: null,
+      trim: true,
+      alias: 'customer_name'
+    },
+    customerPhone: {
+      type: String,
+      default: null,
+      trim: true,
+      alias: 'customer_phone'
+    },
+    customerEmail: {
+      type: String,
+      default: null,
+      trim: true,
+      lowercase: true,
+      alias: 'customer_email'
+    },
     name: {
       type: String,
       required: true,
@@ -249,6 +285,12 @@ const orderSchema = new mongoose.Schema(
         ret.id = ret._id.toString();
         ret.order_no = ret.orderNo;
         ret.user_id = ret.userId ? ret.userId.toString() : null;
+        ret.is_gift = Boolean(ret.isGift);
+        ret.recipient_name = ret.recipientName || ret.name;
+        ret.recipient_phone = ret.recipientPhone || ret.phone;
+        ret.customer_name = ret.customerName || ret.name;
+        ret.customer_phone = ret.customerPhone || ret.phone;
+        ret.customer_email = ret.customerEmail || ret.email;
         ret.shipment_group_id = ret.shipmentGroupId ? ret.shipmentGroupId.toString() : null;
         ret.shipment_group_code = ret.shipmentGroupCode || null;
         ret.pincode = ret.pincode;
@@ -292,4 +334,14 @@ const orderSchema = new mongoose.Schema(
   }
 );
 
+orderSchema.pre('validate', function () {
+  if (this.is_gift !== undefined && this.isGift === undefined) this.isGift = this.is_gift;
+  if (this.recipient_name && !this.recipientName) this.recipientName = this.recipient_name;
+  if (this.recipient_phone && !this.recipientPhone) this.recipientPhone = this.recipient_phone;
+  if (this.customer_name && !this.customerName) this.customerName = this.customer_name;
+  if (this.customer_phone && !this.customerPhone) this.customerPhone = this.customer_phone;
+  if (this.customer_email && !this.customerEmail) this.customerEmail = this.customer_email;
+});
+
 export const Order = mongoose.model('Order', orderSchema);
+

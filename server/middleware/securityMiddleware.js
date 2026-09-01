@@ -94,7 +94,7 @@ export function noSqlSanitizer(req, res, next) {
  */
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // 20 requests per IP per window
+  max: process.env.NODE_ENV === 'production' ? 20 : 500,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -107,7 +107,7 @@ export const authLimiter = rateLimit({
  */
 export const orderLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 30, // 30 order creation requests per IP
+  max: process.env.NODE_ENV === 'production' ? 30 : 500,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -120,7 +120,7 @@ export const orderLimiter = rateLimit({
  */
 export const lookupLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 45, // 45 tracking lookups per IP
+  max: process.env.NODE_ENV === 'production' ? 45 : 500,
   standardHeaders: true,
   legacyHeaders: false,
   message: {

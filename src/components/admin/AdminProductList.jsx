@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pencil, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Pencil, Trash2, Eye, EyeOff, Star } from 'lucide-react';
 import { money } from '../../utils/formatters';
 import './AdminProductList.css';
 
@@ -7,14 +7,15 @@ export default function AdminProductList({
   allProducts,
   editProduct,
   removeProduct,
-  toggleProductActive
+  toggleProductActive,
+  toggleProductBestseller
 }) {
   return (
     <div className="adminCard adminCatalogueCard">
       <div className="cardHeading">
         <div>
           <h3>Product Catalogue</h3>
-          <p className="catalogueSub">Manage, edit, hide, or permanently remove products</p>
+          <p className="catalogueSub">Manage, edit, toggle bestsellers, hide, or permanently remove products</p>
         </div>
         <span className="productCountBadge">{allProducts.length} total</span>
       </div>
@@ -22,6 +23,8 @@ export default function AdminProductList({
       <div className="adminProductList">
         {allProducts.map((p) => {
           const imgCount = Array.isArray(p.images) && p.images.length > 0 ? p.images.length : (p.img ? 1 : 0);
+          const isBestseller = Boolean(p.isBestseller || p.is_bestseller || p.tag === 'BESTSELLER');
+
           return (
             <div className={`adminProduct ${!p.active ? 'inactive' : ''}`} key={p.id}>
               <div className="adminProductThumb">
@@ -39,6 +42,11 @@ export default function AdminProductList({
                   <span className={`statusTag ${p.active ? 'liveTag' : 'hiddenTag'}`}>
                     {p.active ? '● Live' : '○ Hidden'}
                   </span>
+                  {isBestseller && (
+                    <span className="statusTag bestsellerTag" style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fcd34d' }}>
+                      ⭐ Bestseller
+                    </span>
+                  )}
                   {imgCount > 1 && (
                     <span className="multiPhotoTag">✦ {imgCount} photos</span>
                   )}
@@ -46,6 +54,18 @@ export default function AdminProductList({
               </div>
 
             <div className="adminProductActions">
+              {toggleProductBestseller && (
+                <button
+                  onClick={() => toggleProductBestseller(p)}
+                  title={isBestseller ? 'Remove from Homepage Bestsellers' : 'Show on Homepage Bestsellers'}
+                  type="button"
+                  className={`actionBtn starBtn ${isBestseller ? 'isBestsellerActive' : ''}`}
+                  style={{ color: isBestseller ? '#d97706' : '#9ca3af' }}
+                >
+                  <Star size={13} fill={isBestseller ? '#d97706' : 'none'} />
+                </button>
+              )}
+
               <button
                 onClick={() => editProduct(p)}
                 title="Edit product details"

@@ -39,11 +39,25 @@ function RenderStars({ rating, size = 13 }) {
 }
 
 export default function AdminReviewManager({
-  reviews = [],
-  summary = {},
+  reviewsData,
+  reviews: propReviews,
+  summary: propSummary,
   onRefresh,
+  onReviewUpdated,
   setToast
 }) {
+  const reviews = useMemo(() => {
+    if (Array.isArray(reviewsData?.reviews)) return reviewsData.reviews;
+    if (Array.isArray(propReviews)) return propReviews;
+    return [];
+  }, [reviewsData, propReviews]);
+
+  const summary = useMemo(() => {
+    return reviewsData?.summary || propSummary || {};
+  }, [reviewsData, propSummary]);
+
+  const refreshHandler = onRefresh || onReviewUpdated;
+
   const [searchQuery, setSearchQuery] = useState('');
   const [ratingFilter, setRatingFilter] = useState('all');
   const [visibilityFilter, setVisibilityFilter] = useState('all');
@@ -244,15 +258,14 @@ export default function AdminReviewManager({
           <thead>
             <tr>
               <th>Review ID</th>
+              <th>Customer</th>
               <th>Product</th>
               <th>Order ID</th>
-              <th>Customer</th>
               <th>Rating</th>
-              <th>Comment Preview</th>
+              <th>Review</th>
               <th>Photo</th>
-              <th>Verified</th>
-              <th>Is Visible</th>
-              <th>Date</th>
+              <th>Visible</th>
+              <th>Created At</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -267,6 +280,18 @@ export default function AdminReviewManager({
                   <tr key={r.id || r._id} className={!r.isVisible ? 'rowHidden' : ''}>
                     <td className="codeCell">
                       <code>{(r.id || r._id).toString().slice(-6).toUpperCase()}</code>
+                    </td>
+
+                    <td className="customerCell">
+                      <div className="custMeta">
+                        <b>{r.customerName}</b>
+                        <small>{r.customerEmail}</small>
+                        {r.isVerifiedPurchase && (
+                          <span className="verifiedPill" style={{ display: 'inline-flex', marginTop: '3px' }} title="Verified Delivered Purchase">
+                            <CheckCircle2 size={10} /> Verified
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     <td className="productCell">
@@ -287,13 +312,6 @@ export default function AdminReviewManager({
                       <span className="orderBadge">
                         #{ord?.orderNo || r.order_id?.toString().slice(-6)}
                       </span>
-                    </td>
-
-                    <td className="customerCell">
-                      <div className="custMeta">
-                        <b>{r.customerName}</b>
-                        <small>{r.customerEmail}</small>
-                      </div>
                     </td>
 
                     <td className="ratingCell">
@@ -332,16 +350,6 @@ export default function AdminReviewManager({
                         />
                       ) : (
                         <span className="noPhotoPill">None</span>
-                      )}
-                    </td>
-
-                    <td className="verifiedCell">
-                      {r.isVerifiedPurchase ? (
-                        <span className="verifiedPill" title="Verified Delivered Purchase">
-                          <CheckCircle2 size={12} /> Yes
-                        </span>
-                      ) : (
-                        <span className="unverifiedPill">No</span>
                       )}
                     </td>
 

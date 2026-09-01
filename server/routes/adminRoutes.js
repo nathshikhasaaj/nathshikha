@@ -11,10 +11,20 @@ import { Coupon } from '../models/Coupon.js';
 import { Review } from '../models/Review.js';
 import { ReviewToken } from '../models/ReviewToken.js';
 import { ShipmentGroup } from '../models/ShipmentGroup.js';
+import { EmailEvent } from '../models/EmailEvent.js';
 import { auth, admin } from '../middleware/auth.js';
 import { calculateShippingCharge } from '../services/shippingService.js';
 import { isCouponExpired, calculateCouponDiscount } from './couponRoutes.js';
 import { applyWatermark } from '../services/watermarkService.js';
+import {
+  sendOrderConfirmedEmail,
+  sendOrderShippedEmail,
+  sendOrderDeliveredEmail,
+  sendCancellationApprovedEmail,
+  sendRefundCompletedEmail,
+  sendAdminTestEmail,
+  resendOrderEmail
+} from '../services/emailService.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const uploadsDir = path.resolve(__dirname, '../../public/uploads');
@@ -128,7 +138,7 @@ router.post('/upload-multiple', upload.array('images', 10), async (req, res) => 
 
 // Create product
 router.post('/products', async (req, res) => {
-  const { name, price, category, tag, img, images, description, stock } = req.body;
+  const { name, price, category, tag, img, images, description, stock, isBestseller } = req.body;
 
   const normalizedImages = Array.isArray(images) && images.length > 0
     ? images.filter(Boolean)
@@ -147,12 +157,13 @@ router.post('/products', async (req, res) => {
       name: name.trim(),
       price: Number(price),
       category: category.trim(),
-      tag: tag || 'NEW',
+      tag: tag || (isBestseller ? 'BESTSELLER' : 'NEW'),
       img: primaryImg,
       images: normalizedImages.length > 0 ? normalizedImages : [primaryImg],
       description: description || '',
       stock: Number(stock || 0),
-      active: 1
+      active: 1,
+      isBestseller: Boolean(isBestseller || tag === 'BESTSELLER')
     });
 
     res.status(201).json(product);
@@ -173,6 +184,7 @@ router.patch('/products/:id', async (req, res) => {
     if (updateData.price !== undefined) updateData.price = Number(updateData.price);
     if (updateData.stock !== undefined) updateData.stock = Number(updateData.stock);
     if (updateData.active !== undefined) updateData.active = Number(updateData.active);
+    if (updateData.isBestseller !== undefined) updateData.isBestseller = Boolean(updateData.isBestseller);
 
     if (Array.isArray(updateData.images)) {
       updateData.images = updateData.images.filter(Boolean);
@@ -191,6 +203,33 @@ router.patch('/products/:id', async (req, res) => {
     res.json(product);
   } catch (err) {
     res.status(500).json({ error: err.message || 'Failed to update product' });
+  }
+});
+
+// Quick Toggle Bestseller status
+router.patch('/products/:id/toggle-bestseller', async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(404).json({ error: 'Product not found' });
+  }
+
+  try {
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    product.isBestseller = !product.isBestseller;
+    if (product.isBestseller && (!product.tag || product.tag === 'NEW')) {
+      product.tag = 'BESTSELLER';
+    } else if (!product.isBestseller && product.tag === 'BESTSELLER') {
+      product.tag = 'NEW';
+    }
+
+    await product.save();
+    res.json(product);
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Failed to toggle bestseller' });
   }
 });
 
@@ -529,10 +568,19 @@ router.patch('/orders/:id', async (req, res) => {
       }
     }
 
+    const previousStatus = order.orderStatus;
     if (orderStatus) order.orderStatus = orderStatus;
     if (paymentStatus) order.paymentStatus = paymentStatus;
 
     await order.save();
+
+    // If order was just marked as delivered, send Delivered email
+    if (orderStatus === 'delivered' && previousStatus !== 'delivered') {
+      sendOrderDeliveredEmail(order).catch((err) => {
+        console.error('[Admin] Failed to send order delivered email:', err.message);
+      });
+    }
+
     res.json(order);
   } catch (err) {
     res.status(500).json({ error: err.message || 'Failed to update order' });
@@ -595,6 +643,14 @@ router.post('/orders/:id/ship', async (req, res) => {
           }
         }
       );
+
+      // Send Shipped email for all orders in group
+      const groupOrders = await Order.find({ shipmentGroupId: order.shipmentGroupId });
+      for (const grpOrder of groupOrders) {
+        sendOrderShippedEmail(grpOrder).catch((err) => {
+          console.error(`[Admin] Failed to send shipped email for order #${grpOrder.orderNo}:`, err.message);
+        });
+      }
     } else {
       order.orderStatus = 'shipped';
       order.shipmentPartner = cleanPartner;
@@ -602,6 +658,11 @@ router.post('/orders/:id/ship', async (req, res) => {
       order.shippedAt = shippedTimestamp;
       order.shippedBy = adminUser;
       await order.save();
+
+      // Send Shipped notification email
+      sendOrderShippedEmail(order).catch((err) => {
+        console.error('[Admin] Failed to send order shipped email:', err.message);
+      });
     }
 
     const updatedOrder = await Order.findById(id);
@@ -643,6 +704,11 @@ router.post('/orders/:id/verify-payment', async (req, res) => {
     order.verifiedBy = req.user?.name || req.user?.email || 'Admin';
 
     await order.save();
+
+    // Send Order Confirmed email with automatic deduplication check
+    sendOrderConfirmedEmail(order).catch((err) => {
+      console.error('[Admin] Failed to dispatch order confirmed email:', err.message);
+    });
 
     res.json({ ok: true, order });
   } catch (err) {
@@ -708,6 +774,11 @@ router.post('/orders/:id/cancellation/review', async (req, res) => {
 
     await order.save();
 
+    // Send Cancellation Approved email
+    sendCancellationApprovedEmail(order).catch((err) => {
+      console.error('[Admin] Failed to send cancellation approved email:', err.message);
+    });
+
     return res.json({
       ok: true,
       message: `Cancellation approved! Refund amount of ₹${calculatedRefund} marked as Pending.`,
@@ -757,13 +828,87 @@ router.post('/orders/:id/cancellation/process-refund', async (req, res) => {
 
     await order.save();
 
+    // Send Refund Completed email
+    sendRefundCompletedEmail(order).catch((err) => {
+      console.error('[Admin] Failed to send refund completed email:', err.message);
+    });
+
     return res.json({
       ok: true,
-      message: `Refund of ₹${order.refundAmount} has been marked as Completed!`,
+      message: `Refund of ₹${order.refundAmount} completed successfully!`,
       order: order.toJSON()
     });
   } catch (err) {
-    res.status(500).json({ error: err.message || 'Failed to process refund' });
+    res.status(500).json({ error: err.message || 'Failed to complete refund' });
+  }
+});
+
+// Get email notification history for an order
+router.get('/orders/:id/emails', async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(404).json({ error: 'Order not found' });
+  }
+
+  try {
+    const events = await EmailEvent.find({ orderId: id }).sort({ createdAt: -1 });
+    res.json(events);
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Failed to fetch email logs' });
+  }
+});
+
+// Resend order email notification
+router.post('/orders/:id/resend-email', async (req, res) => {
+  const { id } = req.params;
+  const { emailType } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(404).json({ error: 'Order not found' });
+  }
+
+  if (!emailType) {
+    return res.status(400).json({ error: 'Email type is required' });
+  }
+
+  try {
+    const order = await Order.findById(id);
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const result = await resendOrderEmail(order, emailType);
+    if (result.success) {
+      res.json({ ok: true, message: `${emailType} email resent successfully!` });
+    } else {
+      res.status(500).json({ error: result.error || 'Failed to resend email' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Failed to resend email' });
+  }
+});
+
+// Admin SMTP Test Email Endpoint
+router.post('/email/test', async (req, res) => {
+  const { targetEmail } = req.body;
+  const recipient = targetEmail ? String(targetEmail).trim() : (req.user?.email || 'nathshikha.saaj@gmail.com');
+
+  try {
+    const result = await sendAdminTestEmail(recipient);
+    if (result.success) {
+      res.json({
+        ok: true,
+        message: `SMTP Test email sent successfully to ${recipient}!`,
+        messageId: result.messageId
+      });
+    } else {
+      res.status(500).json({
+        ok: false,
+        error: result.error || 'SMTP test failed. Please verify SMTP_PASSWORD in your server environment.'
+      });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'SMTP test failed' });
   }
 });
 

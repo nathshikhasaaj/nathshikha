@@ -7,28 +7,86 @@
 
 .authFormCard {
   background: #ffffff;
-  padding: 32px 28px;
-  border: 1px solid #e4d8bf;
+  padding: 34px 30px;
+  border: 1px solid #ebdcc6;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(79, 61, 56, 0.05);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(79, 61, 56, 0.08);
   width: 100%;
   box-sizing: border-box;
 }
 
 .authErrorBanner {
-  background: #fdf2f2;
-  border: 1px solid #f8b4b4;
-  color: #9b1c1c;
-  padding: 10px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  padding: 12px 14px;
   border-radius: 6px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.unverifiedEmailNotice {
+  background: #fffbeb;
+  border: 1.5px solid #fde68a;
+  border-left: 4px solid #d97706;
+  padding: 14px 16px;
+  border-radius: 8px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.unverifiedIcon {
+  color: #d97706;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.unverifiedContent strong {
+  display: block;
+  color: #92400e;
+  font-size: 13.5px;
+  margin-bottom: 4px;
+}
+
+.unverifiedContent p {
+  color: #b45309;
+  font-size: 12.5px;
+  line-height: 1.45;
+  margin: 0 0 10px 0;
+}
+
+.resendVerificationInlineBtn {
+  background: #ffffff;
+  border: 1px solid #d97706;
+  color: #92400e;
   font-size: 12px;
-  line-height: 1.4;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.resendVerificationInlineBtn:hover {
+  background: #d97706;
+  color: #ffffff;
+}
+
+.resendBadge {
+  color: #15803d;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-block;
 }
 
 .authInputGroup {
@@ -37,27 +95,48 @@
   gap: 6px;
 }
 
-.authInputGroup label {
+.passwordLabelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.forgotPasswordLink {
+  background: none;
+  border: none;
+  color: var(--maroon, #6d1b29);
   font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.forgotPasswordLink:hover {
+  color: #8f2336;
+}
+
+.authInputGroup label {
+  font-size: 12.5px;
   font-weight: 600;
   color: #4a3c36;
 }
 
 .authContainer input {
   padding: 12px 14px;
-  border: 1px solid #ddd0b8;
-  background: #fffdf9;
+  border: 1.5px solid #d8c7b0;
+  background: #ffffff;
   outline: none;
-  font-size: 13px;
-  border-radius: 4px;
+  font-size: 13.5px;
+  border-radius: 6px;
   width: 100%;
   box-sizing: border-box;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .authContainer input:focus {
-  border-color: var(--gold, #b8860b);
-  box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.12);
+  border-color: var(--maroon, #6d1b29);
+  box-shadow: 0 0 0 3px rgba(109, 27, 41, 0.1);
 }
 
 .passwordInputWrap {
@@ -103,18 +182,161 @@
 .authSwitchBtn {
   width: 100%;
   height: 44px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
+  text-align: center;
 }
 
-@media (max-width: 600px) {
-  .authFormCard {
-    padding: 22px 16px;
-  }
-
-  .authContainer input {
-    font-size: 16px;
-  }
+.forgotHeader {
+  text-align: center;
+  margin-bottom: 16px;
 }
 
+.forgotKeyIconWrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #faf5ee;
+  color: var(--maroon, #6d1b29);
+  border: 1.5px solid #ebdcc6;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.forgotHeader h3 {
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 20px;
+  color: var(--maroon, #6d1b29);
+  margin: 0 0 6px 0;
+}
+
+.forgotHeader p {
+  color: #6e5d56;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.forgotSuccessBlock {
+  text-align: center;
+  padding: 12px 0;
+}
+
+.forgotSuccessIconWrap {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 2px solid #bbf7d0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.forgotSuccessBlock h3 {
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 20px;
+  color: var(--maroon, #6d1b29);
+  margin: 0 0 8px 0;
+}
+
+.forgotSuccessBlock p {
+  color: #4a3b32;
+  font-size: 13.5px;
+  line-height: 1.55;
+  margin: 0 0 16px 0;
+}
+
+.noticeCardMini {
+  background: #faf6ef;
+  border: 1px solid #ebdcc6;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 20px;
+}
+
+.noticeCardMini p {
+  color: #7a6b63;
+  font-size: 12px;
+  margin: 0;
+}
+
+.registerSuccessCard {
+  text-align: center;
+  padding: 38px 28px;
+}
+
+.registerSuccessIconWrap {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: #fdfaf4;
+  color: var(--maroon, #6d1b29);
+  border: 2px solid var(--gold, #c69a59);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.registerSuccessCard h2 {
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 22px;
+  color: var(--maroon, #6d1b29);
+  margin: 0 0 10px 0;
+}
+
+.registerSuccessText {
+  color: #5c4d47;
+  font-size: 14px;
+  margin: 0 0 12px 0;
+}
+
+.registeredEmailBadge {
+  background: #faf5ee;
+  border: 1px solid #ebdcc6;
+  padding: 10px 16px;
+  border-radius: 6px;
+  display: inline-block;
+  margin-bottom: 14px;
+  color: var(--maroon, #6d1b29);
+  font-size: 14.5px;
+}
+
+.registerSuccessSubtext {
+  color: #7a6b63;
+  font-size: 12.5px;
+  line-height: 1.5;
+  margin: 0 0 24px 0;
+}
+
+.registerSuccessActions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.resendPillBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.resendSuccessPill {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+}

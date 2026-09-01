@@ -80,7 +80,8 @@ export default function Header({ searchOpen, setSearchOpen }) {
     { title: t('nav_signature_collections', 'Signature Collections'), path: '/category/Signature' },
     { title: t('nav_handmade_collections', 'Handmade Collections'), path: '/category/Pearl' },
     { title: t('nav_traditional_collections', 'Traditional Collections'), path: '/category/Traditional' },
-    { title: t('nav_bridal_collections', 'Bridal Collections'), path: '/category/Nath' }
+    { title: t('nav_bridal_collections', 'Bridal Collections'), path: '/category/Nath' },
+    { title: t('nav_accessories_collections', 'Accessories'), path: '/category/Accessories' }
   ];
 
   return (

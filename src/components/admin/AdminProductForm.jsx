@@ -154,6 +154,7 @@ export default function AdminProductForm({
             <option>Pearl</option>
             <option>Traditional</option>
             <option>Signature</option>
+            <option>Accessories</option>
           </select>
           <input
             placeholder="Tag e.g. BESTSELLER"
@@ -297,14 +298,25 @@ export default function AdminProductForm({
           onChange={(e) => setForm({ ...form, description: e.target.value })}
         />
 
-        <label className="switchRow">
-          <input
-            type="checkbox"
-            checked={!!form.active}
-            onChange={(e) => setForm({ ...form, active: e.target.checked ? 1 : 0 })}
-          />
-          Visible on store
-        </label>
+        <div className="formRow" style={{ gap: 16, alignItems: 'center' }}>
+          <label className="switchRow" style={{ cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={!!form.active}
+              onChange={(e) => setForm({ ...form, active: e.target.checked ? 1 : 0 })}
+            />
+            <span>Visible on store</span>
+          </label>
+
+          <label className="switchRow" style={{ cursor: 'pointer', color: '#b45309', fontWeight: 600 }}>
+            <input
+              type="checkbox"
+              checked={!!form.isBestseller}
+              onChange={(e) => setForm({ ...form, isBestseller: e.target.checked })}
+            />
+            <span>⭐ Show in Homepage Bestsellers</span>
+          </label>
+        </div>
 
         <button
           className="goldBtn"

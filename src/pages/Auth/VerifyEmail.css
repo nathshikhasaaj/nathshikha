@@ -1,0 +1,204 @@
+.verifyEmailPage {
+  min-height: calc(100vh - 280px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 60px;
+}
+
+.verifyEmailContainer {
+  width: 100%;
+  max-width: 580px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.verifyEmailCard {
+  background: #ffffff;
+  border: 1.5px solid #ebdcc6;
+  border-radius: 12px;
+  padding: 42px 36px;
+  box-shadow: 0 10px 30px rgba(79, 61, 56, 0.08);
+  text-align: center;
+}
+
+.verifyStateBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.verifySpinner {
+  color: var(--maroon, #6d1b29);
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.verifyStateBlock h2 {
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 24px;
+  color: var(--maroon, #6d1b29);
+  margin: 0 0 12px 0;
+}
+
+.verifyStateBlock p {
+  color: #5c4d47;
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0 0 24px 0;
+  max-width: 440px;
+}
+
+.verifyIconWrap {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.verifyIconWrap.successIcon {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 2px solid #bbf7d0;
+}
+
+.verifyIconWrap.errorIcon {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 2px solid #fecaca;
+}
+
+.verifyErrorText {
+  color: #991b1b !important;
+  font-weight: 500;
+}
+
+.verifyActions {
+  margin-top: 10px;
+}
+
+.verifyBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 28px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.resendVerificationForm {
+  width: 100%;
+  background: #faf6ef;
+  border: 1px solid #ebdcc6;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 18px 0;
+  text-align: left;
+}
+
+.resendVerificationForm label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4a3b32;
+  margin-bottom: 10px;
+}
+
+.resendInputRow {
+  display: flex;
+  gap: 10px;
+}
+
+.resendInputRow input {
+  flex: 1;
+  padding: 11px 14px;
+  border: 1.5px solid #d8c7b0;
+  border-radius: 6px;
+  font-size: 14px;
+  background: #ffffff;
+  outline: none;
+}
+
+.resendInputRow input:focus {
+  border-color: var(--maroon, #6d1b29);
+}
+
+.resendSubmitBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 11px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.resendSuccessBox {
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 18px 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+}
+
+.resendSuccessIcon {
+  color: #16a34a;
+  flex-shrink: 0;
+}
+
+.resendSuccessBox strong {
+  display: block;
+  color: #166534;
+  font-size: 14.5px;
+  margin-bottom: 4px;
+}
+
+.resendSuccessBox p {
+  color: #15803d;
+  font-size: 13px;
+  margin: 0;
+}
+
+.verifyBackLink {
+  margin-top: 20px;
+}
+
+.verifyBackLink a {
+  color: var(--maroon, #6d1b29);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.verifyBackLink a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+  .verifyEmailCard {
+    padding: 30px 20px;
+  }
+  .resendInputRow {
+    flex-direction: column;
+  }
+}

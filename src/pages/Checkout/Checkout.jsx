@@ -19,7 +19,8 @@ import {
   Boxes,
   PackagePlus,
   Check,
-  ArrowRight
+  ArrowRight,
+  Gift
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -39,6 +40,9 @@ export default function Checkout() {
   const { setToast } = useToast();
   const { t } = useLanguage();
 
+  // Delivery Address Mode: 'my_address' | 'gift_address'
+  const [addressMode, setAddressMode] = useState('my_address');
+
   const [form, setForm] = useState({
     name: '',
     phone: '',
@@ -46,6 +50,26 @@ export default function Checkout() {
     address: '',
     pincode: ''
   });
+
+  // Gift Recipient and Buyer Forms
+  const [giftForm, setGiftForm] = useState({
+    recipientName: '',
+    recipientPhone: '',
+    address: '',
+    pincode: ''
+  });
+
+  const [buyerForm, setBuyerForm] = useState({
+    name: '',
+    phone: '',
+    email: ''
+  });
+
+  const [savedAddresses, setSavedAddresses] = useState({
+    defaultAddress: null,
+    giftAddresses: []
+  });
+  const [selectedSavedGiftId, setSelectedSavedGiftId] = useState('');
 
   const [pincodeLoading, setPincodeLoading] = useState(false);
   const [pincodeError, setPincodeError] = useState('');
@@ -76,6 +100,41 @@ export default function Checkout() {
     return <Navigate to="/cart" replace />;
   }
 
+  // Fetch saved customer addresses if logged in
+  useEffect(() => {
+    if (user) {
+      setBuyerForm({
+        name: user.name || '',
+        phone: user.phone || '',
+        email: user.email || ''
+      });
+
+      api('/auth/addresses')
+        .then((res) => {
+          if (res) {
+            const def = res.defaultAddress || res.default_address || null;
+            const gifts = res.giftAddresses || res.gift_addresses || [];
+            setSavedAddresses({
+              defaultAddress: def,
+              giftAddresses: gifts
+            });
+
+            if (def && def.addressLine1) {
+              setForm((prev) => ({
+                ...prev,
+                name: def.recipientName || def.recipient_name || user.name || prev.name,
+                phone: def.recipientPhone || def.recipient_phone || user.phone || prev.phone,
+                email: user.email || prev.email,
+                address: `${def.addressLine1 || def.address_line1}${def.addressLine2 || def.address_line2 ? ', ' + (def.addressLine2 || def.address_line2) : ''}, ${def.city}, ${def.state}`,
+                pincode: def.pincode || prev.pincode
+              }));
+            }
+          }
+        })
+        .catch(() => {});
+    }
+  }, [user]);
+
   // Pre-fill saved details or authenticated user information
   useEffect(() => {
     try {
@@ -103,19 +162,41 @@ export default function Checkout() {
     }
   }, [user]);
 
+  // Handle Saved Gift Address dropdown selection
+  const handleSelectSavedGift = (giftId) => {
+    setSelectedSavedGiftId(giftId);
+    if (!giftId) {
+      setGiftForm({ recipientName: '', recipientPhone: '', address: '', pincode: '' });
+      return;
+    }
+    const match = (savedAddresses.giftAddresses || []).find(
+      (g) => (g.id || g._id) === giftId
+    );
+    if (match) {
+      setGiftForm({
+        recipientName: match.recipient_name || match.recipientName || '',
+        recipientPhone: match.recipient_phone || match.recipientPhone || '',
+        address: `${match.address_line1 || match.addressLine1}${match.address_line2 || match.addressLine2 ? ', ' + (match.address_line2 || match.addressLine2) : ''}, ${match.city}, ${match.state}`,
+        pincode: match.pincode || ''
+      });
+    }
+  };
+
   // Fetch merge-eligible active orders for customer
   useEffect(() => {
     let isMounted = true;
     const fetchEligible = async () => {
       try {
         const queryParams = new URLSearchParams();
-        if (form.email.trim()) queryParams.set('email', form.email.trim());
-        if (form.phone.trim()) queryParams.set('phone', form.phone.trim());
+        const activeEmail = addressMode === 'gift_address' ? (buyerForm.email || user?.email) : form.email;
+        const activePhone = addressMode === 'gift_address' ? (buyerForm.phone || user?.phone) : form.phone;
+
+        if (activeEmail && activeEmail.trim()) queryParams.set('email', activeEmail.trim());
+        if (activePhone && activePhone.trim()) queryParams.set('phone', activePhone.trim());
 
         const data = await api(`/orders/eligible-merge-orders?${queryParams.toString()}`).catch(() => []);
         if (isMounted && Array.isArray(data)) {
           setEligibleMergeOrders(data);
-          // If already selected order is no longer in eligible list, reset
           setSelectedCombineOrderId((prev) => {
             if (prev && !data.some((o) => o.id === prev || o.order_no === prev)) {
               return null;
@@ -137,23 +218,22 @@ export default function Checkout() {
     return () => {
       isMounted = false;
     };
-  }, [user, form.email, form.phone]);
+  }, [user, form.email, form.phone, buyerForm.email, buyerForm.phone, addressMode]);
 
-  // Handle PIN Code Lookup when 6 digits are entered
+  // Handle PIN Code Lookup when 6 digits are entered (always on destination PIN)
   useEffect(() => {
-    const cleanPin = form.pincode.trim();
-    if (cleanPin.length === 6 && /^[1-9][0-9]{5}$/.test(cleanPin)) {
+    const activePin = (addressMode === 'gift_address' ? giftForm.pincode : form.pincode).trim();
+    if (activePin.length === 6 && /^[1-9][0-9]{5}$/.test(activePin)) {
       let isMounted = true;
       setPincodeLoading(true);
       setPincodeError('');
 
-      api(`/shipping/lookup/${cleanPin}`)
+      api(`/shipping/lookup/${activePin}`)
         .then((data) => {
           if (!isMounted) return;
           if (data && data.valid && Array.isArray(data.options)) {
             setLocationData(data);
             setPincodeError('');
-            // Auto-select the delivery option (or self pickup if only 1 option)
             const defaultMethod = data.options[1]?.id || data.options[0]?.id || 'self_pickup';
             setSelectedShippingMethod((prev) => {
               return data.options.some((o) => o.id === prev) ? prev : defaultMethod;
@@ -177,16 +257,16 @@ export default function Checkout() {
       return () => {
         isMounted = false;
       };
-    } else if (cleanPin.length > 0 && cleanPin.length < 6) {
+    } else if (activePin.length > 0 && activePin.length < 6) {
       setLocationData(null);
       setPincodeError('Please enter a full 6-digit PIN code.');
       setSelectedShippingMethod('');
-    } else if (cleanPin.length === 0) {
+    } else if (activePin.length === 0) {
       setLocationData(null);
       setPincodeError('');
       setSelectedShippingMethod('');
     }
-  }, [form.pincode]);
+  }, [addressMode, form.pincode, giftForm.pincode]);
 
   // Compute compatible eligible orders based on destination & shipping method
   const compatibleOrders = (eligibleMergeOrders || []).filter((o) => {
@@ -273,25 +353,52 @@ export default function Checkout() {
   const placeOrder = async (e) => {
     e?.preventDefault();
 
-    if (!form.name.trim()) {
-      return setToast('Please enter your full name.');
-    }
-    if (!form.phone.trim() || form.phone.trim().length !== 10) {
-      return setToast('Please enter a valid 10-digit mobile number.');
-    }
-    if (!form.email.trim()) {
-      return setToast('Please enter your email address.');
-    }
-    if (!form.address.trim()) {
-      return setToast('Please enter your complete delivery address.');
+    const isGiftOrder = addressMode === 'gift_address';
+
+    if (isGiftOrder) {
+      if (!giftForm.recipientName.trim()) {
+        return setToast("Please enter the gift recipient's full name.");
+      }
+      if (!giftForm.recipientPhone.trim() || giftForm.recipientPhone.trim().length !== 10) {
+        return setToast("Please enter a valid 10-digit mobile number for the recipient.");
+      }
+      if (!buyerForm.name.trim() && !user?.name) {
+        return setToast("Please enter your name (Sender / Buyer).");
+      }
+      if (!buyerForm.phone.trim() && !user?.phone) {
+        return setToast("Please enter your mobile number (Sender / Buyer).");
+      }
+      if (!buyerForm.email.trim() && !user?.email) {
+        return setToast("Please enter your email address (for order updates).");
+      }
+      if (!giftForm.address.trim()) {
+        return setToast("Please enter the complete delivery address for the recipient.");
+      }
+      const cleanPin = giftForm.pincode.trim();
+      if (!cleanPin || cleanPin.length !== 6 || !/^[1-9][0-9]{5}$/.test(cleanPin)) {
+        return setToast("Please enter a valid 6-digit PIN code for the recipient.");
+      }
+    } else {
+      if (!form.name.trim()) {
+        return setToast('Please enter your full name.');
+      }
+      if (!form.phone.trim() || form.phone.trim().length !== 10) {
+        return setToast('Please enter a valid 10-digit mobile number.');
+      }
+      if (!form.email.trim()) {
+        return setToast('Please enter your email address.');
+      }
+      if (!form.address.trim()) {
+        return setToast('Please enter your complete delivery address.');
+      }
+      const cleanPin = form.pincode.trim();
+      if (!cleanPin || cleanPin.length !== 6 || !/^[1-9][0-9]{5}$/.test(cleanPin)) {
+        return setToast('Please enter a valid 6-digit PIN code.');
+      }
     }
 
-    const cleanPin = form.pincode.trim();
-    if (!cleanPin || cleanPin.length !== 6 || !/^[1-9][0-9]{5}$/.test(cleanPin)) {
-      return setToast('Please enter a valid 6-digit PIN code.');
-    }
     if (!locationData || !locationData.valid) {
-      return setToast('Please verify your PIN code to select a delivery method.');
+      return setToast('Please verify the delivery PIN code to select a shipping method.');
     }
     if (!selectedShippingMethod) {
       return setToast('Please select a shipping method.');
@@ -302,6 +409,10 @@ export default function Checkout() {
         t('terms_required_error', 'Please agree to the Terms & Conditions and Privacy Policy to proceed.')
       );
     }
+
+    const effectiveBuyerName = isGiftOrder ? (buyerForm.name.trim() || user?.name || '') : form.name.trim();
+    const effectiveBuyerEmail = isGiftOrder ? (buyerForm.email.trim().toLowerCase() || user?.email || '') : form.email.trim().toLowerCase();
+    const effectiveBuyerPhone = isGiftOrder ? (buyerForm.phone.trim() || user?.phone || '') : form.phone.trim();
 
     if (!user && createAccount) {
       if (!accountPassword || accountPassword.trim().length < 6) {
@@ -319,8 +430,8 @@ export default function Checkout() {
           const authData = await api('/auth/register', {
             method: 'POST',
             body: JSON.stringify({
-              name: form.name.trim(),
-              email: form.email.trim().toLowerCase(),
+              name: effectiveBuyerName,
+              email: effectiveBuyerEmail,
               password: accountPassword
             })
           });
@@ -333,7 +444,7 @@ export default function Checkout() {
       }
 
       // 2. Save or clear details for later
-      if (saveDetails) {
+      if (saveDetails && !isGiftOrder) {
         localStorage.setItem(
           'nw-saved-checkout-details',
           JSON.stringify({
@@ -341,30 +452,39 @@ export default function Checkout() {
             phone: form.phone.trim(),
             email: form.email.trim(),
             address: form.address.trim(),
-            pincode: cleanPin
+            pincode: form.pincode.trim()
           })
         );
-      } else {
+      } else if (!isGiftOrder) {
         localStorage.removeItem('nw-saved-checkout-details');
       }
 
-      // 3. Place order (customer is NEVER asked for UTR or transaction ID)
+      // 3. Place order with accurate gift snapshot fields
+      const cleanDestinationPin = (isGiftOrder ? giftForm.pincode : form.pincode).trim();
+      const orderPayload = {
+        isGift: isGiftOrder,
+        recipientName: isGiftOrder ? giftForm.recipientName.trim() : null,
+        recipientPhone: isGiftOrder ? giftForm.recipientPhone.trim() : null,
+        customerName: isGiftOrder ? effectiveBuyerName : form.name.trim(),
+        customerPhone: isGiftOrder ? effectiveBuyerPhone : form.phone.trim(),
+        customerEmail: isGiftOrder ? effectiveBuyerEmail : form.email.trim(),
+        name: isGiftOrder ? giftForm.recipientName.trim() : form.name.trim(),
+        phone: isGiftOrder ? giftForm.recipientPhone.trim() : form.phone.trim(),
+        email: effectiveBuyerEmail,
+        address: isGiftOrder ? giftForm.address.trim() : form.address.trim(),
+        pincode: cleanDestinationPin,
+        shippingMethod: selectedShippingMethod,
+        couponCode: appliedCoupon ? appliedCoupon.code : null,
+        city: locationData.city,
+        state: locationData.state,
+        items: cart.map((x) => ({ id: x.id, qty: x.qty })),
+        paymentMethod: 'upi',
+        combineWithOrderId: isCombinedShipment ? selectedCombineOrderId : null
+      };
+
       const created = await api('/orders', {
         method: 'POST',
-        body: JSON.stringify({
-          name: form.name.trim(),
-          phone: form.phone.trim(),
-          email: form.email.trim(),
-          address: form.address.trim(),
-          pincode: cleanPin,
-          shippingMethod: selectedShippingMethod,
-          couponCode: appliedCoupon ? appliedCoupon.code : null,
-          city: locationData.city,
-          state: locationData.state,
-          items: cart.map((x) => ({ id: x.id, qty: x.qty })),
-          paymentMethod: 'upi',
-          combineWithOrderId: isCombinedShipment ? selectedCombineOrderId : null
-        })
+        body: JSON.stringify(orderPayload)
       });
 
       const orderData = created.order;
@@ -388,6 +508,8 @@ export default function Checkout() {
       setToast(
         isCombinedShipment
           ? `Order placed and successfully combined with #${created.combined_with_order_no}!`
+          : isGiftOrder
+          ? 'Gift order placed successfully! 🎁'
           : 'Order placed successfully!'
       );
     } catch (err) {
@@ -432,82 +554,242 @@ export default function Checkout() {
             <h3>Delivery & Contact Details</h3>
           </div>
 
-          <input
-            required
-            placeholder={t('full_name', 'Full Name')}
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-          />
-          <input
-            required
-            inputMode="tel"
-            pattern="[0-9]{10}"
-            maxLength="10"
-            placeholder={t('mobile_10digit', '10-digit Mobile Number')}
-            value={form.phone}
-            onChange={(e) =>
-              setForm({ ...form, phone: e.target.value.replace(/\D/g, '') })
-            }
-          />
-          <input
-            required
-            type="email"
-            placeholder={t('email_address', 'Email Address')}
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-          />
-          <textarea
-            required
-            placeholder={t('delivery_address', 'Complete Delivery Address (House/Flat No, Street, Area)')}
-            value={form.address}
-            onChange={(e) => setForm({ ...form, address: e.target.value })}
-          />
+          {/* Delivery Mode Selector: My Address vs Send as a Gift */}
+          <div className="addressModeSelector">
+            <label className={`addressModeOption ${addressMode === 'my_address' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="addressMode"
+                value="my_address"
+                checked={addressMode === 'my_address'}
+                onChange={() => setAddressMode('my_address')}
+              />
+              <User size={15} />
+              <span>Deliver to My Address</span>
+            </label>
 
-          {/* PIN Code Input with Live Lookup */}
-          <div className="pincodeInputGroup">
-            <div className="pincodeFieldWrap">
+            <label className={`addressModeOption ${addressMode === 'gift_address' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="addressMode"
+                value="gift_address"
+                checked={addressMode === 'gift_address'}
+                onChange={() => setAddressMode('gift_address')}
+              />
+              <Gift size={15} color="var(--maroon)" />
+              <span>Send as a Gift 🎁</span>
+            </label>
+          </div>
+
+          {addressMode === 'my_address' ? (
+            <>
               <input
                 required
-                inputMode="numeric"
-                pattern="[1-9][0-9]{5}"
-                maxLength="6"
-                placeholder="6-digit PIN Code (e.g. 410203 or 411001)"
-                value={form.pincode}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    pincode: e.target.value.replace(/\D/g, '').slice(0, 6)
-                  })
-                }
-                className={`pincodeInput ${
-                  locationData ? 'pincodeInputValid' : pincodeError ? 'pincodeInputError' : ''
-                }`}
+                placeholder={t('full_name', 'Full Name')}
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
-              {pincodeLoading && (
-                <Loader2 size={16} className="pincodeSpinner" />
-              )}
-            </div>
+              <input
+                required
+                inputMode="tel"
+                pattern="[0-9]{10}"
+                maxLength="10"
+                placeholder={t('mobile_10digit', '10-digit Mobile Number')}
+                value={form.phone}
+                onChange={(e) =>
+                  setForm({ ...form, phone: e.target.value.replace(/\D/g, '') })
+                }
+              />
+              <input
+                required
+                type="email"
+                placeholder={t('email_address', 'Email Address')}
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+              />
+              <textarea
+                required
+                placeholder={t('delivery_address', 'Complete Delivery Address (House/Flat No, Street, Area)')}
+                value={form.address}
+                onChange={(e) => setForm({ ...form, address: e.target.value })}
+              />
 
-            {/* Detected Location Badge */}
-            {locationData && (
-              <div className="locationVerifiedBadge">
-                <CheckCircle2 size={14} />
-                <span>
-                  <b>{locationData.city}</b>, {locationData.state}{' '}
-                  {locationData.location_type === 'khopoli' && (
-                    <small className="khopoliTag">✦ Khopoli City (Raigad)</small>
+              {/* PIN Code Input with Live Lookup */}
+              <div className="pincodeInputGroup">
+                <div className="pincodeFieldWrap">
+                  <input
+                    required
+                    inputMode="numeric"
+                    pattern="[1-9][0-9]{5}"
+                    maxLength="6"
+                    placeholder="6-digit PIN Code (e.g. 410203 or 411001)"
+                    value={form.pincode}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        pincode: e.target.value.replace(/\D/g, '').slice(0, 6)
+                      })
+                    }
+                    className={`pincodeInput ${
+                      locationData ? 'pincodeInputValid' : pincodeError ? 'pincodeInputError' : ''
+                    }`}
+                  />
+                  {pincodeLoading && (
+                    <Loader2 size={16} className="pincodeSpinner" />
                   )}
-                </span>
-              </div>
-            )}
+                </div>
 
-            {pincodeError && (
-              <div className="pincodeErrorText">
-                <AlertCircle size={13} />
-                <span>{pincodeError}</span>
+                {locationData && (
+                  <div className="locationVerifiedBadge">
+                    <CheckCircle2 size={14} />
+                    <span>
+                      <b>{locationData.city}</b>, {locationData.state}{' '}
+                      {locationData.location_type === 'khopoli' && (
+                        <small className="khopoliTag">✦ Khopoli City (Raigad)</small>
+                      )}
+                    </span>
+                  </div>
+                )}
+
+                {pincodeError && (
+                  <div className="pincodeErrorText">
+                    <AlertCircle size={13} />
+                    <span>{pincodeError}</span>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </>
+          ) : (
+            <>
+              <div className="giftCheckoutNotice">
+                <Gift size={20} color="var(--maroon)" />
+                <div>
+                  <b>Gift Delivery Order 🎁</b>
+                  <p>We'll deliver this jewellery directly to your recipient. Shipping charges will be calculated based on their delivery PIN code.</p>
+                </div>
+              </div>
+
+              {/* Saved Gift Addresses Picker (if available) */}
+              {savedAddresses.giftAddresses && savedAddresses.giftAddresses.length > 0 && (
+                <div className="savedGiftDropdownWrap">
+                  <label>Select Saved Gift Recipient:</label>
+                  <select
+                    value={selectedSavedGiftId}
+                    onChange={(e) => handleSelectSavedGift(e.target.value)}
+                  >
+                    <option value="">-- Or enter new recipient details below --</option>
+                    {savedAddresses.giftAddresses.map((ga) => (
+                      <option key={ga.id || ga._id} value={ga.id || ga._id}>
+                        {ga.recipient_name || ga.recipientName} ({ga.city}, {ga.pincode})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="formSectionSubheader">
+                <span>1. Gift Recipient's Delivery Information</span>
+              </div>
+
+              <input
+                required
+                placeholder="Recipient Full Name"
+                value={giftForm.recipientName}
+                onChange={(e) => setGiftForm({ ...giftForm, recipientName: e.target.value })}
+              />
+              <input
+                required
+                inputMode="tel"
+                pattern="[0-9]{10}"
+                maxLength="10"
+                placeholder="Recipient 10-digit Mobile Number"
+                value={giftForm.recipientPhone}
+                onChange={(e) =>
+                  setGiftForm({ ...giftForm, recipientPhone: e.target.value.replace(/\D/g, '') })
+                }
+              />
+              <textarea
+                required
+                placeholder="Recipient Complete Delivery Address (House/Flat No, Street, Area)"
+                value={giftForm.address}
+                onChange={(e) => setGiftForm({ ...giftForm, address: e.target.value })}
+              />
+
+              {/* Recipient PIN Code Input with Live Lookup */}
+              <div className="pincodeInputGroup">
+                <div className="pincodeFieldWrap">
+                  <input
+                    required
+                    inputMode="numeric"
+                    pattern="[1-9][0-9]{5}"
+                    maxLength="6"
+                    placeholder="Recipient 6-digit PIN Code"
+                    value={giftForm.pincode}
+                    onChange={(e) =>
+                      setGiftForm({
+                        ...giftForm,
+                        pincode: e.target.value.replace(/\D/g, '').slice(0, 6)
+                      })
+                    }
+                    className={`pincodeInput ${
+                      locationData ? 'pincodeInputValid' : pincodeError ? 'pincodeInputError' : ''
+                    }`}
+                  />
+                  {pincodeLoading && (
+                    <Loader2 size={16} className="pincodeSpinner" />
+                  )}
+                </div>
+
+                {locationData && (
+                  <div className="locationVerifiedBadge">
+                    <CheckCircle2 size={14} />
+                    <span>
+                      <b>{locationData.city}</b>, {locationData.state}{' '}
+                      {locationData.location_type === 'khopoli' && (
+                        <small className="khopoliTag">✦ Khopoli City (Raigad)</small>
+                      )}
+                    </span>
+                  </div>
+                )}
+
+                {pincodeError && (
+                  <div className="pincodeErrorText">
+                    <AlertCircle size={13} />
+                    <span>{pincodeError}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="formSectionSubheader buyerHeader">
+                <span>2. Your Details (Sender / Buyer)</span>
+              </div>
+
+              <input
+                required
+                placeholder="Your Full Name (Sender)"
+                value={buyerForm.name}
+                onChange={(e) => setBuyerForm({ ...buyerForm, name: e.target.value })}
+              />
+              <input
+                required
+                inputMode="tel"
+                pattern="[0-9]{10}"
+                maxLength="10"
+                placeholder="Your 10-digit Mobile Number"
+                value={buyerForm.phone}
+                onChange={(e) =>
+                  setBuyerForm({ ...buyerForm, phone: e.target.value.replace(/\D/g, '') })
+                }
+              />
+              <input
+                required
+                type="email"
+                placeholder="Your Email Address (for order tracking & updates)"
+                value={buyerForm.email}
+                onChange={(e) => setBuyerForm({ ...buyerForm, email: e.target.value })}
+              />
+            </>
+          )}
 
           {/* Shipping Method Section */}
           <div className="shippingMethodSection">

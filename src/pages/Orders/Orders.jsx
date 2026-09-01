@@ -44,7 +44,7 @@ import './Orders.css';
 const LIFECYCLE_STAGES = [
   { key: 'placed', label: 'Order Received' },
   { key: 'confirmed', label: 'Order Confirmed' },
-  { key: 'making', label: 'Artisan Crafting' },
+  { key: 'making', label: 'Making' },
   { key: 'packing', label: 'QC & Packaging' },
   { key: 'shipped', label: 'Dispatched' },
   { key: 'delivered', label: 'Delivered' }
@@ -518,7 +518,7 @@ export default function Orders() {
                     : trackResult.order_status === 'packing' || trackResult.order_status === 'processing'
                     ? 'Quality Check & Packaging 📦'
                     : trackResult.order_status === 'making'
-                    ? 'Artisan Crafting ✨'
+                    ? 'Making ✨'
                     : trackResult.order_status === 'confirmed'
                     ? 'Order Confirmed ✓'
                     : 'Order Received'}
@@ -579,6 +579,22 @@ export default function Orders() {
               </div>
             ) : (
               <OrderStatusVisualBanner status={trackResult.order_status} />
+            )}
+
+            {/* Shipped State: Mandatory 360 Opening Video Notice */}
+            {trackResult.order_status === 'shipped' && (
+              <div className="shippedOpeningVideoNotice">
+                <div className="openingVideoHeader">
+                  <PackageCheck size={20} color="var(--maroon)" />
+                  <h4>📦 Important — Opening Video Required</h4>
+                </div>
+                <p>
+                  Once your order is delivered, please record a <b>complete 360° opening/unboxing video</b> before opening/using the jewellery.
+                </p>
+                <p className="openingVideoNote">
+                  This video is <b>compulsory for raising any damage, missing-item, return or refund-related claim</b>. Without a complete opening/unboxing video, the claim/complaint may not be accepted.
+                </p>
+              </div>
             )}
 
             {/* Combined Shipment Group Information */}
@@ -825,7 +841,7 @@ export default function Orders() {
                         : isPacking
                         ? 'QC & Packaging 📦'
                         : isMaking
-                        ? 'Artisan Crafting ✨'
+                        ? 'Making ✨'
                         : isConfirmed
                         ? 'Order Confirmed ✓'
                         : 'Order Received'}
@@ -896,6 +912,22 @@ export default function Orders() {
                   </div>
                 ) : (
                   <OrderStatusVisualBanner status={o.order_status} />
+                )}
+
+                {/* Shipped State: Mandatory 360 Opening Video Notice */}
+                {isShipped && (
+                  <div className="shippedOpeningVideoNotice">
+                    <div className="openingVideoHeader">
+                      <PackageCheck size={20} color="var(--maroon)" />
+                      <h4>📦 Important — Opening Video Required</h4>
+                    </div>
+                    <p>
+                      Once your order is delivered, please record a <b>complete 360° opening/unboxing video</b> before opening/using the jewellery.
+                    </p>
+                    <p className="openingVideoNote">
+                      This video is <b>compulsory for raising any damage, missing-item, return or refund-related claim</b>. Without a complete opening/unboxing video, the claim/complaint may not be accepted.
+                    </p>
+                  </div>
                 )}
 
                 {/* Combined Shipment info in order card if part of a group */}
@@ -993,16 +1025,16 @@ export default function Orders() {
                         <XCircle size={14} />
                         <span>Cancel Order</span>
                       </button>
-                    ) : (
+                    ) : isMaking ? null : (
                       <div className="discussWhatsAppCancelBox">
                         <div className="discussWhatsAppLeft">
-                          <span className="discussTitle">Need to discuss cancellation or changes?</span>
-                          <p>Your jewellery is in production or dispatch. Connect with our studio on WhatsApp, Instagram (@nakharewali.handmade) or Facebook (Nakharewali.handmade) for manual assistance.</p>
+                          <span className="discussTitle">Need assistance regarding packaging or dispatch?</span>
+                          <p>Your jewellery is being carefully prepared for dispatch. Connect with our studio on WhatsApp for any assistance.</p>
                         </div>
                         <div className="discussActionBtns">
                           <a
                             href={`https://wa.me/919699668421?text=${encodeURIComponent(
-                              `Hi Nathshikha Studio, I would like to discuss cancellation for Order #${o.order_no}.`
+                              `Hi Nathshikha Studio, I have a query regarding Order #${o.order_no}.`
                             )}`}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -1010,24 +1042,6 @@ export default function Orders() {
                           >
                             <MessageSquare size={13} />
                             <span>WhatsApp Help</span>
-                          </a>
-                          <a
-                            href="https://www.instagram.com/nakharewali.handmade"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="instaDiscussBtn"
-                          >
-                            <Instagram size={13} />
-                            <span>Instagram</span>
-                          </a>
-                          <a
-                            href="https://www.facebook.com/Nakharewali.handmade"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="fbDiscussBtn"
-                          >
-                            <Facebook size={13} />
-                            <span>Facebook</span>
                           </a>
                         </div>
                       </div>

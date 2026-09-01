@@ -26,6 +26,11 @@ export default function CategoryGrid() {
       name: t('cat_signature', 'Signature Set'),
       slug: 'Signature',
       img: '/assets/saaj-category.jpg'
+    },
+    {
+      name: t('cat_accessories', 'Accessories'),
+      slug: 'Accessories',
+      img: '/assets/bugadi-product.jpg'
     }
   ];
 

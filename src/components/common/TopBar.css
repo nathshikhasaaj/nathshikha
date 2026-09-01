@@ -1,35 +1,94 @@
 .topbar {
-  height: 32px;
-  background: #f3e7ca;
-  color: #5c4314;
-  text-align: center;
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
+  height: 34px;
+  background: linear-gradient(90deg, #26080f 0%, #42101b 50%, #26080f 100%);
+  color: #f1d590;
+  overflow: hidden;
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  padding: 0 12px;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+  border-bottom: 1px solid rgba(228, 199, 134, 0.35);
+  user-select: none;
 }
 
-.topbarText {
+/* Seamless Infinite Marquee Track */
+.topbarMarqueeTrack {
+  display: flex;
+  align-items: center;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-  display: inline-block;
+  width: max-content;
+  animation: topbarScrollLeft 28s linear infinite;
+  will-change: transform;
 }
 
-@media (max-width: 600px) {
-  .topbar {
-    height: 30px;
-    font-size: 11px;
-    padding: 0 10px;
+.topbarMarqueeTrack:hover {
+  animation-play-state: paused;
+}
+
+.topbarContent {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  padding-right: 30px;
+  flex-shrink: 0;
+  color: #f4dc9e;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Smooth Gradient Fade on Boundaries */
+.topbarFadeLeft,
+.topbarFadeRight {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 32px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.topbarFadeLeft {
+  left: 0;
+  background: linear-gradient(90deg, #26080f 0%, transparent 100%);
+}
+
+.topbarFadeRight {
+  right: 0;
+  background: linear-gradient(270deg, #26080f 0%, transparent 100%);
+}
+
+/* Infinite Left Scrolling Keyframes */
+@keyframes topbarScrollLeft {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
   }
 }
 
+/* Mobile Responsiveness */
+@media (max-width: 600px) {
+  .topbar {
+    height: 30px;
+  }
 
+  .topbarContent {
+    font-size: 10.5px;
+    letter-spacing: 0.4px;
+    padding-right: 20px;
+  }
+
+  .topbarMarqueeTrack {
+    animation-duration: 22s;
+  }
+
+  .topbarFadeLeft,
+  .topbarFadeRight {
+    width: 18px;
+  }
+}

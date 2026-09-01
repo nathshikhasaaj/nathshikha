@@ -31,9 +31,11 @@ import AdminShipmentModal from '../../components/admin/AdminShipmentModal';
 import AdminShipmentTable from '../../components/admin/AdminShipmentTable';
 import AdminCouponManager from '../../components/admin/AdminCouponManager';
 import AdminReviewManager from '../../components/admin/AdminReviewManager';
+import AdminShowcaseReviewManager from '../../components/admin/AdminShowcaseReviewManager';
 import AdminHallOfFameManager from '../../components/admin/AdminHallOfFameManager';
+import AdminHeroManager from '../../components/admin/AdminHeroManager';
 import AdminCancellationModal from '../../components/admin/AdminCancellationModal';
-import { Camera } from 'lucide-react';
+import { Camera, MessageSquareQuote } from 'lucide-react';
 import './AdminDashboard.css';
 
 const emptyForm = {
@@ -45,7 +47,8 @@ const emptyForm = {
   images: ['/assets/thushi.jpg'],
   description: '',
   stock: 10,
-  active: 1
+  active: 1,
+  isBestseller: false
 };
 
 export default function AdminDashboard({ products = [], refreshProducts }) {
@@ -57,7 +60,9 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
   const [suggestions, setSuggestions] = useState([]);
   const [coupons, setCoupons] = useState([]);
   const [reviewsData, setReviewsData] = useState({ reviews: [], summary: {} });
+  const [showcaseReviews, setShowcaseReviews] = useState([]);
   const [hallOfFameStories, setHallOfFameStories] = useState([]);
+  const [heroSlides, setHeroSlides] = useState([]);
   const [allProducts, setAllProducts] = useState(products);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm);
@@ -159,13 +164,15 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
   const load = async () => {
     setRefreshing(true);
     try {
-      const [o, p, s, c, r, h] = await Promise.all([
+      const [o, p, s, c, r, h, sr, hs] = await Promise.all([
         api('/admin/orders'),
         api('/admin/products'),
         api('/suggestions/admin').catch(() => []),
         api('/admin/coupons').catch(() => []),
         api('/admin/reviews').catch(() => ({ reviews: [], summary: {} })),
-        api('/hall-of-fame/admin').catch(() => [])
+        api('/hall-of-fame/admin').catch(() => []),
+        api('/showcase-reviews/admin').catch(() => []),
+        api('/hero-slides/admin/all').catch(() => [])
       ]);
       setOrders(Array.isArray(o) ? o : []);
       setAllProducts(Array.isArray(p) ? p : []);
@@ -173,6 +180,8 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
       setCoupons(Array.isArray(c) ? c : []);
       setReviewsData(r && Array.isArray(r.reviews) ? r : { reviews: [], summary: {} });
       setHallOfFameStories(Array.isArray(h) ? h : []);
+      setShowcaseReviews(Array.isArray(sr) ? sr : []);
+      setHeroSlides(Array.isArray(hs) ? hs : []);
     } catch (e) {
       setToast(e.message || 'Failed to load dashboard data');
     } finally {
@@ -374,6 +383,28 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
     }
   };
 
+  const toggleProductBestseller = async (p) => {
+    const nextBestseller = !(p.isBestseller || p.is_bestseller || p.tag === 'BESTSELLER');
+    try {
+      await api(`/admin/products/${p.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          isBestseller: nextBestseller,
+          tag: nextBestseller ? 'BESTSELLER' : (p.tag === 'BESTSELLER' ? 'NEW' : p.tag)
+        })
+      });
+      setToast(
+        nextBestseller
+          ? `⭐ "${p.name}" added to Homepage Bestsellers!`
+          : `"${p.name}" removed from Homepage Bestsellers.`
+      );
+      await load();
+      if (refreshProducts) refreshProducts();
+    } catch (e) {
+      setToast(e.message);
+    }
+  };
+
   const editProduct = (p) => {
     const images = Array.isArray(p.images) && p.images.length > 0
       ? p.images
@@ -384,12 +415,13 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
       name: p.name,
       price: p.price,
       category: p.category,
-      tag: p.tag || 'NEW',
+      tag: p.tag || (p.isBestseller ? 'BESTSELLER' : 'NEW'),
       img: p.img || images[0] || '',
       images: images,
       description: p.description || '',
       stock: p.stock,
-      active: p.active
+      active: p.active,
+      isBestseller: Boolean(p.isBestseller || p.is_bestseller || p.tag === 'BESTSELLER')
     });
     setTab('products');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -548,6 +580,15 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
         </button>
 
         <button
+          className={tab === 'showcase_reviews' ? 'active' : ''}
+          onClick={() => setTab('showcase_reviews')}
+          type="button"
+        >
+          <MessageSquareQuote size={15} />
+          <span>Homepage Showcase / Google ({showcaseReviews.length})</span>
+        </button>
+
+        <button
           className={tab === 'suggestions' ? 'active' : ''}
           onClick={() => setTab('suggestions')}
           type="button"
@@ -564,6 +605,15 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
         >
           <Camera size={15} />
           <span>Hall of Fame / Our Brides ({hallOfFameStories.length})</span>
+        </button>
+
+        <button
+          className={tab === 'hero_showcase' ? 'active' : ''}
+          onClick={() => setTab('hero_showcase')}
+          type="button"
+        >
+          <Sparkles size={15} />
+          <span>Hero Banners ({heroSlides.length || 3})</span>
         </button>
       </div>
 
@@ -695,6 +745,7 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
             editProduct={editProduct}
             removeProduct={removeProduct}
             toggleProductActive={toggleProductActive}
+            toggleProductBestseller={toggleProductBestseller}
           />
         </div>
       )}
@@ -850,10 +901,28 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
         />
       )}
 
+      {/* TAB 5B: HOMEPAGE SHOWCASE & GOOGLE REVIEWS */}
+      {tab === 'showcase_reviews' && (
+        <AdminShowcaseReviewManager
+          reviews={showcaseReviews}
+          onRefresh={load}
+          setToast={setToast}
+        />
+      )}
+
       {/* TAB 6: HALL OF FAME / OUR BRIDES */}
       {tab === 'hall_of_fame' && (
         <AdminHallOfFameManager
           stories={hallOfFameStories}
+          onRefresh={load}
+          loading={refreshing}
+        />
+      )}
+
+      {/* TAB 7: HERO SHOWCASE BANNERS */}
+      {tab === 'hero_showcase' && (
+        <AdminHeroManager
+          slides={heroSlides}
           onRefresh={load}
           loading={refreshing}
         />

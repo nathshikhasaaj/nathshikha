@@ -57,7 +57,12 @@ export default function PrivacyPolicy() {
           We only share essential shipping information (recipient name, address, and mobile number) with trusted national courier partners (e.g. BlueDart, Delhivery, India Post) solely for doorstep delivery.
         </p>
 
-        <h2>6. Your Rights & Contact</h2>
+        <h2>6. Customer Photographs & Marketing Permission</h2>
+        <p>
+          When you voluntarily share, upload, or submit your photographs, bridal looks, or styling pictures with Nathshikha (via product reviews, Hall of Fame submissions, customer accounts, WhatsApp, social media tags, or email), you grant Nathshikha permission to use those photographs for promotional and marketing purposes across our website, official social media handles, and marketing collateral. You retain ownership of your original photos and may request removal of your photo by contacting our team.
+        </p>
+
+        <h2>7. Your Rights & Contact</h2>
         <p>
           You have the right to access, review, or request the deletion of your personal account data at any time. To exercise these rights, reach out to our team at <strong>nakharewali.saaj@gmail.com</strong>, message us on Instagram <strong>@nakharewali.handmade</strong>, or on Facebook at <strong>Nakharewali.handmade</strong>.
         </p>

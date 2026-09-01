@@ -1,57 +1,489 @@
+.accountPage {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding-bottom: 60px;
+}
+
+.accountLayout {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
 .accountGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 15px;
-  max-width: 1000px;
-  margin: auto;
+  width: 100%;
 }
 
 .accountGrid a,
 .accountGrid button {
   background: #fff;
-  border: 1px solid #e3d6bb;
-  padding: 24px;
+  border: 1px solid #ebdcc6;
+  padding: 20px 22px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  border-radius: 6px;
+  gap: 6px;
+  border-radius: 8px;
   text-align: left;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(79, 61, 56, 0.04);
   cursor: pointer;
+  text-decoration: none;
 }
 
 .accountGrid a:hover,
 .accountGrid button:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  border-color: var(--gold, #d4af37);
+  box-shadow: 0 6px 16px rgba(79, 61, 56, 0.08);
 }
 
 .accountGrid svg {
-  color: var(--gold);
-  width: 25px;
-  height: 25px;
+  color: var(--maroon, #6d1b29);
+  width: 22px;
+  height: 22px;
 }
 
 .accountGrid b {
-  font-family: var(--font-serif);
-  color: var(--maroon);
-  font-size: 14px;
+  font-family: var(--font-serif, 'Playfair Display', serif);
+  color: var(--maroon, #6d1b29);
+  font-size: 15px;
 }
 
 .accountGrid span {
-  font-size: 10px;
+  font-size: 11.5px;
   color: #8c7f78;
+}
+
+.accountCard {
+  background: #ffffff;
+  border: 1px solid #ebdcc6;
+  border-radius: 10px;
+  padding: 26px 30px;
+  box-shadow: 0 3px 14px rgba(79, 61, 56, 0.04);
+}
+
+.accountCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-bottom: 1px solid #f2e9dc;
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+}
+
+.headerTitleBox {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.headerTitleBox h3 {
+  margin: 0 0 3px 0;
+  font-family: var(--font-serif, 'Playfair Display', serif);
+  font-size: 18px;
+  color: var(--maroon, #6d1b29);
+}
+
+.headerTitleBox p {
+  margin: 0;
+  font-size: 12.5px;
+  color: #7a6b63;
+}
+
+.editSectionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fbf5e6;
+  border: 1px solid #ebdcc6;
+  color: var(--maroon, #6d1b29);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.editSectionBtn:hover {
+  background: var(--gold, #d4af37);
+  color: #ffffff;
+  border-color: var(--gold, #d4af37);
+}
+
+.profileInfoDisplayGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.infoField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fieldLabel {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #8c7f78;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.fieldVal {
+  font-size: 15px;
+  color: #2b1f1d;
+}
+
+.fieldHint {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.dimText {
+  color: #94a3b8;
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* Edit profile form */
+.profileEditForm .formGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formGroup label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a3b32;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.formGroup input,
+.formGroup select {
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 9px 12px;
+  font-size: 13.5px;
+  outline: none;
+  font-family: inherit;
+}
+
+.formGroup input:focus,
+.formGroup select:focus {
+  border-color: var(--gold, #d4af37);
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.15);
+}
+
+.formGroup.disabled input {
+  background: #f8fafc;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+.formActionsRow {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.formActionsRow .saveBtn,
+.formActionsRow .cancelBtn {
+  font-size: 13px;
+  padding: 8px 18px;
+}
+
+/* Address sub-sections */
+.addressSubSection {
+  margin-bottom: 24px;
+}
+
+.addressSubSection:last-child {
+  margin-bottom: 0;
+}
+
+.subSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.subHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.subHeaderLeft h4 {
+  margin: 0;
+  font-size: 15px;
+  color: var(--maroon, #6d1b29);
+  font-weight: 700;
+}
+
+.editAddressBtn,
+.addGiftAddressBtn {
+  font-size: 12px;
+}
+
+.savedAddressCard {
+  background: #fdfbf7;
+  border: 1.5px solid #ebdcc6;
+  border-radius: 8px;
+  padding: 16px 20px;
+  position: relative;
+}
+
+.savedAddressCard.default {
+  border-left: 4px solid var(--gold, #d4af37);
+}
+
+.savedAddressCard.giftCard {
+  border-left: 4px solid var(--maroon, #6d1b29);
+  background: #ffffff;
+}
+
+.addressRecipientRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.addressRecipientRow b {
+  font-size: 14.5px;
+  color: #1e293b;
+}
+
+.defaultTag {
+  font-size: 11px;
+  background: #fef3c7;
+  color: #92400e;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.giftTag {
+  font-size: 11px;
+  background: #fce7f3;
+  color: #9d174d;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.addressText {
+  margin: 0 0 4px 0;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.45;
+}
+
+.addressCityState {
+  margin: 0 0 6px 0;
+  font-size: 13px;
+  color: #334155;
+}
+
+.addressPhone {
+  margin: 0;
+  font-size: 12px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.giftCardActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  border-top: 1px dashed #e2e8f0;
+  padding-top: 10px;
+}
+
+.giftActionBtn {
+  background: none;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.giftActionBtn:hover {
+  background: #f1f5f9;
+  color: var(--maroon, #6d1b29);
+  border-color: #94a3b8;
+}
+
+.giftActionBtn.delete:hover {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+.giftAddressesBlock {
+  border-top: 1px solid #f2e9dc;
+  padding-top: 22px;
+  margin-top: 10px;
+}
+
+.giftAddressesSubtext {
+  margin: 0 0 16px 0;
+  font-size: 12.5px;
+  color: #78350f;
+}
+
+.giftAddressesListGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.noAddressPrompt {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  padding: 18px 20px;
+  text-align: center;
+}
+
+.noAddressPrompt p {
+  margin: 0 0 10px 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.noAddressPrompt.giftPrompt {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.noAddressPrompt.giftPrompt p {
+  color: #92400e;
+  margin-top: 8px;
+}
+
+/* Address Forms Grid */
+.addressFormGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.addressFormGrid .fullWidth {
+  grid-column: span 2;
+}
+
+/* Modal Overlay */
+.accountModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(3px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.accountModalContent {
+  background: #ffffff;
+  border-radius: 12px;
+  max-width: 580px;
+  width: 100%;
+  padding: 24px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.accountModalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 12px;
+}
+
+.modalTitleBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modalTitleBox h3 {
+  margin: 0;
+  font-family: var(--font-serif, 'Playfair Display', serif);
+  font-size: 18px;
+  color: var(--maroon, #6d1b29);
+}
+
+.modalFooterActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
 }
 
 @media (max-width: 900px) {
   .accountGrid {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  .profileInfoDisplayGrid,
+  .profileEditForm .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .giftAddressesListGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
-@media (max-width: 420px) {
-  .accountGrid {
+@media (max-width: 600px) {
+  .accountCard {
+    padding: 20px 16px;
+  }
+
+  .addressFormGrid {
     grid-template-columns: 1fr;
+  }
+
+  .addressFormGrid .fullWidth {
+    grid-column: span 1;
   }
 }

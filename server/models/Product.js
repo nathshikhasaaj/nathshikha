@@ -43,6 +43,10 @@ const productSchema = new mongoose.Schema(
       type: Number,
       default: 1,
       enum: [0, 1]
+    },
+    isBestseller: {
+      type: Boolean,
+      default: false
     }
   },
   {

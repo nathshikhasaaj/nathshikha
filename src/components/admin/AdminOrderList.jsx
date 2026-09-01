@@ -66,7 +66,7 @@ export default function AdminOrderList({
       case 'confirmed':
         return 'Confirmed';
       case 'making':
-        return 'Crafting';
+        return 'Making';
       case 'packing':
       case 'processing':
         return 'QC & Packed';
@@ -416,10 +416,27 @@ export default function AdminOrderList({
 
                         {/* 2. Customer */}
                         <td className="customerCell">
-                          <b>{o.name}</b>
-                          <small className="userBadge">
-                            {o.user_id ? 'Registered' : 'Guest'}
-                          </small>
+                          <b>{o.recipient_name || o.recipientName || o.name}</b>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', marginTop: 2 }}>
+                            <small className="userBadge">
+                              {o.user_id ? 'Registered' : 'Guest'}
+                            </small>
+                            {(o.is_gift || o.isGift) && (
+                              <span
+                                style={{
+                                  background: '#fce7f3',
+                                  color: '#9d174d',
+                                  fontSize: '10px',
+                                  fontWeight: 700,
+                                  padding: '1px 5px',
+                                  borderRadius: 3
+                                }}
+                                title={`Gift from: ${o.customer_name || o.customerName || 'Customer'}`}
+                              >
+                                🎁 Gift
+                              </span>
+                            )}
+                          </div>
                         </td>
 
                         {/* 3. Contact */}
@@ -538,7 +555,7 @@ export default function AdminOrderList({
                           >
                             <option value="placed">Order Received</option>
                             <option value="confirmed">Order Confirmed</option>
-                            <option value="making">Artisan Crafting</option>
+                            <option value="making">Making</option>
                             <option value="packing">QC & Packaging</option>
                             <option value="shipped">Dispatched & In Transit</option>
                             <option value="delivered">Delivered</option>

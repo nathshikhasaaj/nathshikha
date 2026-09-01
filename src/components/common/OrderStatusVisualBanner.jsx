@@ -32,10 +32,10 @@ export const ORDER_STAGE_CONFIG = {
   },
   making: {
     key: 'making',
-    label: 'Artisan Crafting',
-    badge: 'IN CRAFTING',
-    title: 'Artisan Handcrafting in Progress ✨',
-    desc: 'Our master artisans are handcrafting, shaping intricate filigree, and setting kemp stones with precision.',
+    label: 'Making',
+    badge: 'HANDCRAFTED WITH LOVE',
+    title: '✨ Handcrafted With Love',
+    desc: 'Your jewellery is lovingly handcrafted by our artisans with time, care and attention to detail. Since every piece is handmade, the making process may take approximately 10–15 days. We kindly request you to keep a little patience while we create your beautiful piece with love and effort. ❤️',
     img: '/assets/order-making.svg',
     icon: Sparkles,
     themeClass: 'bannerThemeMaking'

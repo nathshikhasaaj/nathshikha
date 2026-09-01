@@ -1252,3 +1252,124 @@
     padding: 12px 14px;
   }
 }
+
+/* ============================================================ */
+/* GIFT ADDRESS DELIVERY SELECTOR IN CHECKOUT                  */
+/* ============================================================ */
+.addressModeSelector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.addressModeOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fdfcf9;
+  border: 1.5px solid #ebdcc5;
+  border-radius: 6px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5a4b42;
+  transition: all 0.15s ease;
+}
+
+.addressModeOption.active {
+  background: #ffffff;
+  border-color: var(--maroon, #6d1b29);
+  color: var(--maroon, #6d1b29);
+  box-shadow: 0 2px 8px rgba(109, 27, 41, 0.08);
+}
+
+.addressModeOption input[type="radio"] {
+  accent-color: var(--maroon, #6d1b29);
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.giftCheckoutNotice {
+  background: linear-gradient(135deg, #fdf2f8 0%, #fff1f2 100%);
+  border: 1px solid #fbcfe8;
+  border-left: 4px solid #db2777;
+  border-radius: 6px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.giftCheckoutNotice b {
+  font-size: 13px;
+  color: #9d174d;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.giftCheckoutNotice p {
+  margin: 0;
+  font-size: 12px;
+  color: #831843;
+  line-height: 1.4;
+}
+
+.savedGiftDropdownWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.savedGiftDropdownWrap label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.savedGiftDropdownWrap select {
+  padding: 10px 12px;
+  border: 1.5px solid #ebdcc5;
+  border-radius: 6px;
+  font-size: 13px;
+  background: #ffffff;
+  color: #1e293b;
+  outline: none;
+  font-family: inherit;
+}
+
+.savedGiftDropdownWrap select:focus {
+  border-color: var(--maroon, #6d1b29);
+}
+
+.formSectionSubheader {
+  border-top: 1px dashed #e2e8f0;
+  padding-top: 10px;
+  margin-top: 4px;
+}
+
+.formSectionSubheader span {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.formSectionSubheader.buyerHeader {
+  border-top: 1px solid #ebdcc5;
+  padding-top: 12px;
+  margin-top: 8px;
+}
+
+.formSectionSubheader.buyerHeader span {
+  color: var(--maroon, #6d1b29);
+}
+

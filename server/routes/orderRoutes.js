@@ -21,6 +21,7 @@ import {
   orderLimiter,
   lookupLimiter
 } from '../middleware/securityMiddleware.js';
+import { sendOrderPlacedEmail } from '../services/emailService.js';
 
 const router = express.Router();
 
@@ -204,7 +205,13 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
     items,
     couponCode,
     paymentMethod = 'upi',
-    combineWithOrderId
+    combineWithOrderId,
+    isGift,
+    recipientName,
+    recipientPhone,
+    customerName,
+    customerPhone,
+    customerEmail
   } = req.body;
 
   // Strict Input Validation
@@ -460,6 +467,12 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
       userId: user?.id && isValidObjectId(user.id) ? user.id : null,
       shipmentGroupId: targetShipmentGroup ? targetShipmentGroup._id : null,
       shipmentGroupCode: targetShipmentGroup ? targetShipmentGroup.groupCode : null,
+      isGift: Boolean(isGift),
+      recipientName: isGift ? (recipientName ? String(recipientName).trim().slice(0, 100) : name.trim().slice(0, 100)) : null,
+      recipientPhone: isGift ? (recipientPhone ? String(recipientPhone).trim() : phone.trim()) : null,
+      customerName: isGift ? (customerName ? String(customerName).trim().slice(0, 100) : (user?.name || name.trim().slice(0, 100))) : null,
+      customerPhone: isGift ? (customerPhone ? String(customerPhone).trim() : (user?.phone || phone.trim())) : null,
+      customerEmail: isGift ? (customerEmail ? String(customerEmail).trim().toLowerCase() : (user?.email || email.trim().toLowerCase())) : null,
       name: name.trim().slice(0, 100),
       phone: phone.trim(),
       email: email.trim().toLowerCase(),
@@ -485,6 +498,11 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
         $addToSet: { orders: order._id }
       });
     }
+
+    // Send Order Placed notification email non-blockingly
+    sendOrderPlacedEmail(order).catch((mailErr) => {
+      console.error('[OrderRoutes] Failed to dispatch order placed email:', mailErr.message);
+    });
 
     res.status(201).json({
       order: order.toJSON(),

@@ -27,6 +27,8 @@ import OrderSuccess from './pages/OrderSuccess/OrderSuccess';
 import Orders from './pages/Orders/Orders';
 import Account from './pages/Account/Account';
 import Auth from './pages/Auth/Auth';
+import VerifyEmail from './pages/Auth/VerifyEmail';
+import ResetPassword from './pages/Auth/ResetPassword';
 import About from './pages/About/About';
 import ContactUs from './pages/Contact/ContactUs';
 import Suggestion from './pages/Suggestion/Suggestion';
@@ -102,6 +104,16 @@ export default function App() {
           <Route path="/track-order" element={<Orders />} />
           <Route path="/account" element={<Account />} />
           <Route path="/login" element={<Auth />} />
+          <Route path="/register" element={<Auth defaultMode="register" />} />
+          <Route path="/forgot-password" element={<Auth defaultMode="forgot" />} />
+          <Route path="/verify-email/:token" element={<VerifyEmail />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/verify-mail/:token" element={<VerifyEmail />} />
+          <Route path="/verify-mail" element={<VerifyEmail />} />
+          <Route path="/verify/:token" element={<VerifyEmail />} />
+          <Route path="/verify" element={<VerifyEmail />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<ContactUs />} />
           <Route path="/suggestion" element={<Suggestion />} />

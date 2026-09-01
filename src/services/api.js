@@ -28,3 +28,22 @@ export async function api(path, opts = {}) {
 
   return data;
 }
+
+export async function uploadFile(file, path = '/admin/upload') {
+  const token = getToken();
+  const formData = new FormData();
+  formData.append('image', file);
+  const res = await fetch(API + path, {
+    method: 'POST',
+    headers: {
+      ...(token ? { Authorization: 'Bearer ' + token } : {})
+    },
+    body: formData
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error || 'Failed to upload image');
+  }
+  return data;
+}
+

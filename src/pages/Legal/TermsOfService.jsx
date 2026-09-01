@@ -51,17 +51,33 @@ export default function TermsOfService() {
           All content, photography, branding, logo marks, product designs, and text displayed on this website are the intellectual property of Nathshikha Handmade Jewellery and protected under Indian copyright laws.
         </p>
 
-        <h2>5. Limitation of Liability</h2>
+        <h2>5. Customer Photographs & Marketing Consent Policy</h2>
+        <p>
+          When you voluntarily share, upload, or submit your photographs, bridal portraits, or styling images with Nathshikha—whether via our website review system, customer account, WhatsApp, Instagram tags/DMs, Facebook, email, or through our Hall of Fame / Our Brides feature—you grant Nathshikha a non-exclusive, royalty-free, worldwide license and permission to use, publish, and showcase those photographs for marketing, brand storytelling, and promotional purposes.
+        </p>
+        <p>
+          Customer-submitted or shared photographs may be featured across Nathshikha promotional channels, including:
+        </p>
+        <ul>
+          <li><strong>Website:</strong> Homepage banners, product review sections, and the Hall of Fame / Our Brides gallery.</li>
+          <li><strong>Social Media:</strong> Official Nathshikha Instagram, Facebook, and Pinterest channels.</li>
+          <li><strong>Marketing & Promotional Material:</strong> Email newsletters, digital lookbooks, advertising campaigns, and studio showcases.</li>
+        </ul>
+        <p>
+          You retain original ownership of your photographs. By sharing your images, you confirm that you have the necessary rights and permissions to grant Nathshikha this marketing usage permission. If at any time you wish to update or withdraw consent for a previously published photo, you may contact our studio directly and we will promptly attend to your request.
+        </p>
+
+        <h2>6. Limitation of Liability</h2>
         <p>
           Nathshikha shall not be liable for any indirect, incidental, or consequential damages resulting from the use or inability to use our products or services.
         </p>
 
-        <h2>6. Governing Law & Jurisdiction</h2>
+        <h2>7. Governing Law & Jurisdiction</h2>
         <p>
           These Terms of Service are governed by and construed in accordance with the laws of India. Any disputes arising shall be subject to the exclusive jurisdiction of the courts in Maharashtra, India.
         </p>
 
-        <h2>7. Studio Contact Details</h2>
+        <h2>8. Studio Contact Details</h2>
         <p>
           For queries regarding these terms, your orders, or custom jewellery requests:
         </p>

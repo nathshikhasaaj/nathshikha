@@ -478,6 +478,7 @@ export default function AdminHallOfFameManager({
                 <th>Occasion</th>
                 <th>Jewellery Featured</th>
                 <th>Display Order</th>
+                <th>Photo Consent</th>
                 <th>Status</th>
                 <th>Created</th>
                 <th style={{ width: '130px', textAlign: 'right' }}>Actions</th>
@@ -486,6 +487,7 @@ export default function AdminHallOfFameManager({
             <tbody>
               {filteredStories.map((story) => {
                 const linkedProducts = story.products || [];
+                const hasConsent = story.photo_consent !== false;
                 return (
                   <tr key={story.id} className={!story.is_visible ? 'rowHidden' : ''}>
                     {/* Thumbnail */}
@@ -538,11 +540,10 @@ export default function AdminHallOfFameManager({
                         ) : (
                           linkedProducts.map((p, idx) => {
                             if (!p) return null;
-                            const prodName = typeof p === 'object' ? p.name : `Item #${idx + 1}`;
                             return (
                               <span key={p.id || p._id || idx} className="jewelleryChip">
                                 <Tag size={10} />
-                                <span>{prodName}</span>
+                                <span>{p.name}</span>
                               </span>
                             );
                           })
@@ -555,6 +556,19 @@ export default function AdminHallOfFameManager({
                       <span className="orderNumberBadge">
                         #{story.display_order ?? 0}
                       </span>
+                    </td>
+
+                    {/* Photo Consent */}
+                    <td>
+                      {hasConsent ? (
+                        <span className="statusToggleBtn active" style={{ cursor: 'default' }}>
+                          <ShieldCheck size={12} /> <span>Consent Granted</span>
+                        </span>
+                      ) : (
+                        <span className="statusToggleBtn" style={{ background: '#fef3c7', color: '#b45309', borderColor: '#fcd34d', cursor: 'default' }}>
+                          <AlertCircle size={12} /> <span>No Consent</span>
+                        </span>
+                      )}
                     </td>
 
                     {/* Visibility Switch */}
@@ -899,26 +913,32 @@ export default function AdminHallOfFameManager({
                     <input
                       type="checkbox"
                       checked={formData.photo_consent}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, photo_consent: e.target.checked }))
-                      }
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setFormData((prev) => ({
+                          ...prev,
+                          photo_consent: checked,
+                          is_visible: checked ? prev.is_visible : false
+                        }));
+                      }}
                     />
                     <span>
                       <ShieldCheck size={16} color="#15803d" />
-                      <b>Customer Consent Verified:</b> Customer has given permission to display this photograph publicly on Nathshikha.
+                      <b>Customer Permission Confirmed:</b> Customer has given permission to use this photo for marketing purposes.
                     </span>
                   </label>
 
-                  <label className="visCheckboxLabel">
+                  <label className={`visCheckboxLabel ${!formData.photo_consent ? 'disabled' : ''}`}>
                     <input
                       type="checkbox"
-                      checked={formData.is_visible}
+                      checked={formData.is_visible && formData.photo_consent}
+                      disabled={!formData.photo_consent}
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, is_visible: e.target.checked }))
                       }
                     />
                     <span>
-                      <b>Publish Live (Is Visible):</b> Make this story immediately visible on the customer-facing Hall of Fame page.
+                      <b>Publish Live (Is Visible):</b> Make this story visible on the customer-facing Hall of Fame page. {!formData.photo_consent && <small style={{ color: '#dc2626' }}>(Requires customer consent)</small>}
                     </span>
                   </label>
                 </div>
