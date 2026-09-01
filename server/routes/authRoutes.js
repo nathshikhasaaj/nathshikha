@@ -436,6 +436,51 @@ router.put('/profile', auth, async (req, res) => {
   }
 });
 
+// Change authenticated user password
+router.put('/change-password', auth, async (req, res) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+
+    if (!currentPassword || !String(currentPassword).trim()) {
+      return res.status(400).json({ error: 'Please enter your current password.' });
+    }
+
+    if (!newPassword || String(newPassword).length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters long.' });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ error: 'New password and confirm password do not match.' });
+    }
+
+    const userDoc = await User.findById(req.user.id);
+    if (!userDoc) {
+      return res.status(404).json({ error: 'User account not found.' });
+    }
+
+    // Verify current password against hashed password in database
+    if (!userDoc.comparePassword(currentPassword)) {
+      return res.status(400).json({ error: 'Incorrect current password. Please try again.' });
+    }
+
+    if (currentPassword === newPassword) {
+      return res.status(400).json({ error: 'New password cannot be the same as your current password.' });
+    }
+
+    // Hash and update password
+    userDoc.passwordHash = User.hashPassword(newPassword);
+    await userDoc.save();
+
+    res.json({
+      ok: true,
+      message: 'Password updated successfully. Please use your new password next time you login.'
+    });
+  } catch (err) {
+    console.error('Error changing password:', err);
+    res.status(500).json({ error: 'Failed to update password. Please try again.' });
+  }
+});
+
 // Get customer saved addresses
 router.get('/addresses', auth, async (req, res) => {
   try {

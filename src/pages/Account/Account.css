@@ -459,6 +459,123 @@
   margin-top: 20px;
 }
 
+/* Security & Password Card */
+.securityCard {
+  border-left: 4px solid var(--gold, #d4af37);
+}
+
+.securityInfoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  background: #fdfaf5;
+  border: 1px solid #ebdcc6;
+  border-radius: 8px;
+  padding: 16px 20px;
+}
+
+.securityStatusBox {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.securityIconBubble {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.securityStatusText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.securityStatusText b {
+  font-size: 14px;
+  color: var(--maroon, #6d1b29);
+}
+
+.securityStatusText span {
+  font-size: 12px;
+  color: #7a6b63;
+}
+
+.changePasswordBtn,
+.changePassActionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Password Modal & Form */
+.passwordModalContent {
+  max-width: 460px;
+}
+
+.passwordChangeForm {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.passwordErrorBanner {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.passwordFormFields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.passwordInputWrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.passwordInputWrapper input {
+  width: 100%;
+  padding-right: 42px !important;
+}
+
+.togglePasswordBtn {
+  position: absolute;
+  right: 10px;
+  background: transparent;
+  border: none;
+  color: #8c7f78;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+}
+
+.togglePasswordBtn:hover {
+  color: var(--maroon, #6d1b29);
+}
+
 @media (max-width: 900px) {
   .accountGrid {
     grid-template-columns: repeat(2, 1fr);
@@ -477,6 +594,17 @@
 @media (max-width: 600px) {
   .accountCard {
     padding: 20px 16px;
+  }
+
+  .securityInfoRow {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 14px;
+  }
+
+  .changePassActionBtn {
+    width: 100%;
+    justify-content: center;
   }
 
   .addressFormGrid {

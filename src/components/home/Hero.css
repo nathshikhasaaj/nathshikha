@@ -400,53 +400,78 @@
 /* ============================================================ */
 /* 5. DEDICATED PROFESSIONAL MOBILE EXPERIENCE (< 900px)        */
 /* ============================================================ */
+/* ============================================================ */
+/* 5. DEDICATED PROFESSIONAL MOBILE EXPERIENCE (< 900px)        */
+/* ============================================================ */
 @media (max-width: 900px) {
   .hero {
     min-height: auto;
-    padding: 16px 12px 28px;
+    padding: 16px 14px 28px;
     background-color: #1e0509;
   }
 
   .heroContainer {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 14px;
     width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
   }
 
-  /* 1. Top Visual Frame (100% Unobstructed Jewellery View) */
+  /* 1. Top Visual Frame (Uncropped, Full-Scale Jewellery Display) */
   .heroVisualCol {
     order: 1;
     width: 100%;
+    display: flex;
+    justify-content: center;
   }
 
   .heroVisualCard {
     max-width: 100%;
     width: 100%;
-    padding: 4px;
-    border-radius: 16px;
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7);
+    padding: 5px;
+    border-radius: 18px;
+    background: linear-gradient(145deg, rgba(228, 199, 134, 0.45) 0%, rgba(90, 20, 32, 0.4) 50%, rgba(228, 199, 134, 0.25) 100%);
+    box-shadow: 0 14px 38px rgba(0, 0, 0, 0.75), 0 0 25px rgba(228, 199, 134, 0.12);
   }
 
   .heroVisualFrame {
-    height: 390px;
-    border-radius: 12px;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 5.2;
+    max-height: 520px;
+    min-height: 380px;
+    border-radius: 14px;
+    background: radial-gradient(circle at center, #2e0b13 0%, #150306 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .heroImageLayer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
   }
 
   .heroModelImg {
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    object-position: center 8%;
+    object-position: center 10%;
+    display: block;
   }
 
   .heroLuxuryBadge {
-    top: 10px;
-    left: 10px;
-    font-size: 9px;
-    padding: 4px 10px;
+    top: 12px;
+    left: 12px;
+    font-size: 9.5px;
+    padding: 5px 11px;
   }
 
   .heroNavArrow {
-    width: 34px;
-    height: 34px;
+    width: 36px;
+    height: 36px;
   }
 
   .heroArrowLeft {
@@ -457,6 +482,13 @@
     right: 8px;
   }
 
+  .heroVisualCounter {
+    bottom: 12px;
+    right: 12px;
+    font-size: 11px;
+    padding: 3px 9px;
+  }
+
   /* 2. Structured Narrative Card Underneath (Never Overlays Jewelry) */
   .heroContentCol {
     order: 2;
@@ -464,40 +496,41 @@
     width: 100%;
     align-items: center;
     text-align: center;
-    background: rgba(36, 8, 14, 0.65);
-    border: 1px solid rgba(228, 199, 134, 0.22);
-    border-radius: 14px;
-    padding: 16px 14px 12px;
+    background: rgba(36, 8, 14, 0.68);
+    border: 1px solid rgba(228, 199, 134, 0.25);
+    border-radius: 16px;
+    padding: 18px 16px 14px;
     box-sizing: border-box;
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
   }
 
   .heroSlideTag {
     font-size: 10px;
     letter-spacing: 1.5px;
-    padding: 3px 10px;
-    margin-bottom: 6px;
+    padding: 4px 12px;
+    margin-bottom: 8px;
   }
 
   .heroSlideTitle {
-    font-size: clamp(21px, 5.8vw, 26px);
-    line-height: 1.2;
-    margin: 4px 0 6px;
+    font-size: clamp(21px, 5.8vw, 27px);
+    line-height: 1.22;
+    margin: 4px 0 8px;
     text-align: center;
   }
 
   .heroSlideDesc {
-    font-size: 12px;
-    line-height: 1.48;
-    margin-bottom: 8px;
+    font-size: 12.5px;
+    line-height: 1.52;
+    margin-bottom: 10px;
     text-align: center;
     max-width: 98%;
   }
 
   .heroJewelleryHighlight {
-    font-size: 10.5px;
-    padding: 4px 10px;
-    margin-bottom: 12px;
+    font-size: 11px;
+    padding: 5px 12px;
+    margin-bottom: 14px;
     text-align: center;
   }
 
@@ -505,16 +538,16 @@
   .heroActionGroup {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 10px;
     width: 100%;
-    max-width: 380px;
-    margin-bottom: 12px;
+    max-width: 400px;
+    margin-bottom: 14px;
   }
 
   .heroMainBtn,
   .heroWhatsAppBtn {
-    padding: 11px 10px;
-    font-size: 10.5px;
+    padding: 12px 10px;
+    font-size: 11px;
     letter-spacing: 0.8px;
     width: 100%;
     box-sizing: border-box;
@@ -526,21 +559,21 @@
   .heroSlideThumbTabs {
     display: flex;
     justify-content: center;
-    gap: 6px;
+    gap: 8px;
     width: 100%;
     margin-top: 2px;
   }
 
   .heroThumbTab {
-    padding: 3px 8px 3px 4px;
-    gap: 6px;
-    border-radius: 6px;
+    padding: 4px 10px 4px 5px;
+    gap: 7px;
+    border-radius: 8px;
   }
 
   .heroThumbTab img {
-    width: 26px;
-    height: 26px;
-    border-radius: 4px;
+    width: 28px;
+    height: 28px;
+    border-radius: 5px;
   }
 
   .thumbTabText small {
@@ -549,17 +582,47 @@
   }
 
   .thumbTabText span {
-    font-size: 9.5px;
+    font-size: 10px;
   }
 }
 
-@media (max-width: 380px) {
+@media (max-width: 420px) {
+  .hero {
+    padding: 12px 10px 24px;
+  }
+
+  .heroVisualFrame {
+    aspect-ratio: 4 / 5.2;
+    max-height: 470px;
+    min-height: 350px;
+  }
+
+  .heroModelImg {
+    object-position: center 8%;
+  }
+
+  .heroContentCol {
+    padding: 16px 12px 12px;
+  }
+
+  .heroSlideTitle {
+    font-size: 21px;
+  }
+
+  .heroSlideDesc {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 360px) {
   .hero {
     padding: 10px 8px 20px;
   }
 
   .heroVisualFrame {
-    height: 330px;
+    aspect-ratio: 4 / 5.2;
+    max-height: 420px;
+    min-height: 320px;
   }
 
   .heroModelImg {
@@ -576,7 +639,7 @@
 
   .heroActionGroup {
     grid-template-columns: 1fr;
-    gap: 6px;
+    gap: 8px;
   }
 
   .heroMainBtn,

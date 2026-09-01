@@ -16,7 +16,10 @@ import {
   CheckCircle2,
   Lock,
   X,
-  ShieldCheck
+  ShieldCheck,
+  KeyRound,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -102,6 +105,21 @@ export default function Account() {
     pincode: ''
   });
   const [savingGift, setSavingGift] = useState(false);
+
+  // Change Password State
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false
+  });
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
 
   // Sync profileForm when user changes
   useEffect(() => {
@@ -308,6 +326,45 @@ export default function Account() {
     }
   };
 
+  // Handle Save Password
+  const handleSavePassword = async (e) => {
+    e.preventDefault();
+    setPasswordError('');
+
+    if (!passwordForm.currentPassword) {
+      setPasswordError('Please enter your current password.');
+      return;
+    }
+    if (!passwordForm.newPassword || passwordForm.newPassword.length < 6) {
+      setPasswordError('New password must be at least 6 characters long.');
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError('New password and confirm password do not match.');
+      return;
+    }
+    if (passwordForm.currentPassword === passwordForm.newPassword) {
+      setPasswordError('New password cannot be the same as your current password.');
+      return;
+    }
+
+    setSavingPassword(true);
+    try {
+      await api('/auth/change-password', {
+        method: 'PUT',
+        body: JSON.stringify(passwordForm)
+      });
+      setToast('Password updated successfully! Please use your new password next time you login.');
+      setShowPasswordModal(false);
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setShowPasswords({ current: false, new: false, confirm: false });
+    } catch (err) {
+      setPasswordError(err.message || 'Failed to update password.');
+    } finally {
+      setSavingPassword(false);
+    }
+  };
+
   return (
     <main className="page accountPage">
       <SectionTitle
@@ -455,7 +512,58 @@ export default function Account() {
             )}
           </div>
 
-          {/* Section 2: Address Book & Gift Addresses */}
+          {/* Section 2: Security & Password */}
+          <div className="accountCard securityCard">
+            <div className="accountCardHeader">
+              <div className="headerTitleBox">
+                <ShieldCheck size={20} color="var(--maroon)" />
+                <div>
+                  <h3>Account Security & Password</h3>
+                  <p>Keep your account secure by updating your password periodically.</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="editSectionBtn changePasswordBtn"
+                onClick={() => {
+                  setPasswordError('');
+                  setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                  setShowPasswordModal(true);
+                }}
+              >
+                <KeyRound size={13} />
+                <span>Change Password</span>
+              </button>
+            </div>
+
+            <div className="securityInfoRow">
+              <div className="securityStatusBox">
+                <div className="securityIconBubble">
+                  <Lock size={16} color="var(--gold)" />
+                </div>
+                <div className="securityStatusText">
+                  <b>Password Protection Active</b>
+                  <span>Your account is protected with encrypted authentication.</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="outlineBtn compact changePassActionBtn"
+                onClick={() => {
+                  setPasswordError('');
+                  setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                  setShowPasswordModal(true);
+                }}
+              >
+                <KeyRound size={13} />
+                <span>Update Password</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Section 3: Address Book & Gift Addresses */}
           <div className="accountCard addressesSectionCard">
             <div className="accountCardHeader">
               <div className="headerTitleBox">
@@ -858,6 +966,135 @@ export default function Account() {
                   disabled={savingGift}
                 >
                   {savingGift ? 'Saving Address...' : editingGiftId ? 'Update Gift Address' : 'Save Gift Address'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Change Password Modal */}
+      {showPasswordModal && (
+        <div className="accountModalOverlay" onClick={() => !savingPassword && setShowPasswordModal(false)}>
+          <div className="accountModalContent passwordModalContent" onClick={(e) => e.stopPropagation()}>
+            <div className="accountModalHeader">
+              <div className="modalTitleBox">
+                <KeyRound size={20} color="var(--maroon)" />
+                <h3>Change Account Password</h3>
+              </div>
+              <button
+                type="button"
+                className="closeModalBtn"
+                onClick={() => !savingPassword && setShowPasswordModal(false)}
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSavePassword} className="passwordChangeForm">
+              {passwordError && (
+                <div className="passwordErrorBanner">
+                  <span>{passwordError}</span>
+                </div>
+              )}
+
+              <div className="passwordFormFields">
+                {/* Current Password */}
+                <div className="formGroup">
+                  <label>Current Password *</label>
+                  <div className="passwordInputWrapper">
+                    <input
+                      type={showPasswords.current ? 'text' : 'password'}
+                      required
+                      placeholder="Enter your current password"
+                      value={passwordForm.currentPassword}
+                      onChange={(e) =>
+                        setPasswordForm((prev) => ({ ...prev, currentPassword: e.target.value }))
+                      }
+                    />
+                    <button
+                      type="button"
+                      className="togglePasswordBtn"
+                      onClick={() =>
+                        setShowPasswords((prev) => ({ ...prev, current: !prev.current }))
+                      }
+                      title={showPasswords.current ? 'Hide password' : 'Show password'}
+                    >
+                      {showPasswords.current ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* New Password */}
+                <div className="formGroup">
+                  <label>New Password * (Min. 6 characters)</label>
+                  <div className="passwordInputWrapper">
+                    <input
+                      type={showPasswords.new ? 'text' : 'password'}
+                      required
+                      minLength={6}
+                      placeholder="Enter strong new password"
+                      value={passwordForm.newPassword}
+                      onChange={(e) =>
+                        setPasswordForm((prev) => ({ ...prev, newPassword: e.target.value }))
+                      }
+                    />
+                    <button
+                      type="button"
+                      className="togglePasswordBtn"
+                      onClick={() =>
+                        setShowPasswords((prev) => ({ ...prev, new: !prev.new }))
+                      }
+                      title={showPasswords.new ? 'Hide password' : 'Show password'}
+                    >
+                      {showPasswords.new ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm New Password */}
+                <div className="formGroup">
+                  <label>Confirm New Password *</label>
+                  <div className="passwordInputWrapper">
+                    <input
+                      type={showPasswords.confirm ? 'text' : 'password'}
+                      required
+                      minLength={6}
+                      placeholder="Re-enter your new password"
+                      value={passwordForm.confirmPassword}
+                      onChange={(e) =>
+                        setPasswordForm((prev) => ({ ...prev, confirmPassword: e.target.value }))
+                      }
+                    />
+                    <button
+                      type="button"
+                      className="togglePasswordBtn"
+                      onClick={() =>
+                        setShowPasswords((prev) => ({ ...prev, confirm: !prev.confirm }))
+                      }
+                      title={showPasswords.confirm ? 'Hide password' : 'Show password'}
+                    >
+                      {showPasswords.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="modalFooterActions">
+                <button
+                  type="button"
+                  className="outlineBtn"
+                  onClick={() => setShowPasswordModal(false)}
+                  disabled={savingPassword}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="goldBtn"
+                  disabled={savingPassword}
+                >
+                  {savingPassword ? 'Updating Password...' : 'Save New Password'}
                 </button>
               </div>
             </form>
