@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
+import { compressImage } from '../../utils/imageCompressor';
 import './AdminHeroManager.css';
 
 const emptySlideForm = {
@@ -75,10 +76,11 @@ export default function AdminHeroManager({
     }
 
     setUploadingImage(true);
-    const form = new FormData();
-    form.append('image', file);
-
     try {
+      const optimizedFile = await compressImage(file, { maxWidth: 2560, maxHeight: 1440, quality: 0.90 });
+      const form = new FormData();
+      form.append('image', optimizedFile);
+
       const res = await api('/hero-slides/admin/upload', {
         method: 'POST',
         body: form

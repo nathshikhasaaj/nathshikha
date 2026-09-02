@@ -738,6 +738,40 @@ export default function AdminOrderDetailsModal({
                         </td>
                         <td className="nameCell">
                           <b>{item.name}</b>
+                          {(() => {
+                            const itemParams =
+                              (item.selectedParameters && typeof item.selectedParameters === 'object'
+                                ? item.selectedParameters
+                                : null) ||
+                              (item.selectedOptions && typeof item.selectedOptions === 'object'
+                                ? item.selectedOptions
+                                : {});
+                            const hasParams = Object.keys(itemParams).length > 0;
+
+                            if (!hasParams) return null;
+
+                            return (
+                              <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                                {Object.entries(itemParams).map(([optName, optVal]) => (
+                                  <span
+                                    key={optName}
+                                    style={{
+                                      fontSize: 10.5,
+                                      fontWeight: 600,
+                                      color: '#78350f',
+                                      background: '#fef3c7',
+                                      border: '1px solid #fde68a',
+                                      padding: '2px 6px',
+                                      borderRadius: 4,
+                                      display: 'inline-block'
+                                    }}
+                                  >
+                                    {optName}: {optVal}
+                                  </span>
+                                ))}
+                              </div>
+                            );
+                          })()}
                         </td>
                         <td>{money(item.price)}</td>
                         <td>

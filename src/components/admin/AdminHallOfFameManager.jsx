@@ -22,6 +22,7 @@ import {
 import { api } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import { money } from '../../utils/formatters';
+import { compressMultipleImages } from '../../utils/imageCompressor';
 import './AdminHallOfFameManager.css';
 
 const OCCASIONS = [
@@ -168,17 +169,15 @@ export default function AdminHallOfFameManager({
         setToast('Please select valid JPG, PNG, WEBP, HEIC or GIF images.');
         return;
       }
-      if (file.size > 25 * 1024 * 1024) {
-        setToast('Each image file size must be under 25MB.');
-        return;
-      }
     }
 
     setUploadingImage(true);
-    const data = new FormData();
-    files.forEach((f) => data.append('images', f));
-
     try {
+      setToast('Optimizing photo(s)…');
+      const optimizedFiles = await compressMultipleImages(files, { maxWidth: 2048, maxHeight: 2048, quality: 0.88 });
+      const data = new FormData();
+      optimizedFiles.forEach((f) => data.append('images', f));
+
       const res = await api('/hall-of-fame/admin/upload-multiple', {
         method: 'POST',
         body: data

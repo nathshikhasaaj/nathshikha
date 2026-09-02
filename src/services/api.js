@@ -1,3 +1,5 @@
+import { compressImage } from '../utils/imageCompressor.js';
+
 const API = '/api';
 
 export const getToken = () => {
@@ -26,10 +28,30 @@ export async function api(path, opts = {}) {
     throw new Error(netErr.message || 'Network connection failed. Please check your internet connection.');
   }
 
-  const data = await res.json().catch(() => ({}));
+  let rawText = '';
+  let data = {};
+  try {
+    rawText = await res.text();
+    data = rawText ? JSON.parse(rawText) : {};
+  } catch {
+    data = {};
+  }
 
   if (!res.ok) {
-    const errorMsg = data.error || data.message || (res.status === 413 ? 'File size too large' : 'Something went wrong');
+    let errorMsg = data.error || data.message;
+    if (!errorMsg) {
+      if (res.status === 413) {
+        errorMsg = 'Request payload too large. Please select optimized photos.';
+      } else if (res.status === 401) {
+        errorMsg = 'Session expired. Please log in again.';
+      } else if (res.status === 403) {
+        errorMsg = 'Admin access required.';
+      } else if (rawText && rawText.length < 200 && !rawText.startsWith('<')) {
+        errorMsg = rawText;
+      } else {
+        errorMsg = `Request failed (${res.status})`;
+      }
+    }
     throw new Error(errorMsg);
   }
 
@@ -43,8 +65,16 @@ export async function uploadFile(fileOrFormData, path = '/admin/upload', fieldNa
   if (fileOrFormData instanceof FormData) {
     formData = fileOrFormData;
   } else {
+    // Compress single image if it is a File/Blob
+    let fileToUpload = fileOrFormData;
+    try {
+      fileToUpload = await compressImage(fileOrFormData);
+    } catch {
+      fileToUpload = fileOrFormData;
+    }
+
     formData = new FormData();
-    formData.append(fieldName, fileOrFormData);
+    formData.append(fieldName, fileToUpload);
   }
 
   let res;
@@ -60,7 +90,14 @@ export async function uploadFile(fileOrFormData, path = '/admin/upload', fieldNa
     throw new Error(netErr.message || 'Network error during image upload.');
   }
 
-  const data = await res.json().catch(() => ({}));
+  let data = {};
+  try {
+    const rawText = await res.text();
+    data = rawText ? JSON.parse(rawText) : {};
+  } catch {
+    data = {};
+  }
+
   if (!res.ok) {
     const errorMsg = data.error || data.message || (res.status === 413 ? 'Image size exceeds maximum limit' : 'Failed to upload image');
     throw new Error(errorMsg);

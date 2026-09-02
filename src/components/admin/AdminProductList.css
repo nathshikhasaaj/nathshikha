@@ -1,5 +1,10 @@
 .adminCatalogueCard {
   background: #ffffff;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .catalogueSub {
@@ -16,24 +21,35 @@
   border-radius: 20px;
   font-size: 11px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .adminProductList {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
   max-height: 600px;
   overflow-y: auto;
+  overflow-x: hidden;
   padding-right: 4px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .adminProduct {
   display: grid;
-  grid-template-columns: 50px 1fr auto;
-  gap: 12px;
+  grid-template-columns: 48px 1fr auto;
+  gap: 10px;
   align-items: center;
   border-top: 1px solid #eee7da;
   padding: 10px 0;
   transition: background 0.15s ease;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .adminProduct:hover {
@@ -42,14 +58,15 @@
 
 .adminProductThumb {
   position: relative;
-  width: 50px;
-  height: 50px;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
 }
 
 .adminProductThumb img,
 .adminProduct img {
-  width: 50px;
-  height: 50px;
+  width: 48px;
+  height: 48px;
   object-fit: cover;
   border-radius: 6px;
   border: 1px solid #ebdcc5;
@@ -62,51 +79,79 @@
   right: 2px;
   background: rgba(30, 20, 15, 0.85);
   color: #ffffff;
-  font-size: 8.5px;
+  font-size: 8px;
   font-weight: 700;
-  padding: 1px 4px;
+  padding: 1px 3px;
   border-radius: 3px;
   white-space: nowrap;
 }
 
 .adminProductInfo {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 2px;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .adminProductInfo b {
-  font-size: 13px;
+  font-size: 12.5px;
   color: #3b2820;
+  white-space: normal;
+  word-break: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.35;
 }
 
 .adminProductInfo small {
-  font-size: 11.5px;
+  font-size: 11px;
   color: #6e5e56;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .adminProductMetaTags {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   margin-top: 2px;
+  flex-wrap: wrap;
+  max-width: 100%;
 }
 
 .multiPhotoTag {
-  font-size: 9.5px;
+  font-size: 9px;
   color: #8b6d32;
   background: #fcf6e6;
   border: 1px solid #ebd8ab;
-  padding: 1px 6px;
-  border-radius: 10px;
+  padding: 1px 5px;
+  border-radius: 8px;
   font-weight: 600;
+  white-space: nowrap;
+}
+
+.paramBadgeTag {
+  font-size: 9px;
+  color: #78350f;
+  background: #fdf5e2;
+  border: 1px solid #dfc793;
+  padding: 1px 5px;
+  border-radius: 8px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .statusTag {
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 700;
   display: inline-block;
-  margin-top: 2px;
-  width: fit-content;
+  white-space: nowrap;
 }
 
 .liveTag {
@@ -117,22 +162,33 @@
   color: #9a6700;
 }
 
+.bestsellerTag {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
 .adminProductActions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
 .actionBtn {
   border: 1px solid #e1d5bd;
   background: #ffffff;
-  padding: 6px;
+  padding: 5px;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 5px;
   display: grid;
   place-items: center;
   transition: all 0.2s ease;
   color: #594640;
+  min-width: 28px;
+  min-height: 28px;
+  box-sizing: border-box;
 }
 
 .actionBtn:hover {
@@ -160,23 +216,39 @@
 }
 
 @media (max-width: 600px) {
+  .adminCatalogueCard {
+    padding: 14px 10px;
+    border-radius: 8px;
+  }
+
   .adminProduct {
-    grid-template-columns: 50px 1fr auto;
-    padding: 10px 4px;
-    gap: 10px;
+    grid-template-columns: 44px 1fr auto;
+    padding: 8px 0;
+    gap: 8px;
+  }
+
+  .adminProductThumb,
+  .adminProductThumb img,
+  .adminProduct img {
+    width: 44px;
+    height: 44px;
   }
 
   .adminProductInfo b {
-    font-size: 12.5px;
+    font-size: 12px;
   }
 
   .adminProductInfo small {
-    font-size: 11px;
+    font-size: 10.5px;
+  }
+
+  .adminProductActions {
+    gap: 3px;
   }
 
   .actionBtn {
-    padding: 8px;
-    min-width: 32px;
-    min-height: 32px;
+    padding: 4px;
+    min-width: 26px;
+    min-height: 26px;
   }
 }

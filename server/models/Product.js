@@ -1,5 +1,73 @@
 import mongoose from 'mongoose';
 
+const productParameterSelectedValueSchema = new mongoose.Schema(
+  {
+    valueId: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    label: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    value: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    colorCode: {
+      type: String,
+      default: null,
+      trim: true
+    },
+    inStock: {
+      type: Boolean,
+      default: true
+    }
+  },
+  { _id: false }
+);
+
+const productParameterAssignmentSchema = new mongoose.Schema(
+  {
+    parameterId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Parameter',
+      required: true
+    },
+    name: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    displayType: {
+      type: String,
+      enum: ['buttons', 'dropdown', 'color'],
+      default: 'buttons'
+    },
+    selectionMode: {
+      type: String,
+      enum: ['single', 'multiple'],
+      default: 'single'
+    },
+    required: {
+      type: Boolean,
+      default: true
+    },
+    selectedValueIds: {
+      type: [String],
+      default: []
+    },
+    selectedValues: {
+      type: [productParameterSelectedValueSchema],
+      default: []
+    }
+  },
+  { _id: false }
+);
+
 const productSchema = new mongoose.Schema(
   {
     name: {
@@ -14,7 +82,7 @@ const productSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      required: [true, 'Product category is required'],
+      default: 'Traditional',
       trim: true
     },
     tag: {
@@ -33,6 +101,10 @@ const productSchema = new mongoose.Schema(
     description: {
       type: String,
       default: ''
+    },
+    productParameters: {
+      type: [productParameterAssignmentSchema],
+      default: []
     },
     stock: {
       type: Number,
@@ -58,6 +130,9 @@ const productSchema = new mongoose.Schema(
         // Ensure images array always contains at least the primary img
         if (!ret.images || ret.images.length === 0) {
           ret.images = ret.img ? [ret.img] : [];
+        }
+        if (!Array.isArray(ret.productParameters)) {
+          ret.productParameters = [];
         }
         delete ret._id;
         delete ret.__v;

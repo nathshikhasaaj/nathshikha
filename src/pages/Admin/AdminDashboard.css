@@ -296,9 +296,11 @@
   width: 100%;
   margin: auto;
   display: grid;
-  grid-template-columns: 1fr 1.2fr;
+  grid-template-columns: 1.15fr 0.85fr;
   gap: 20px;
+  align-items: start;
   box-sizing: border-box;
+  min-width: 0;
 }
 
 .adminCard {
@@ -311,6 +313,7 @@
   width: 100%;
   margin: 0 auto;
   box-sizing: border-box;
+  min-width: 0;
 }
 
 .cardHeading {
@@ -319,6 +322,7 @@
   justify-content: space-between;
   gap: 15px;
   margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
 .cardHeading h3 {
@@ -337,13 +341,18 @@
 /* Responsive Media Queries */
 @media (max-width: 900px) {
   .adminTwoCol {
-    grid-template-columns: 1fr;
+    grid-template-columns: 100%;
+    gap: 16px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
   }
 }
 
 @media (max-width: 768px) {
   .admin {
-    padding: 12px 10px 50px;
+    padding: 12px 8px 60px;
+    overflow-x: hidden;
   }
 
   .adminHeader {

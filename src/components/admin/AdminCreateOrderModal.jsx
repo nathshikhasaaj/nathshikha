@@ -271,7 +271,9 @@ export default function AdminCreateOrderModal({
         shippingMethod: selectedShippingMethod,
         items: selectedItems.map((item) => ({
           id: item.productId,
-          qty: item.qty
+          qty: item.qty,
+          selectedParameters: item.selectedParameters || item.selectedOptions || {},
+          selectedOptions: item.selectedParameters || item.selectedOptions || {}
         })),
         couponCode: appliedCoupon ? appliedCoupon.code : null,
         paymentMethod: 'upi',

@@ -52,53 +52,73 @@ export default function Cart() {
               </div>
             </div>
 
-            {cart.map((p) => (
-              <div className="cartItem" key={p.id}>
-                <Link to={`/product/${p.id}`} className="cartItemImgLink">
-                  <img src={p.img || '/assets/thushi.jpg'} alt={p.name} />
-                </Link>
-                <div className="cartItemDetails">
-                  <div>
-                    <Link to={`/product/${p.id}`}>
-                      <h3>{p.name}</h3>
-                    </Link>
-                    <div className="cartItemPriceRow">
-                      <strong className="cartItemUnitPrice">{money(p.price)}</strong>
-                      {p.qty > 1 && (
-                        <span className="cartItemTotalSub">({money(p.price * p.qty)})</span>
+            {cart.map((p) => {
+              const selectedParams =
+                (p.selectedParameters && typeof p.selectedParameters === 'object' ? p.selectedParameters : null) ||
+                (p.selectedOptions && typeof p.selectedOptions === 'object' ? p.selectedOptions : {});
+              const hasOptions = Object.keys(selectedParams).length > 0;
+
+              return (
+                <div className="cartItem" key={itemKey}>
+                  <Link to={`/product/${p.id}`} className="cartItemImgLink">
+                    <img src={p.img || '/assets/thushi.jpg'} alt={p.name} />
+                  </Link>
+                  <div className="cartItemDetails">
+                    <div>
+                      <Link to={`/product/${p.id}`}>
+                        <h3>{p.name}</h3>
+                      </Link>
+
+                      {/* Dynamic Selected Parameters Badges */}
+                      {hasOptions && (
+                        <div className="cartItemOptionsRow">
+                          {Object.entries(selectedParams).map(([optName, optVal]) => (
+                            <span key={optName} className="cartOptionPill">
+                              <span className="cartOptionLabel">{optName}:</span>
+                              <b>{optVal}</b>
+                            </span>
+                          ))}
+                        </div>
                       )}
+
+                      <div className="cartItemPriceRow">
+                        <strong className="cartItemUnitPrice">{money(p.price)}</strong>
+                        {p.qty > 1 && (
+                          <span className="cartItemTotalSub">({money(p.price * p.qty)})</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="qty">
+                      <button
+                        type="button"
+                        onClick={() => updateCartQty(itemKey, -1)}
+                        aria-label="Decrease quantity"
+                      >
+                        <Minus size={13} />
+                      </button>
+                      <b>{p.qty}</b>
+                      <button
+                        type="button"
+                        onClick={() => updateCartQty(itemKey, 1)}
+                        aria-label="Increase quantity"
+                      >
+                        <Plus size={13} />
+                      </button>
+                      <button
+                        className="trash"
+                        type="button"
+                        onClick={() => removeFromCart(itemKey)}
+                        aria-label={`Remove ${p.name} from bag`}
+                        title="Remove item"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </div>
                   </div>
-
-                  <div className="qty">
-                    <button
-                      type="button"
-                      onClick={() => updateCartQty(p.id, -1)}
-                      aria-label="Decrease quantity"
-                    >
-                      <Minus size={13} />
-                    </button>
-                    <b>{p.qty}</b>
-                    <button
-                      type="button"
-                      onClick={() => updateCartQty(p.id, 1)}
-                      aria-label="Increase quantity"
-                    >
-                      <Plus size={13} />
-                    </button>
-                    <button
-                      className="trash"
-                      type="button"
-                      onClick={() => removeFromCart(p.id)}
-                      aria-label={`Remove ${p.name} from bag`}
-                      title="Remove item"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <aside className="summary">

@@ -106,6 +106,35 @@
   color: var(--maroon);
 }
 
+.cartItemOptionsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 6px;
+}
+
+.cartOptionPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #fdf5e2;
+  border: 1px solid #dfc793;
+  color: #78350f;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.cartOptionPill .cartOptionLabel {
+  font-weight: 500;
+  color: #8c704b;
+}
+
+.cartOptionPill b {
+  font-weight: 700;
+  color: #78350f;
+}
+
 .cartItemPriceRow {
   display: flex;
   align-items: baseline;

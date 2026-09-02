@@ -148,9 +148,61 @@ router.post('/upload-multiple', uploadMultiple(['images', 'photos', 'files'], 10
   });
 });
 
+// Helper to sanitize product parameters
+function sanitizeProductParameters(rawParams) {
+  if (!Array.isArray(rawParams)) return [];
+  return rawParams
+    .filter((param) => param && (param.parameterId || (param.name && String(param.name).trim())))
+    .map((param) => {
+      const selectedValues = Array.isArray(param.selectedValues)
+        ? param.selectedValues
+            .filter((v) => v && (v.valueId || v.value || v.label))
+            .map((v) => ({
+              valueId: String(v.valueId || v._id || v.value || v.label).trim(),
+              label: String(v.label || v.value || '').trim(),
+              value: String(v.value || v.label || '').trim(),
+              colorCode: v.colorCode ? String(v.colorCode).trim() : null,
+              inStock: v.inStock !== undefined ? Boolean(v.inStock) : true
+            }))
+        : [];
+
+      const selectedValueIds = Array.isArray(param.selectedValueIds) && param.selectedValueIds.length > 0
+        ? param.selectedValueIds.map((id) => String(id).trim())
+        : selectedValues.map((v) => v.valueId);
+
+      return {
+        parameterId: param.parameterId && mongoose.Types.ObjectId.isValid(param.parameterId)
+          ? param.parameterId
+          : new mongoose.Types.ObjectId(),
+        name: String(param.name || '').trim(),
+        displayType: ['buttons', 'dropdown', 'color'].includes(param.displayType)
+          ? param.displayType
+          : 'buttons',
+        selectionMode: ['single', 'multiple'].includes(param.selectionMode)
+          ? param.selectionMode
+          : 'single',
+        required: param.required !== undefined ? Boolean(param.required) : true,
+        selectedValueIds,
+        selectedValues
+      };
+    });
+}
+
 // Create product
 router.post('/products', async (req, res) => {
-  const { name, price, category, tag, img, images, description, stock, isBestseller } = req.body;
+  const {
+    name,
+    price,
+    category,
+    tag,
+    img,
+    images,
+    description,
+    productParameters,
+    parameters,
+    stock,
+    isBestseller
+  } = req.body;
 
   const normalizedImages = Array.isArray(images) && images.length > 0
     ? images.filter(Boolean)
@@ -158,22 +210,25 @@ router.post('/products', async (req, res) => {
 
   const primaryImg = img?.trim() || normalizedImages[0];
 
-  if (!name || !price || !category || !primaryImg) {
+  if (!name || !price || !primaryImg) {
     return res
       .status(400)
-      .json({ error: 'Name, price, category and at least one image are required' });
+      .json({ error: 'Name, price, and at least one image are required' });
   }
 
   try {
+    const cleanParams = sanitizeProductParameters(productParameters || parameters);
+
     const product = await Product.create({
       name: name.trim(),
       price: Number(price),
-      category: category.trim(),
+      category: category ? category.trim() : 'Traditional',
       tag: tag || (isBestseller ? 'BESTSELLER' : 'NEW'),
       img: primaryImg,
       images: normalizedImages.length > 0 ? normalizedImages : [primaryImg],
       description: description || '',
-      stock: Number(stock || 0),
+      productParameters: cleanParams,
+      stock: Number(stock !== undefined ? stock : 10),
       active: 1,
       isBestseller: Boolean(isBestseller || tag === 'BESTSELLER')
     });
@@ -197,6 +252,12 @@ router.patch('/products/:id', async (req, res) => {
     if (updateData.stock !== undefined) updateData.stock = Number(updateData.stock);
     if (updateData.active !== undefined) updateData.active = Number(updateData.active);
     if (updateData.isBestseller !== undefined) updateData.isBestseller = Boolean(updateData.isBestseller);
+    if (updateData.category !== undefined) updateData.category = String(updateData.category || 'Traditional').trim();
+
+    if (updateData.productParameters !== undefined || updateData.parameters !== undefined) {
+      updateData.productParameters = sanitizeProductParameters(updateData.productParameters || updateData.parameters);
+      delete updateData.parameters;
+    }
 
     if (Array.isArray(updateData.images)) {
       updateData.images = updateData.images.filter(Boolean);
@@ -398,12 +459,18 @@ router.post('/orders', async (req, res) => {
       if (!p) continue;
       const qty = Math.max(1, Number(item.qty) || 1);
       subtotal += p.price * qty;
+      const effectiveSelectedParams =
+        (item.selectedParameters && typeof item.selectedParameters === 'object' ? item.selectedParameters : null) ||
+        (item.selectedOptions && typeof item.selectedOptions === 'object' ? item.selectedOptions : {});
+
       normalizedItems.push({
         productId: p._id,
         name: p.name,
         price: p.price,
         qty,
-        img: p.img
+        img: p.img,
+        selectedParameters: effectiveSelectedParams,
+        selectedOptions: effectiveSelectedParams
       });
     }
 

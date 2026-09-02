@@ -275,12 +275,18 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
       }
 
       subtotal += p.price * qty;
+      const effectiveSelectedParams =
+        (item.selectedParameters && typeof item.selectedParameters === 'object' ? item.selectedParameters : null) ||
+        (item.selectedOptions && typeof item.selectedOptions === 'object' ? item.selectedOptions : {});
+
       normalizedItems.push({
         productId: p._id,
         name: p.name,
         price: p.price,
         qty,
-        img: p.img
+        img: p.img,
+        selectedParameters: effectiveSelectedParams,
+        selectedOptions: effectiveSelectedParams
       });
     }
 
@@ -514,7 +520,9 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
         name: item.name,
         price: item.price,
         qty: item.qty,
-        img: item.img
+        img: item.img,
+        selectedParameters: item.selectedParameters || item.selectedOptions || {},
+        selectedOptions: item.selectedOptions || item.selectedParameters || {}
       }))
     });
   } catch (err) {
@@ -811,7 +819,9 @@ router.post('/track', lookupLimiter, async (req, res) => {
           name: item.name,
           price: item.price,
           qty: item.qty,
-          img: item.img
+          img: item.img,
+          selectedParameters: item.selectedParameters || item.selectedOptions || {},
+          selectedOptions: item.selectedOptions || item.selectedParameters || {}
         }))
       }
     });

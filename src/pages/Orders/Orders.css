@@ -1381,14 +1381,79 @@
 }
 
 @media (max-width: 650px) {
+  .ordersPageContainer {
+    padding: 0 4px 60px;
+  }
+
+  .liveOrderTrackerWidget {
+    padding: 16px 14px;
+    border-radius: 8px;
+  }
+
+  .trackerHeader {
+    gap: 12px;
+  }
+
+  .trackerModeTabs {
+    width: 100%;
+  }
+
+  .trackerModeTab {
+    flex: 1;
+    justify-content: center;
+    padding: 7px 10px;
+    font-size: 11px;
+  }
+
+  .trackForm {
+    flex-direction: column;
+  }
+
+  .trackInputGroup {
+    width: 100%;
+  }
+
+  .trackSubmitBtn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .trackResultHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .trackResultHeaderRight {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .trackMetaSummaryGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .orderCard {
+    padding: 16px 14px;
+  }
+
+  .orderCard .status {
+    float: none;
+    display: inline-block;
+    margin-bottom: 8px;
+  }
+
   .discussWhatsAppCancelBox {
     flex-direction: column;
     align-items: flex-start;
   }
+
   .discussActionBtns {
     width: 100%;
     flex-direction: column;
   }
+
   .waDiscussCancelBtn,
   .instaDiscussBtn,
   .fbDiscussBtn {

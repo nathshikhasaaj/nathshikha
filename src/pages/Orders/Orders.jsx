@@ -675,22 +675,49 @@ export default function Orders() {
             {/* Tracked Items Breakdown */}
             <div className="trackResultItemsList">
               <span className="itemsListTitle">Ordered Items ({trackResult.items?.length || 0}):</span>
-              {trackResult.items?.map((item, idx) => (
-                <div key={idx} className="trackItemRow">
-                  <img
-                    src={item.img || '/assets/thushi.jpg'}
-                    alt={item.name}
-                    className="trackItemThumb"
-                  />
-                  <div className="trackItemMeta">
-                    <b>{item.name}</b>
-                    <small>
-                      Qty: {item.qty} · {money(item.price)}
-                    </small>
+              {trackResult.items?.map((item, idx) => {
+                const itemParams =
+                  (item.selectedParameters && typeof item.selectedParameters === 'object' ? item.selectedParameters : null) ||
+                  (item.selectedOptions && typeof item.selectedOptions === 'object' ? item.selectedOptions : {});
+                const hasParams = Object.keys(itemParams).length > 0;
+
+                return (
+                  <div key={idx} className="trackItemRow">
+                    <img
+                      src={item.img || '/assets/thushi.jpg'}
+                      alt={item.name}
+                      className="trackItemThumb"
+                    />
+                    <div className="trackItemMeta">
+                      <b>{item.name}</b>
+                      {hasParams && (
+                        <div className="orderItemParamsList" style={{ display: 'flex', gap: 4, flexWrap: 'wrap', margin: '2px 0' }}>
+                          {Object.entries(itemParams).map(([pName, pVal]) => (
+                            <span
+                              key={pName}
+                              style={{
+                                fontSize: '11px',
+                                background: '#fdf5e2',
+                                border: '1px solid #dfc793',
+                                color: '#78350f',
+                                padding: '1px 6px',
+                                borderRadius: '3px',
+                                fontWeight: 600
+                              }}
+                            >
+                              {pName}: {pVal}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <small>
+                        Qty: {item.qty} · {money(item.price)}
+                      </small>
+                    </div>
+                    <b className="trackItemTotal">{money(item.price * item.qty)}</b>
                   </div>
-                  <b className="trackItemTotal">{money(item.price * item.qty)}</b>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Customer Cancellation / WhatsApp Action Footer */}
@@ -977,6 +1004,15 @@ export default function Orders() {
                             />
                             <div className="orderReviewItemDetails">
                               <span className="orderReviewItemName">{item.name}</span>
+                              {item.selectedOptions && typeof item.selectedOptions === 'object' && Object.keys(item.selectedOptions).length > 0 && (
+                                <div className="orderItemOptionsRow" style={{ marginTop: 3, marginBottom: 3 }}>
+                                  {Object.entries(item.selectedOptions).map(([optName, optVal]) => (
+                                    <span key={optName} className="orderItemOptionPill" style={{ fontSize: 11, background: '#fdf5e2', border: '1px solid #dfc793', color: '#78350f', padding: '1px 6px', borderRadius: 4, marginRight: 4, display: 'inline-block' }}>
+                                      <b>{optName}:</b> {optVal}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
                               <small className="orderReviewItemMeta">
                                 Qty: {item.qty} · {money(item.price)}
                               </small>

@@ -25,6 +25,10 @@ export default function AdminProductList({
           const imgCount = Array.isArray(p.images) && p.images.length > 0 ? p.images.length : (p.img ? 1 : 0);
           const isBestseller = Boolean(p.isBestseller || p.is_bestseller || p.tag === 'BESTSELLER');
 
+          const paramCount = Array.isArray(p.productParameters)
+            ? p.productParameters.length
+            : (Array.isArray(p.parameters) ? p.parameters.length : (Array.isArray(p.options) ? p.options.length : 0));
+
           return (
             <div className={`adminProduct ${!p.active ? 'inactive' : ''}`} key={p.id}>
               <div className="adminProductThumb">
@@ -45,6 +49,11 @@ export default function AdminProductList({
                   {isBestseller && (
                     <span className="statusTag bestsellerTag" style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fcd34d' }}>
                       ⭐ Bestseller
+                    </span>
+                  )}
+                  {paramCount > 0 && (
+                    <span className="paramBadgeTag">
+                      ⚙ {paramCount} {paramCount === 1 ? 'Param' : 'Params'}
                     </span>
                   )}
                   {imgCount > 1 && (

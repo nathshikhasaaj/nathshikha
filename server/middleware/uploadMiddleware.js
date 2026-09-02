@@ -35,8 +35,8 @@ const imageFileFilter = (req, file, cb) => {
 export const baseMulter = multer({
   dest: uploadsDir,
   limits: {
-    fileSize: 25 * 1024 * 1024, // 25 MB max per file
-    files: 10
+    fileSize: 50 * 1024 * 1024, // 50 MB max per file
+    files: 15
   },
   fileFilter: imageFileFilter
 });
@@ -58,7 +58,7 @@ export function uploadSingle(fieldNames = ['image', 'photo', 'file']) {
       if (err) {
         if (err instanceof multer.MulterError) {
           if (err.code === 'LIMIT_FILE_SIZE') {
-            return res.status(400).json({ error: 'Image file is too large. Maximum size allowed is 25MB.' });
+            return res.status(400).json({ error: 'Image file is too large. Maximum size allowed is 50MB per file.' });
           }
           return res.status(400).json({ error: `Upload error: ${err.message}` });
         }
@@ -84,7 +84,7 @@ export function uploadSingle(fieldNames = ['image', 'photo', 'file']) {
  * Middleware for multiple images upload supporting multiple potential field names
  * (e.g. 'images', 'photos', 'files')
  */
-export function uploadMultiple(fieldNames = ['images', 'photos', 'files'], maxCount = 10) {
+export function uploadMultiple(fieldNames = ['images', 'photos', 'files'], maxCount = 15) {
   const fields = (Array.isArray(fieldNames) ? fieldNames : [fieldNames]).map((name) => ({
     name,
     maxCount
@@ -97,7 +97,7 @@ export function uploadMultiple(fieldNames = ['images', 'photos', 'files'], maxCo
       if (err) {
         if (err instanceof multer.MulterError) {
           if (err.code === 'LIMIT_FILE_SIZE') {
-            return res.status(400).json({ error: 'One or more image files exceed the 25MB size limit.' });
+            return res.status(400).json({ error: 'One or more image files exceed the 50MB size limit.' });
           }
           if (err.code === 'LIMIT_UNEXPECTED_FILE' || err.code === 'LIMIT_FILE_COUNT') {
             return res.status(400).json({ error: `Maximum ${maxCount} images can be uploaded at a time.` });

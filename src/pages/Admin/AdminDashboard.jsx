@@ -20,6 +20,7 @@ import {
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { compressImage, compressMultipleImages } from '../../utils/imageCompressor';
 import AdminStats from '../../components/admin/AdminStats';
 import AdminProductForm from '../../components/admin/AdminProductForm';
 import AdminProductList from '../../components/admin/AdminProductList';
@@ -34,8 +35,9 @@ import AdminReviewManager from '../../components/admin/AdminReviewManager';
 import AdminShowcaseReviewManager from '../../components/admin/AdminShowcaseReviewManager';
 import AdminHallOfFameManager from '../../components/admin/AdminHallOfFameManager';
 import AdminHeroManager from '../../components/admin/AdminHeroManager';
+import AdminParameterManager from '../../components/admin/AdminParameterManager';
 import AdminCancellationModal from '../../components/admin/AdminCancellationModal';
-import { Camera, MessageSquareQuote } from 'lucide-react';
+import { Camera, MessageSquareQuote, SlidersHorizontal } from 'lucide-react';
 import './AdminDashboard.css';
 
 const emptyForm = {
@@ -43,9 +45,10 @@ const emptyForm = {
   price: '',
   category: 'Traditional',
   tag: 'NEW',
-  img: '/assets/thushi.jpg',
-  images: ['/assets/thushi.jpg'],
+  img: '',
+  images: [],
   description: '',
+  productParameters: [],
   stock: 10,
   active: 1,
   isBestseller: false
@@ -328,6 +331,20 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
   // Product Operations
   const saveProduct = async (e) => {
     e.preventDefault();
+    const imagesList = Array.isArray(form.images) && form.images.length > 0
+      ? form.images.filter(Boolean)
+      : (form.img ? [form.img.trim()].filter(Boolean) : []);
+
+    if (!form.name?.trim()) {
+      return setToast('Please enter a product name');
+    }
+    if (!form.price || Number(form.price) <= 0) {
+      return setToast('Please enter a valid product price');
+    }
+    if (imagesList.length === 0) {
+      return setToast('Please upload at least 1 product photo');
+    }
+
     setBusy(true);
     try {
       const path = editing ? `/admin/products/${editing.id}` : '/admin/products';
@@ -335,20 +352,27 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
         method: editing ? 'PATCH' : 'POST',
         body: JSON.stringify({
           ...form,
+          name: form.name.trim(),
+          category: form.category || 'Traditional',
+          tag: form.tag || (form.isBestseller ? 'BESTSELLER' : 'NEW'),
+          img: imagesList[0] || form.img,
+          images: imagesList,
+          productParameters: Array.isArray(form.productParameters) ? form.productParameters : [],
           price: Number(form.price),
-          stock: Number(form.stock),
-          active: Number(form.active)
+          stock: Number(form.stock !== undefined ? form.stock : 10),
+          active: form.active !== undefined ? Number(form.active) : 1,
+          isBestseller: Boolean(form.isBestseller)
         })
       });
 
-      setToast(editing ? 'Product updated' : 'Product added');
+      setToast(editing ? `✓ "${form.name}" updated successfully` : `✓ "${form.name}" added to catalogue!`);
       setForm(emptyForm);
       setEditing(null);
       await load();
       if (refreshProducts) refreshProducts();
       setTab('products');
     } catch (e) {
-      setToast(e.message);
+      setToast(e.message || 'Failed to save product');
     } finally {
       setBusy(false);
     }
@@ -407,24 +431,30 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
 
   const editProduct = (p) => {
     const images = Array.isArray(p.images) && p.images.length > 0
-      ? p.images
-      : (p.img ? [p.img] : []);
+      ? p.images.filter(Boolean)
+      : (p.img ? [p.img.trim()].filter(Boolean) : []);
 
     setEditing(p);
     setForm({
-      name: p.name,
-      price: p.price,
-      category: p.category,
+      name: p.name || '',
+      price: p.price || '',
+      category: p.category || 'Traditional',
       tag: p.tag || (p.isBestseller ? 'BESTSELLER' : 'NEW'),
       img: p.img || images[0] || '',
       images: images,
       description: p.description || '',
-      stock: p.stock,
-      active: p.active,
+      productParameters: Array.isArray(p.productParameters) ? p.productParameters : [],
+      stock: p.stock !== undefined ? p.stock : 10,
+      active: p.active !== undefined ? p.active : 1,
       isBestseller: Boolean(p.isBestseller || p.is_bestseller || p.tag === 'BESTSELLER')
     });
     setTab('products');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const formElement = document.getElementById('adminProductFormTop');
+    if (formElement) {
+      formElement.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const updateSuggestion = async (id, status, notes) => {
@@ -441,27 +471,29 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
   };
 
   const uploadImage = async (e) => {
-    const file = e.target.files?.[0];
+    const file = e.target?.files?.[0];
     if (!file) return;
-    const fd = new FormData();
-    fd.append('image', file);
     setBusy(true);
     try {
+      setToast('Optimizing & preparing photo…');
+      const optimizedFile = await compressImage(file);
+      const fd = new FormData();
+      fd.append('image', optimizedFile);
       const r = await api('/admin/upload', {
         method: 'POST',
         body: fd
       });
       setForm((f) => {
-        const currentList = Array.isArray(f.images) ? [...f.images] : (f.img ? [f.img] : []);
+        const currentList = Array.isArray(f.images) ? [...f.images.filter(Boolean)] : (f.img ? [f.img] : []);
         const baseList = (currentList.length === 1 && currentList[0] === '/assets/thushi.jpg')
           ? []
           : currentList;
         const updated = [...baseList, r.url].slice(0, 10);
         return { ...f, img: updated[0] || r.url, images: updated };
       });
-      setToast('Image uploaded');
+      setToast('✓ Photo uploaded & watermarked successfully');
     } catch (err) {
-      setToast(err.message);
+      setToast(err.message || 'Failed to upload photo');
     } finally {
       setBusy(false);
     }
@@ -469,17 +501,22 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
 
   const uploadMultipleImages = async (files) => {
     if (!files || files.length === 0) return;
-    const fd = new FormData();
-    Array.from(files).forEach((f) => fd.append('images', f));
     setBusy(true);
     try {
+      const optimizedFiles = await compressMultipleImages(files, {}, (current, total) => {
+        setToast(`Optimizing photo ${current} of ${total}…`);
+      });
+
+      const fd = new FormData();
+      optimizedFiles.forEach((f) => fd.append('images', f));
+
       const r = await api('/admin/upload-multiple', {
         method: 'POST',
         body: fd
       });
       const newUrls = r.urls || (r.url ? [r.url] : []);
       setForm((prev) => {
-        const currentList = Array.isArray(prev.images) ? [...prev.images] : (prev.img ? [prev.img] : []);
+        const currentList = Array.isArray(prev.images) ? [...prev.images.filter(Boolean)] : (prev.img ? [prev.img] : []);
         const baseList = (currentList.length === 1 && currentList[0] === '/assets/thushi.jpg')
           ? []
           : currentList;
@@ -490,7 +527,7 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
           img: combined[0] || ''
         };
       });
-      setToast(`✓ ${newUrls.length} image(s) uploaded successfully!`);
+      setToast(`✓ ${newUrls.length} photo(s) uploaded & watermarked!`);
     } catch (err) {
       setToast(err.message || 'Failed to upload images');
     } finally {
@@ -555,6 +592,15 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
         >
           <ShoppingBag size={15} />
           <span>Products Catalogue ({allProducts.length})</span>
+        </button>
+
+        <button
+          className={tab === 'parameters' ? 'active' : ''}
+          onClick={() => setTab('parameters')}
+          type="button"
+        >
+          <SlidersHorizontal size={15} />
+          <span>Parameter Library</span>
         </button>
 
         <button
@@ -747,6 +793,13 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
             toggleProductActive={toggleProductActive}
             toggleProductBestseller={toggleProductBestseller}
           />
+        </div>
+      )}
+
+      {/* TAB: MASTER PARAMETER LIBRARY */}
+      {tab === 'parameters' && (
+        <div className="adminParametersView">
+          <AdminParameterManager />
         </div>
       )}
 

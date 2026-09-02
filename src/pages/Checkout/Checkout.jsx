@@ -317,7 +317,7 @@ export default function Checkout() {
         method: 'POST',
         body: JSON.stringify({
           code: couponCode.trim(),
-          items: cart.map((x) => ({ id: x.id, qty: x.qty }))
+          items: cart.map((x) => ({ id: x.id, qty: x.qty, selectedOptions: x.selectedOptions || {} }))
         })
       });
 
@@ -477,7 +477,17 @@ export default function Checkout() {
         couponCode: appliedCoupon ? appliedCoupon.code : null,
         city: locationData.city,
         state: locationData.state,
-        items: cart.map((x) => ({ id: x.id, qty: x.qty })),
+        items: cart.map((x) => {
+          const selectedParams =
+            (x.selectedParameters && typeof x.selectedParameters === 'object' ? x.selectedParameters : null) ||
+            (x.selectedOptions && typeof x.selectedOptions === 'object' ? x.selectedOptions : {});
+          return {
+            id: x.id,
+            qty: x.qty,
+            selectedParameters: selectedParams,
+            selectedOptions: selectedParams
+          };
+        }),
         paymentMethod: 'upi',
         combineWithOrderId: isCombinedShipment ? selectedCombineOrderId : null
       };

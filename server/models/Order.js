@@ -22,6 +22,14 @@ const orderItemSchema = new mongoose.Schema(
     img: {
       type: String,
       required: true
+    },
+    selectedParameters: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
+    },
+    selectedOptions: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
     }
   },
   { _id: false }

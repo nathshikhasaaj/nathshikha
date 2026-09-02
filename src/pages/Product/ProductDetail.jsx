@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { useCart } from '../../context/CartContext';
+import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { money } from '../../utils/formatters';
 import ProductCard from '../../components/product/ProductCard';
@@ -491,6 +492,7 @@ export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart, toggleWishlist, isInWishlist } = useCart();
+  const { setToast } = useToast();
   const { t } = useLanguage();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -499,6 +501,10 @@ export default function ProductDetail() {
   const [qty, setQty] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
+
+  // Dynamic Parameters selection and validation state
+  const [selectedParameters, setSelectedParameters] = useState({});
+  const [validationErrors, setValidationErrors] = useState({});
 
   // Reviews state
   const [reviewsData, setReviewsData] = useState({
@@ -512,6 +518,15 @@ export default function ProductDetail() {
 
   const isFavorite = isInWishlist(product?.id || product?._id);
 
+  // Normalized product parameters
+  const productParameters = Array.isArray(product?.productParameters) && product.productParameters.length > 0
+    ? product.productParameters
+    : Array.isArray(product?.parameters) && product.parameters.length > 0
+    ? product.parameters
+    : Array.isArray(product?.options) && product.options.length > 0
+    ? product.options
+    : [];
+
   useEffect(() => {
     setLoading(true);
     api(`/products/${id}`)
@@ -519,6 +534,29 @@ export default function ProductDetail() {
         setProduct(data);
         setActiveIndex(0);
         setQty(1);
+
+        // Pre-select first choice for each assigned parameter
+        const params = Array.isArray(data?.productParameters) && data.productParameters.length > 0
+          ? data.productParameters
+          : Array.isArray(data?.parameters) && data.parameters.length > 0
+          ? data.parameters
+          : Array.isArray(data?.options) ? data.options : [];
+
+        if (params.length > 0) {
+          const initialParams = {};
+          params.forEach((p) => {
+            const vals = Array.isArray(p.selectedValues) && p.selectedValues.length > 0
+              ? p.selectedValues
+              : Array.isArray(p.values) ? p.values : [];
+            if (vals.length > 0) {
+              initialParams[p.name] = vals[0].value || vals[0].label;
+            }
+          });
+          setSelectedParameters(initialParams);
+        } else {
+          setSelectedParameters({});
+        }
+        setValidationErrors({});
       })
       .catch(() => setProduct(null))
       .finally(() => setLoading(false));
@@ -546,10 +584,62 @@ export default function ProductDetail() {
       .finally(() => setReviewsLoading(false));
   }, [id, sort]);
 
+  const handleSelectParameter = (paramName, value) => {
+    setSelectedParameters((prev) => ({
+      ...prev,
+      [paramName]: value
+    }));
+    if (validationErrors[paramName]) {
+      setValidationErrors((prev) => {
+        const next = { ...prev };
+        delete next[paramName];
+        return next;
+      });
+    }
+  };
+
+  const validateRequiredParameters = () => {
+    if (!product || productParameters.length === 0) {
+      return true;
+    }
+    const errors = {};
+    for (const param of productParameters) {
+      const vals = Array.isArray(param.selectedValues) && param.selectedValues.length > 0
+        ? param.selectedValues
+        : Array.isArray(param.values) ? param.values : [];
+      if (vals.length === 0) continue;
+
+      if (param.required && (!selectedParameters[param.name] || !String(selectedParameters[param.name]).trim())) {
+        errors[param.name] = `Please select ${param.name}`;
+      }
+    }
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      const firstErrorKey = Object.keys(errors)[0];
+      setToast({
+        type: 'warning',
+        message: `Please select ${firstErrorKey} before adding to bag`,
+        duration: 3500
+      });
+      const elem = document.getElementById(`product-parameter-${encodeURIComponent(firstErrorKey)}`);
+      if (elem) {
+        elem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return false;
+    }
+    return true;
+  };
+
   const handleAddToCart = () => {
     if (isAdding || !product) return;
+    if (!validateRequiredParameters()) return;
+
     setIsAdding(true);
-    addToCart(product, qty);
+    addToCart(product, qty, {
+      selectedParameters,
+      selectedOptions: selectedParameters,
+      showToast: true
+    });
     setTimeout(() => {
       setIsAdding(false);
       setJustAdded(true);
@@ -561,7 +651,13 @@ export default function ProductDetail() {
 
   const handleBuyNow = () => {
     if (!product) return;
-    addToCart(product, qty, { showToast: false });
+    if (!validateRequiredParameters()) return;
+
+    addToCart(product, qty, {
+      selectedParameters,
+      selectedOptions: selectedParameters,
+      showToast: false
+    });
     navigate('/checkout');
   };
 
@@ -662,6 +758,118 @@ export default function ProductDetail() {
               <Truck /> {t('pan_india_badge', 'Pan-India delivery')}
             </span>
           </div>
+
+          {/* Dynamic Product Parameters & Choices Section */}
+          {productParameters.length > 0 && (
+            <div className="productDynamicOptionsContainer">
+              {productParameters.map((param) => {
+                const paramValues = Array.isArray(param.selectedValues) && param.selectedValues.length > 0
+                  ? param.selectedValues
+                  : (Array.isArray(param.values) ? param.values : []);
+
+                if (paramValues.length === 0) return null;
+
+                const isError = Boolean(validationErrors[param.name]);
+                const currentSelected = selectedParameters[param.name];
+
+                return (
+                  <div
+                    key={param.name}
+                    id={`product-parameter-${encodeURIComponent(param.name)}`}
+                    className={`productOptionBlock ${isError ? 'productOptionBlock--error' : ''}`}
+                  >
+                    <div className="productOptionHeader">
+                      <span className="productOptionLabel">
+                        {param.name}
+                        {param.required && <span className="requiredStar">*</span>}:
+                      </span>
+                      {currentSelected && (
+                        <span className="productOptionActiveVal">{currentSelected}</span>
+                      )}
+                    </div>
+
+                    {param.displayType === 'dropdown' ? (
+                      <select
+                        className="productOptionSelect"
+                        value={currentSelected || ''}
+                        onChange={(e) => handleSelectParameter(param.name, e.target.value)}
+                      >
+                        <option value="" disabled>
+                          Select {param.name}
+                        </option>
+                        {paramValues.map((v) => (
+                          <option key={v.value || v.label} value={v.value || v.label}>
+                            {v.label}
+                          </option>
+                        ))}
+                      </select>
+                    ) : param.displayType === 'color' ? (
+                      <div className="productOptionColorSwatches" role="radiogroup" aria-label={param.name}>
+                        {paramValues.map((v) => {
+                          const valKey = v.value || v.label;
+                          const isSelected = currentSelected === valKey;
+                          const colorCode = v.colorCode || '#b8860b';
+
+                          return (
+                            <button
+                              key={valKey}
+                              type="button"
+                              role="radio"
+                              aria-checked={isSelected}
+                              className={`colorSwatchBtn ${isSelected ? 'isSelected' : ''}`}
+                              onClick={() => handleSelectParameter(param.name, valKey)}
+                              title={v.label}
+                            >
+                              <span
+                                className="colorDot"
+                                style={{
+                                  backgroundColor: colorCode,
+                                  border:
+                                    colorCode.toLowerCase() === '#ffffff' ||
+                                    colorCode.toLowerCase() === '#f8fafc' ||
+                                    colorCode.toLowerCase() === 'white'
+                                      ? '1px solid #d4c5b2'
+                                      : 'none'
+                                }}
+                              />
+                              <span className="colorLabel">{v.label}</span>
+                              {isSelected && <Check size={12} className="colorCheckIcon" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      /* Default: Buttons Display Type */
+                      <div className="productOptionButtonsGroup" role="radiogroup" aria-label={param.name}>
+                        {paramValues.map((v) => {
+                          const valKey = v.value || v.label;
+                          const isSelected = currentSelected === valKey;
+
+                          return (
+                            <button
+                              key={valKey}
+                              type="button"
+                              role="radio"
+                              aria-checked={isSelected}
+                              className={`optionPillBtn ${isSelected ? 'isSelected' : ''}`}
+                              onClick={() => handleSelectParameter(param.name, valKey)}
+                            >
+                              <span>{v.label}</span>
+                              {isSelected && <Check size={13} className="pillCheckIcon" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {isError && (
+                      <span className="optionErrorMsg">{validationErrors[param.name]}</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {/* Quantity Selector */}
           <div className="productQtySelectorRow">

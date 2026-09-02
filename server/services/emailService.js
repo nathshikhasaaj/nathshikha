@@ -418,18 +418,28 @@ export async function sendPasswordResetEmail(user, rawToken, originUrl = null) {
 function renderOrderItemsTable(order) {
   const items = order.items || [];
   const itemsRows = items
-    .map(
-      (item) => `
+    .map((item) => {
+      const paramsMap =
+        (item.selectedParameters && typeof item.selectedParameters === 'object' ? item.selectedParameters : null) ||
+        (item.selectedOptions && typeof item.selectedOptions === 'object' ? item.selectedOptions : {});
+
+      const optionsText = Object.entries(paramsMap)
+        .filter(([_, v]) => v)
+        .map(([k, v]) => `${k}: ${v}`)
+        .join(' · ');
+
+      return `
     <tr>
       <td>
         <strong>${item.name}</strong>
         ${item.tag ? `<br><small style="color:#c69a59; font-weight:600;">${item.tag}</small>` : ''}
+        ${optionsText ? `<br><span style="font-size:11.5px; color:#78350f; background:#fef3c7; padding:2px 6px; border-radius:3px; display:inline-block; margin-top:3px;">${optionsText}</span>` : ''}
       </td>
       <td style="text-align:center;">${item.qty || 1}</td>
       <td style="text-align:right;">₹${Number(item.price || 0).toLocaleString('en-IN')}</td>
     </tr>
-  `
-    )
+  `;
+    })
     .join('');
 
   const subtotal = order.subtotal || items.reduce((sum, i) => sum + (i.price || 0) * (i.qty || 1), 0);

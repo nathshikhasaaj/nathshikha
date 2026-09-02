@@ -1,0 +1,656 @@
+/* ==========================================================================
+   ADMIN PARAMETER MANAGER COMPONENT STYLES
+   ========================================================================== */
+
+.adminParameterManager {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.parameterManagerHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 22px;
+  background: #ffffff;
+  border: 1px solid #ebdcc6;
+  border-radius: 10px;
+}
+
+.parameterHeaderBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--maroon, #5b1420);
+  background: #fdf5e2;
+  border: 1px solid #dfc793;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+
+.parameterHeaderTitle h3 {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  color: var(--char, #2c2523);
+  margin: 0 0 6px;
+}
+
+.parameterHeaderTitle p {
+  margin: 0;
+  font-size: 13px;
+  color: #6a5d57;
+  max-width: 680px;
+  line-height: 1.5;
+}
+
+.parameterHeaderActions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.createParameterBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 9px 16px;
+  height: 40px;
+}
+
+.seedLibraryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 9px 14px;
+  height: 40px;
+}
+
+/* Editor Modal / Card */
+.parameterEditorCard {
+  background: #ffffff;
+  border: 2px solid #b8860b;
+  border-radius: 10px;
+  padding: 22px;
+  box-shadow: 0 8px 24px rgba(91, 20, 32, 0.08);
+}
+
+.editorCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #ebdcc6;
+  margin-bottom: 20px;
+}
+
+.editorEyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #8b6d32;
+  text-transform: uppercase;
+}
+
+.editorCardHeader h4 {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  color: var(--maroon, #5b1420);
+  margin: 4px 0 0;
+}
+
+.parameterEditorForm {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.paramFormGrid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  gap: 16px;
+}
+
+.paramFormField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.paramFormField label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #4a3b32;
+}
+
+.paramTextInput,
+.paramSelect {
+  padding: 10px 12px;
+  border: 1.5px solid #dcd3c4;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2c2523;
+  outline: none;
+  background: #ffffff;
+}
+
+.paramTextInput:focus,
+.paramSelect:focus {
+  border-color: var(--maroon, #5b1420);
+}
+
+.paramFormToggles {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 24px;
+  padding: 12px 14px;
+  background: #fbf9f5;
+  border: 1px solid #e7dcc8;
+  border-radius: 6px;
+}
+
+.paramToggleLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #4a3b32;
+  cursor: pointer;
+}
+
+/* Values Section */
+.paramValuesSection {
+  background: #fbf9f4;
+  border: 1px solid #dfc793;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.valuesSectionHeader h5 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--maroon, #5b1420);
+  margin: 0 0 4px;
+}
+
+.valuesSectionNote {
+  font-size: 12px;
+  color: #78350f;
+}
+
+.addValueBar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.colorPickerWrap {
+  width: 40px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  background: #ffffff;
+  border: 1px solid #dcd3c4;
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.colorPickerMain {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  background: transparent;
+}
+
+.newValueInput {
+  flex: 1;
+  padding: 9px 12px;
+  border: 1.5px solid #dcd3c4;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+}
+
+.newValueInput:focus {
+  border-color: #5b1420;
+}
+
+.addValueBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 9px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.colorPresetsPalette {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  background: #ffffff;
+  border: 1px dashed #dfc793;
+  border-radius: 6px;
+}
+
+.paletteLabel {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #78350f;
+}
+
+.paletteList {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.paletteChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #fbf7ee;
+  border: 1px solid #dfc793;
+  padding: 3px 8px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.paletteChip:hover {
+  background: #fdf5e2;
+  border-color: #b8860b;
+}
+
+.paletteDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.formValuesTable {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.formValueRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid #e2d7c5;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+.valIndex {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8b6d32;
+  width: 24px;
+}
+
+.colorInputGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.colorPickerMini {
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  background: transparent;
+}
+
+.valLabelInput {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid #dcd3c4;
+  border-radius: 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+  outline: none;
+}
+
+.valLabelInput:focus {
+  border-color: #5b1420;
+}
+
+.valRowActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.valMoveBtn,
+.valDeleteBtn {
+  background: #f5efe4;
+  border: 1px solid #dcd3c4;
+  color: #5c524c;
+  padding: 5px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all 0.15s ease;
+}
+
+.valMoveBtn:hover:not(:disabled) {
+  background: #e6ddce;
+  color: #2c2523;
+}
+
+.valMoveBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.valDeleteBtn {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.valDeleteBtn:hover {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.editorSubmitBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #ebdcc6;
+}
+
+.saveParamBtn {
+  padding: 10px 24px;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+/* Parameters Grid */
+.parametersGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.parameterCard {
+  background: #ffffff;
+  border: 1.5px solid #ebdcc6;
+  border-radius: 10px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: all 0.2s ease;
+}
+
+.parameterCard:hover {
+  border-color: var(--gold, #b8860b);
+  box-shadow: 0 4px 14px rgba(91, 20, 32, 0.06);
+}
+
+.parameterCard--inactive {
+  opacity: 0.65;
+  background: #f9f8f6;
+  border-style: dashed;
+}
+
+.paramCardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.paramCardMeta h4 {
+  font-family: var(--font-serif);
+  font-size: 16.5px;
+  color: var(--char, #2c2523);
+  margin: 0 0 6px;
+}
+
+.paramBadges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.paramTypeBadge,
+.paramModeBadge,
+.paramReqBadge,
+.paramInactiveBadge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.paramTypeBadge {
+  background: #fdf5e2;
+  border: 1px solid #dfc793;
+  color: #78350f;
+}
+
+.paramModeBadge {
+  background: #f5f0e6;
+  border: 1px solid #dcd3c4;
+  color: #5c524c;
+}
+
+.paramReqBadge {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+
+.paramInactiveBadge {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  color: #6b7280;
+}
+
+.paramCardActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.toggleActiveBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  border: 1px solid #dcd3c4;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.toggleActiveBtn.isActive {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #16a34a;
+}
+
+.toggleActiveBtn.isInactive {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.paramCardValues {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px dashed #ebdcc6;
+}
+
+.valuesCountLabel {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #8b6d32;
+}
+
+.paramValuesChipList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.paramValueChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #fbf9f4;
+  border: 1px solid #e2d7c5;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #3b302c;
+}
+
+.chipColorDot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.paramLoadingState,
+.emptyParametersState {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+  background: #ffffff;
+  border: 1px dashed #ebdcc6;
+  border-radius: 10px;
+  gap: 12px;
+  color: #78350f;
+}
+
+@media (max-width: 900px) {
+  .parametersGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .paramFormGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .parameterManagerHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .parameterHeaderActions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 600px) {
+  .parameterManagerHeader {
+    padding: 14px;
+  }
+
+  .parameterHeaderTitle h3 {
+    font-size: 18px;
+  }
+
+  .parameterHeaderActions {
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .createParameterBtn,
+  .seedLibraryBtn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .parameterEditorCard {
+    padding: 14px;
+  }
+
+  .paramFormToggles {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .addValueBar {
+    flex-wrap: wrap;
+  }
+
+  .newValueInput {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .addValueBtn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .editorSubmitBar {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .saveParamBtn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .paramCardTop {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .paramCardActions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

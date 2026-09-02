@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { useToast } from './ToastContext';
+import { getCartParameterKey, formatSelectedParametersText } from '../utils/parameterHelpers';
 
 const CartContext = createContext(null);
 
@@ -8,7 +9,23 @@ export function CartProvider({ children }) {
     try {
       const saved = JSON.parse(localStorage.getItem('nw-cart') || '[]');
       return Array.isArray(saved)
-        ? saved.filter((item) => item && typeof item.id === 'string' && item.id.length > 5)
+        ? saved
+            .filter((item) => item && typeof item.id === 'string' && item.id.length > 5)
+            .map((item) => {
+              const selectedParams =
+                (item.selectedParameters && typeof item.selectedParameters === 'object'
+                  ? item.selectedParameters
+                  : null) ||
+                (item.selectedOptions && typeof item.selectedOptions === 'object'
+                  ? item.selectedOptions
+                  : {});
+              return {
+                ...item,
+                selectedParameters: selectedParams,
+                selectedOptions: selectedParams,
+                cartKey: item.cartKey || getCartParameterKey(item.id, selectedParams)
+              };
+            })
         : [];
     } catch {
       return [];
@@ -48,26 +65,43 @@ export function CartProvider({ children }) {
     });
   }, []);
 
-  const addToCart = useCallback((product, qty = 1, options = { showToast: true }) => {
+  const addToCart = useCallback((product, qty = 1, options = {}) => {
     if (!product) return;
     const pId = String(product.id || product._id);
+    const selectedParameters =
+      (options?.selectedParameters && typeof options.selectedParameters === 'object'
+        ? options.selectedParameters
+        : null) ||
+      (options?.selectedOptions && typeof options.selectedOptions === 'object'
+        ? options.selectedOptions
+        : {});
+    const itemCartKey = getCartParameterKey(pId, selectedParameters);
+
     let isExisting = false;
     let newQty = qty;
 
     setCart((prev) => {
-      const existing = prev.find((item) => String(item.id) === pId);
-      if (existing) {
+      const existingIndex = prev.findIndex(
+        (item) => (item.cartKey || getCartParameterKey(item.id, item.selectedParameters || item.selectedOptions)) === itemCartKey
+      );
+
+      if (existingIndex !== -1) {
         isExisting = true;
+        const existing = prev[existingIndex];
         newQty = existing.qty + qty;
-        return prev.map((item) =>
-          String(item.id) === pId ? { ...item, qty: newQty } : item
+        return prev.map((item, idx) =>
+          idx === existingIndex ? { ...item, qty: newQty } : item
         );
       }
+
       return [
         ...prev,
         {
           ...product,
           id: pId,
+          cartKey: itemCartKey,
+          selectedParameters,
+          selectedOptions: selectedParameters,
           img: product.img || (Array.isArray(product.images) ? product.images[0] : '/assets/thushi.jpg'),
           qty
         }
@@ -76,6 +110,8 @@ export function CartProvider({ children }) {
 
     if (options?.showToast !== false) {
       const productImg = product.img || (Array.isArray(product.images) && product.images[0]) || '/assets/thushi.jpg';
+      const optionsSubtext = formatSelectedParametersText(selectedParameters);
+
       setToast({
         type: 'success',
         product: {
@@ -85,10 +121,10 @@ export function CartProvider({ children }) {
           price: product.price
         },
         message: isExisting
-          ? `Updated quantity in bag (${newQty})`
+          ? `Updated quantity in bag (${newQty})${optionsSubtext ? ` · ${optionsSubtext}` : ''}`
           : qty > 1
-          ? `${qty} items added to bag`
-          : '✓ Added to your bag',
+          ? `${qty} items added to bag${optionsSubtext ? ` (${optionsSubtext})` : ''}`
+          : `✓ Added to bag${optionsSubtext ? ` (${optionsSubtext})` : ''}`,
         action: {
           label: 'VIEW BAG',
           to: '/cart'
@@ -100,27 +136,34 @@ export function CartProvider({ children }) {
     return { success: true, isExisting, qty: newQty };
   }, [setToast]);
 
-  const updateCartQty = useCallback((id, delta) => {
+  const updateCartQty = useCallback((cartKeyOrId, delta) => {
     setCart((prev) =>
-      prev.map((item) =>
-        String(item.id) === String(id)
-          ? { ...item, qty: Math.max(1, item.qty + delta) }
-          : item
-      )
+      prev.map((item) => {
+        const itemKey = item.cartKey || getCartParameterKey(item.id, item.selectedParameters || item.selectedOptions);
+        const match = itemKey === String(cartKeyOrId) || String(item.id) === String(cartKeyOrId);
+        return match ? { ...item, qty: Math.max(1, item.qty + delta) } : item;
+      })
     );
   }, []);
 
-  const removeFromCart = useCallback((id) => {
+  const removeFromCart = useCallback((cartKeyOrId) => {
     setCart((prev) => {
-      const item = prev.find((x) => String(x.id) === String(id));
+      const item = prev.find((x) => {
+        const itemKey = x.cartKey || getCartParameterKey(x.id, x.selectedParameters || x.selectedOptions);
+        return itemKey === String(cartKeyOrId) || String(x.id) === String(cartKeyOrId);
+      });
       if (item) {
+        const optionsSubtext = formatSelectedParametersText(item.selectedParameters || item.selectedOptions);
         setToast({
           type: 'info',
-          message: `${item.name} removed from bag`,
+          message: `${item.name}${optionsSubtext ? ` (${optionsSubtext})` : ''} removed from bag`,
           duration: 3000
         });
       }
-      return prev.filter((x) => String(x.id) !== String(id));
+      return prev.filter((x) => {
+        const itemKey = x.cartKey || getCartParameterKey(x.id, x.selectedParameters || x.selectedOptions);
+        return itemKey !== String(cartKeyOrId) && String(x.id) !== String(cartKeyOrId);
+      });
     });
   }, [setToast]);
 

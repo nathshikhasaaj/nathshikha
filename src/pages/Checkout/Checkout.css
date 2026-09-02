@@ -1237,19 +1237,53 @@
 }
 
 @media (max-width: 600px) {
+  .checkoutPage {
+    padding: 0 4px;
+  }
+
   .checkout form {
-    padding: 16px 14px;
+    padding: 16px 12px;
     gap: 12px;
+    border-radius: 6px;
   }
 
   .checkout form input,
-  .checkout form textarea {
-    font-size: 16px;
+  .checkout form textarea,
+  .checkout form select {
+    font-size: 14px;
     padding: 11px 12px;
+  }
+
+  .checkoutPaymentCard {
+    padding: 18px 14px;
+    border-radius: 6px;
   }
 
   .guestBanner {
     padding: 12px 14px;
+  }
+
+  .addressModeSelector {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .shippingOptionsGrid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .iHavePaidBtn {
+    height: 48px;
+    font-size: 13px !important;
+  }
+
+  .studioUpiBox {
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    text-align: center;
   }
 }
 

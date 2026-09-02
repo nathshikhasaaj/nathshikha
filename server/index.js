@@ -18,6 +18,7 @@ import reviewRoutes from './routes/reviewRoutes.js';
 import hallOfFameRoutes from './routes/hallOfFameRoutes.js';
 import showcaseReviewRoutes from './routes/showcaseReviewRoutes.js';
 import heroSlideRoutes from './routes/heroSlideRoutes.js';
+import parameterRoutes, { ensureDefaultParameters } from './routes/parameterRoutes.js';
 import { Coupon } from './models/Coupon.js';
 import { Review } from './models/Review.js';
 import { Order } from './models/Order.js';
@@ -72,9 +73,20 @@ app.use(
   })
 );
 
-// 3. Request body parsing with safe size limit
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+// 3. Request body parsing with generous size limit for multi-image uploads and product payloads
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Handle body-parser payload too large or invalid json errors gracefully
+app.use((err, req, res, next) => {
+  if (err && (err.type === 'entity.too.large' || err.status === 413)) {
+    return res.status(413).json({ error: 'Request payload is too large. Maximum allowed size is 50MB.' });
+  }
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({ error: 'Invalid JSON formatted body in request.' });
+  }
+  next(err);
+});
 
 // 4. NoSQL Query Injection Sanitization
 app.use(noSqlSanitizer);
@@ -311,6 +323,9 @@ async function seedDatabase() {
       console.log('✓ Initial hero slides seeded successfully.');
     }
 
+    // Seed Master Parameter Library if empty
+    await ensureDefaultParameters();
+
     const adminEmail = process.env.ADMIN_EMAIL;
     const adminPass = process.env.ADMIN_PASSWORD;
     if (adminEmail && adminPass) {
@@ -336,6 +351,7 @@ app.get('/api/health', (req, res) => res.json({ ok: true, upiId: UPI_ID }));
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/parameters', parameterRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/shipping', orderRoutes);
 app.use('/api/coupons', couponRoutes);
