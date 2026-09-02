@@ -26,16 +26,7 @@ import {
   resendOrderEmail
 } from '../services/emailService.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const uploadsDir = path.resolve(__dirname, '../../public/uploads');
-fs.mkdirSync(uploadsDir, { recursive: true });
-
-const upload = multer({
-  dest: uploadsDir,
-  limits: { fileSize: 20 * 1024 * 1024 },
-  fileFilter: (req, file, cb) =>
-    cb(null, /^image\/(jpeg|png|webp|gif|heic|avif)$/i.test(file.mimetype))
-});
+import { uploadSingle, uploadMultiple, uploadsDir } from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
 
@@ -53,11 +44,11 @@ router.get('/products', async (req, res) => {
 });
 
 // Upload product image with automatic Nathshikha logo watermark
-router.post('/upload', upload.single('image'), async (req, res) => {
+router.post('/upload', uploadSingle(['image', 'photo', 'file']), async (req, res) => {
   if (!req.file) {
     return res
       .status(400)
-      .json({ error: 'Please select a valid image (JPG, PNG, WEBP, or GIF, max 10MB).' });
+      .json({ error: 'Please select a valid image file (JPG, PNG, WEBP, GIF, HEIC, AVIF).' });
   }
 
   const filename = `${Date.now()}-${crypto.randomBytes(6).toString('hex')}.jpg`;
@@ -65,12 +56,23 @@ router.post('/upload', upload.single('image'), async (req, res) => {
 
   try {
     // Deep image validation and watermarking via Sharp
-    const watermarkedBuffer = await applyWatermark(req.file.path, {
-      position: 'center',
-      scale: 0.54,
-      opacity: 0.30,
-      quality: 92
-    });
+    let watermarkedBuffer;
+    try {
+      watermarkedBuffer = await applyWatermark(req.file.path, {
+        position: 'center',
+        scale: 0.54,
+        opacity: 0.30,
+        quality: 92
+      });
+    } catch (wmErr) {
+      console.warn('Watermark fallback - saving original optimized image:', wmErr.message);
+      // Fallback: optimize image without watermark if custom buffer failed
+      const sharp = (await import('sharp')).default;
+      watermarkedBuffer = await sharp(req.file.path)
+        .rotate()
+        .jpeg({ quality: 90, mozjpeg: true })
+        .toBuffer();
+    }
 
     await fs.promises.writeFile(target, watermarkedBuffer);
 
@@ -85,14 +87,14 @@ router.post('/upload', upload.single('image'), async (req, res) => {
     if (fs.existsSync(req.file.path)) {
       await fs.promises.unlink(req.file.path).catch(() => {});
     }
-    res.status(400).json({ error: 'Invalid or unsupported image file. Please upload a valid JPG, PNG or WEBP image.' });
+    res.status(400).json({ error: 'Invalid or unsupported image file. Please upload a valid JPG, PNG, WEBP, or HEIC image.' });
   }
 });
 
 // Upload multiple product images with automatic Nathshikha logo watermark
-router.post('/upload-multiple', upload.array('images', 10), async (req, res) => {
+router.post('/upload-multiple', uploadMultiple(['images', 'photos', 'files'], 10), async (req, res) => {
   if (!req.files || req.files.length === 0) {
-    return res.status(400).json({ error: 'Please select at least one image (JPG, PNG, WEBP, or GIF, max 10MB each).' });
+    return res.status(400).json({ error: 'Please select at least one valid image file.' });
   }
 
   const uploadedUrls = [];
@@ -103,12 +105,22 @@ router.post('/upload-multiple', upload.array('images', 10), async (req, res) => 
     const target = path.join(uploadsDir, filename);
 
     try {
-      const watermarkedBuffer = await applyWatermark(file.path, {
-        position: 'center',
-        scale: 0.54,
-        opacity: 0.30,
-        quality: 92
-      });
+      let watermarkedBuffer;
+      try {
+        watermarkedBuffer = await applyWatermark(file.path, {
+          position: 'center',
+          scale: 0.54,
+          opacity: 0.30,
+          quality: 92
+        });
+      } catch (wmErr) {
+        console.warn(`Watermark fallback for ${file.originalname}:`, wmErr.message);
+        const sharp = (await import('sharp')).default;
+        watermarkedBuffer = await sharp(file.path)
+          .rotate()
+          .jpeg({ quality: 90, mozjpeg: true })
+          .toBuffer();
+      }
 
       await fs.promises.writeFile(target, watermarkedBuffer);
       uploadedUrls.push(`/uploads/${filename}`);

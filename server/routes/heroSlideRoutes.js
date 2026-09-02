@@ -8,16 +8,7 @@ import { fileURLToPath } from 'url';
 import { HeroSlide, defaultHeroSlides } from '../models/HeroSlide.js';
 import { auth, admin } from '../middleware/auth.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const uploadsDir = path.resolve(__dirname, '../../public/uploads');
-fs.mkdirSync(uploadsDir, { recursive: true });
-
-const upload = multer({
-  dest: uploadsDir,
-  limits: { fileSize: 25 * 1024 * 1024 },
-  fileFilter: (req, file, cb) =>
-    cb(null, /^image\/(jpeg|png|webp|gif|heic|avif|jpg)$/i.test(file.mimetype))
-});
+import { uploadSingle, uploadsDir } from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
 
@@ -64,7 +55,7 @@ router.get('/admin/all', auth, admin, async (req, res) => {
  * 3. ADMIN: POST /api/hero-slides/admin/upload
  * Uploads and optimizes a hero slide image
  */
-router.post('/admin/upload', auth, admin, upload.single('image'), async (req, res) => {
+router.post('/admin/upload', auth, admin, uploadSingle(['image', 'photo', 'file']), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'Please select an image file to upload.' });
   }

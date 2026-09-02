@@ -68,8 +68,9 @@ export default function AdminHeroManager({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!/^image\/(jpeg|png|webp|gif|heic|avif|jpg)$/i.test(file.type)) {
-      setToast('Please select a valid image file (JPG, PNG, WEBP).', 'error');
+    const isImg = file.type ? file.type.startsWith('image/') : /\.(jpe?g|png|webp|gif|heic|heif|avif|jfif)$/i.test(file.name);
+    if (!isImg) {
+      setToast('Please select a valid image file (JPG, PNG, WEBP, HEIC).', 'error');
       return;
     }
 
@@ -101,9 +102,10 @@ export default function AdminHeroManager({
       }
     } catch (err) {
       console.error('Error uploading hero image:', err);
-      setToast(err.message || 'Failed to upload image. Please try again.', 'error');
+      setToast(err.message || 'Failed to upload hero image.', 'error');
     } finally {
       setUploadingImage(false);
+      e.target.value = '';
     }
   };
 

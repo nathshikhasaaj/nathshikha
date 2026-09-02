@@ -163,12 +163,13 @@ export default function AdminHallOfFameManager({
     if (!files.length) return;
 
     for (const file of files) {
-      if (!/^image\/(jpeg|png|webp|gif)$/i.test(file.type)) {
-        setToast('Please select valid JPG, PNG, WEBP or GIF images.');
+      const isImg = file.type ? file.type.startsWith('image/') : /\.(jpe?g|png|webp|gif|heic|heif|avif|jfif)$/i.test(file.name);
+      if (!isImg) {
+        setToast('Please select valid JPG, PNG, WEBP, HEIC or GIF images.');
         return;
       }
-      if (file.size > 5 * 1024 * 1024) {
-        setToast('Each image file size must be under 5MB.');
+      if (file.size > 25 * 1024 * 1024) {
+        setToast('Each image file size must be under 25MB.');
         return;
       }
     }
@@ -716,14 +717,14 @@ export default function AdminHallOfFameManager({
                           ? '+ Add More Photos (Select Multiple)'
                           : 'Click or drop bride photo(s) here (Select single or multiple)'}
                       </strong>
-                      <span>Supports JPG, PNG, WEBP (Max 5MB each, up to 10 photos)</span>
+                      <span>Supports JPG, PNG, WEBP, HEIC (Max 25MB each, up to 10 photos)</span>
                     </div>
 
                     <input
                       type="file"
                       ref={fileInputRef}
                       style={{ display: 'none' }}
-                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.heic,.avif,.jfif"
                       multiple
                       onChange={handleFileChange}
                     />

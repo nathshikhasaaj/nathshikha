@@ -10,16 +10,7 @@ import { ShowcaseReview } from '../models/ShowcaseReview.js';
 import { auth, admin } from '../middleware/auth.js';
 import { isValidObjectId } from '../middleware/securityMiddleware.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const uploadsDir = path.resolve(__dirname, '../../public/uploads');
-fs.mkdirSync(uploadsDir, { recursive: true });
-
-const upload = multer({
-  dest: uploadsDir,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
-  fileFilter: (req, file, cb) =>
-    cb(null, /^image\/(jpeg|png|webp|gif|heic|avif)$/i.test(file.mimetype))
-});
+import { uploadSingle, uploadsDir } from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
 
@@ -56,9 +47,9 @@ router.get('/admin', auth, admin, async (req, res) => {
 /**
  * Admin: Upload showcase review image
  */
-router.post('/admin/upload', auth, admin, upload.single('image'), async (req, res) => {
+router.post('/admin/upload', auth, admin, uploadSingle(['image', 'photo', 'file']), async (req, res) => {
   if (!req.file) {
-    return res.status(400).json({ error: 'Please select a valid image file.' });
+    return res.status(400).json({ error: 'Please select a valid image file (JPG, PNG, WEBP, GIF, HEIC, AVIF).' });
   }
 
   const filename = `showcase-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.jpg`;

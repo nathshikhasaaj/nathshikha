@@ -34,6 +34,16 @@ export default function Suggestion() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const isImg = file.type ? file.type.startsWith('image/') : /\.(jpe?g|png|webp|gif|heic|heif|avif|jfif)$/i.test(file.name);
+    if (!isImg) {
+      setToast('Please select a valid image file (JPG, PNG, WEBP, HEIC, GIF)');
+      return;
+    }
+    if (file.size > 25 * 1024 * 1024) {
+      setToast('Image file size must be under 25MB');
+      return;
+    }
+
     const fd = new FormData();
     fd.append('image', file);
     setUploading(true);
@@ -49,6 +59,7 @@ export default function Suggestion() {
       setToast(err.message || 'Image upload failed');
     } finally {
       setUploading(false);
+      e.target.value = '';
     }
   };
 
@@ -328,14 +339,14 @@ export default function Suggestion() {
                 <span>
                   {uploading
                     ? 'Uploading image…'
-                    : 'Click or drop to upload reference sketch / photo (max 5MB)'}
+                    : 'Click or drop to upload reference sketch / photo (max 25MB)'}
                 </span>
                 <small style={{ color: '#91796f', fontSize: '10px' }}>
-                  Supports JPG, PNG, WEBP
+                  Supports JPG, PNG, WEBP, HEIC
                 </small>
                 <input
                   type="file"
-                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.heic,.avif,.jfif"
                   onChange={handleImageUpload}
                   disabled={uploading}
                 />

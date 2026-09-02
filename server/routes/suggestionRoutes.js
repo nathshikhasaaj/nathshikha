@@ -14,25 +14,16 @@ import {
   apiLimiter
 } from '../middleware/securityMiddleware.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const uploadsDir = path.resolve(__dirname, '../../public/uploads');
-fs.mkdirSync(uploadsDir, { recursive: true });
-
-const upload = multer({
-  dest: uploadsDir,
-  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB limit
-  fileFilter: (req, file, cb) =>
-    cb(null, /^image\/(jpeg|png|webp|gif)$/i.test(file.mimetype))
-});
+import { uploadSingle, uploadsDir } from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
 
 // Public: Upload reference design image or sketch (Validated through Sharp)
-router.post('/upload', apiLimiter, upload.single('image'), async (req, res) => {
+router.post('/upload', apiLimiter, uploadSingle(['image', 'photo', 'file']), async (req, res) => {
   if (!req.file) {
     return res
       .status(400)
-      .json({ error: 'Please select a valid JPG, PNG, WEBP or GIF image (max 5MB).' });
+      .json({ error: 'Please select a valid image file (JPG, PNG, WEBP, GIF, HEIC, AVIF).' });
   }
 
   const filename = `design-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.jpg`;

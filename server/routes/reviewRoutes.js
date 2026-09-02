@@ -12,16 +12,7 @@ import { Order } from '../models/Order.js';
 import { Product } from '../models/Product.js';
 import { auth } from '../middleware/auth.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const uploadsDir = path.resolve(__dirname, '../../public/uploads');
-fs.mkdirSync(uploadsDir, { recursive: true });
-
-const upload = multer({
-  dest: uploadsDir,
-  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB max
-  fileFilter: (req, file, cb) =>
-    cb(null, /^image\/(jpeg|png|webp|gif|heic|avif)$/i.test(file.mimetype))
-});
+import { uploadSingle, uploadsDir } from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
 
@@ -176,11 +167,11 @@ router.get('/token/:token', async (req, res) => {
 /**
  * Public/Customer: Upload review photo (Sharp verified)
  */
-router.post('/upload-photo', upload.single('photo'), async (req, res) => {
+router.post('/upload-photo', uploadSingle(['photo', 'image', 'file']), async (req, res) => {
   if (!req.file) {
     return res
       .status(400)
-      .json({ error: 'Please select a valid image file (JPG, PNG, WEBP, GIF; max 5MB).' });
+      .json({ error: 'Please select a valid image file (JPG, PNG, WEBP, GIF, HEIC, AVIF).' });
   }
 
   const filename = `review-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.jpg`;

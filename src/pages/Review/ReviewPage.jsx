@@ -73,11 +73,12 @@ export default function ReviewPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.match(/^image\/(jpeg|png|webp|gif)$/i)) {
-      return setFormError('Please select a valid image file (JPG, PNG, WEBP, GIF).');
+    const isImage = file.type ? file.type.startsWith('image/') : /\.(jpe?g|png|webp|gif|heic|heif|avif|jfif)$/i.test(file.name);
+    if (!isImage) {
+      return setFormError('Please select a valid image file (JPG, PNG, WEBP, GIF, HEIC).');
     }
-    if (file.size > 5 * 1024 * 1024) {
-      return setFormError('Image file size must be under 5MB.');
+    if (file.size > 25 * 1024 * 1024) {
+      return setFormError('Image file size must be under 25MB.');
     }
 
     setUploadingPhoto(true);
@@ -87,17 +88,20 @@ export default function ReviewPage() {
     formData.append('photo', file);
 
     try {
-      const res = await fetch('/api/reviews/upload-photo', {
+      const res = await api('/reviews/upload-photo', {
         method: 'POST',
         body: formData
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to upload image');
-      setPhotoUrl(data.url);
+      if (res && res.url) {
+        setPhotoUrl(res.url);
+      } else {
+        throw new Error('No image URL returned');
+      }
     } catch (err) {
       setFormError(err.message || 'Failed to upload photo');
     } finally {
       setUploadingPhoto(false);
+      e.target.value = '';
     }
   };
 
@@ -313,7 +317,7 @@ export default function ReviewPage() {
               <label className={`pagePhotoUploadZone ${uploadingPhoto ? 'uploading' : ''}`}>
                 <input
                   type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.heic,.avif,.jfif"
                   onChange={handlePhotoSelect}
                   disabled={uploadingPhoto}
                   style={{ display: 'none' }}
@@ -321,13 +325,13 @@ export default function ReviewPage() {
                 {uploadingPhoto ? (
                   <div className="pageUploadingStatus">
                     <Loader2 size={24} className="spinIcon" />
-                    <span>Uploading photo…</span>
+                    <span>Uploading & optimizing photo…</span>
                   </div>
                 ) : (
                   <div className="pageUploadPrompt">
                     <Camera size={26} color="var(--gold)" />
-                    <span>Click or tap to upload photo</span>
-                    <small>JPG, PNG, WEBP or GIF (Max 5MB)</small>
+                    <span>Click or tap to upload / take photo</span>
+                    <small>JPG, PNG, WEBP, HEIC or GIF (Max 25MB)</small>
                   </div>
                 )}
               </label>

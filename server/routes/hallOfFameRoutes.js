@@ -10,16 +10,7 @@ import { HallOfFame } from '../models/HallOfFame.js';
 import { auth, admin } from '../middleware/auth.js';
 import { isValidObjectId } from '../middleware/securityMiddleware.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const uploadsDir = path.resolve(__dirname, '../../public/uploads');
-fs.mkdirSync(uploadsDir, { recursive: true });
-
-const upload = multer({
-  dest: uploadsDir,
-  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB limit
-  fileFilter: (req, file, cb) =>
-    cb(null, /^image\/(jpeg|png|webp|gif|heic|avif)$/i.test(file.mimetype))
-});
+import { uploadSingle, uploadMultiple, uploadsDir } from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
 
@@ -63,11 +54,11 @@ router.get('/', async (req, res) => {
 // ----------------------------------------------------
 
 // Admin: Upload single customer photo (Sharp validated)
-router.post('/admin/upload', auth, admin, upload.single('image'), async (req, res) => {
+router.post('/admin/upload', auth, admin, uploadSingle(['image', 'photo', 'file']), async (req, res) => {
   if (!req.file) {
     return res
       .status(400)
-      .json({ error: 'Please select a valid image (JPG, PNG, WEBP or GIF, max 5MB).' });
+      .json({ error: 'Please select a valid image file (JPG, PNG, WEBP, GIF, HEIC, AVIF).' });
   }
 
   const filename = `bride-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.jpg`;
@@ -96,7 +87,7 @@ router.post('/admin/upload', auth, admin, upload.single('image'), async (req, re
 });
 
 // Admin: Upload multiple customer photos (Sharp validated)
-router.post('/admin/upload-multiple', auth, admin, upload.array('images', 10), async (req, res) => {
+router.post('/admin/upload-multiple', auth, admin, uploadMultiple(['images', 'photos', 'files'], 10), async (req, res) => {
   if (!req.files || !req.files.length) {
     return res.status(400).json({ error: 'Please select at least one image file (max 10).' });
   }

@@ -19,30 +19,51 @@ export async function api(path, opts = {}) {
     headers['Content-Type'] = 'application/json';
   }
 
-  const res = await fetch(API + path, { ...opts, headers });
+  let res;
+  try {
+    res = await fetch(API + path, { ...opts, headers });
+  } catch (netErr) {
+    throw new Error(netErr.message || 'Network connection failed. Please check your internet connection.');
+  }
+
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    throw new Error(data.error || 'Something went wrong');
+    const errorMsg = data.error || data.message || (res.status === 413 ? 'File size too large' : 'Something went wrong');
+    throw new Error(errorMsg);
   }
 
   return data;
 }
 
-export async function uploadFile(file, path = '/admin/upload') {
+export async function uploadFile(fileOrFormData, path = '/admin/upload', fieldName = 'image') {
   const token = getToken();
-  const formData = new FormData();
-  formData.append('image', file);
-  const res = await fetch(API + path, {
-    method: 'POST',
-    headers: {
-      ...(token ? { Authorization: 'Bearer ' + token } : {})
-    },
-    body: formData
-  });
+  let formData;
+
+  if (fileOrFormData instanceof FormData) {
+    formData = fileOrFormData;
+  } else {
+    formData = new FormData();
+    formData.append(fieldName, fileOrFormData);
+  }
+
+  let res;
+  try {
+    res = await fetch(API + path, {
+      method: 'POST',
+      headers: {
+        ...(token ? { Authorization: 'Bearer ' + token } : {})
+      },
+      body: formData
+    });
+  } catch (netErr) {
+    throw new Error(netErr.message || 'Network error during image upload.');
+  }
+
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.error || 'Failed to upload image');
+    const errorMsg = data.error || data.message || (res.status === 413 ? 'Image size exceeds maximum limit' : 'Failed to upload image');
+    throw new Error(errorMsg);
   }
   return data;
 }

@@ -18,6 +18,8 @@ dist/
 dist-ssr/
 build/
 *.local
+public/uploads/*
+!public/uploads/.gitkeep
 
 # Logs and databases
 npm-debug.log*

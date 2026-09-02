@@ -181,14 +181,14 @@ export default function AdminProductForm({
           <label className={`uploadBox multiUploadBox ${busy ? 'uploading' : ''}`}>
             <Upload size={20} />
             <div className="uploadText">
-              <b>{busy ? 'Processing & Watermarking…' : 'Choose Multiple Photos to Upload'}</b>
-              <span>Auto-watermarks Nathshikha logo (JPG, PNG, WEBP, up to 20MB each)</span>
+              <b>{busy ? 'Processing & Watermarking…' : 'Choose Single / Multiple Photos to Upload'}</b>
+              <span>Auto-watermarks Nathshikha logo (JPG, PNG, WEBP, HEIC, up to 25MB each)</span>
             </div>
             <input
               ref={fileInputRef}
               type="file"
               multiple
-              accept="image/png,image/jpeg,image/webp,image/gif"
+              accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.heic,.avif,.jfif"
               onChange={handleFileInputChange}
               disabled={busy}
             />

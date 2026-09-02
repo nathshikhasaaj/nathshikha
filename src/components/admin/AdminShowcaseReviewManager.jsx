@@ -110,6 +110,7 @@ export default function AdminShowcaseReviewManager({
       alert(err.message || 'Failed to upload photo. Please ensure valid image file.');
     } finally {
       setUploadingImage(false);
+      e.target.value = '';
     }
   };
 
