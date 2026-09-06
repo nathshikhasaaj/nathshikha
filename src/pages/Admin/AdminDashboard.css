@@ -1,199 +1,23 @@
-.admin {
-  min-height: 80vh;
-  padding: 20px 16px 60px;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-}
+/* ==========================================================================
+   NATHSHIKHA ADMIN DASHBOARD & CORE COMPONENTS STYLING
+   ========================================================================== */
 
-/* Header */
-.adminHeader {
-  max-width: 1200px;
-  width: 100%;
-  margin: 0 auto 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 20px;
-  box-sizing: border-box;
-}
-
-.adminHeader .eyebrow {
-  display: inline-block;
-  font-size: 10.5px;
-  letter-spacing: 1.2px;
-  font-weight: 700;
-  color: var(--gold, #b8860b);
-  margin-bottom: 4px;
-}
-
-.adminHeader h1 {
-  font-family: var(--font-serif);
-  color: var(--maroon, #5b1420);
-  font-weight: 600;
-  font-size: 28px;
-  margin: 0 0 4px;
-  line-height: 1.2;
-}
-
-.adminHeader p {
-  margin: 0;
-  color: #7d6e64;
-  font-size: 13px;
-}
-
-.adminHeader p b {
-  color: var(--maroon, #5b1420);
-}
-
-.adminHeaderActions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.adminHeaderActions .outlineBtn,
-.adminHeaderActions .goldBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px !important;
-  font-size: 11.5px !important;
-  font-weight: 700;
-  border-radius: 6px !important;
-  box-sizing: border-box;
-}
-
-.createOrderActionBtn {
-  box-shadow: 0 2px 8px rgba(91, 42, 26, 0.2);
-}
-
-.spinIcon {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-/* Tabs Strip */
-.adminTabs {
-  max-width: 1200px;
-  width: 100%;
-  margin: 0 auto 20px;
-  display: flex;
-  gap: 6px;
-  border-bottom: 1px solid #dfd1b5;
-  padding-bottom: 2px;
-  box-sizing: border-box;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-
-.adminTabs::-webkit-scrollbar {
-  display: none;
-}
-
-.adminTabs button {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  position: relative;
-  border: 0;
-  background: transparent;
-  padding: 10px 16px;
-  color: #7c6c65;
-  font-size: 12.5px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.15s ease;
-  border-radius: 6px 6px 0 0;
-  white-space: nowrap;
-}
-
-.adminTabs button:hover {
-  color: var(--maroon);
-  background: rgba(184, 134, 11, 0.05);
-}
-
-.adminTabs button.active {
-  color: var(--maroon);
-  font-weight: 700;
-  border-bottom: 3px solid var(--maroon);
-  background: #fffdf9;
-}
-
-.adminTabs button b {
-  margin-left: 4px;
-  background: #713f12;
-  color: #fff;
-  border-radius: 12px;
-  padding: 2px 7px;
-  font-size: 9.5px;
-  font-weight: 700;
-}
-
-.tabAlertBadge {
-  background: #dc2626 !important;
-  color: #ffffff !important;
-  animation: pulseBadge 1.8s infinite;
-}
-
-@keyframes pulseBadge {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.15);
-  }
-}
-
-/* Control Center View */
-.controlCenterView {
-  max-width: 1200px;
-  width: 100%;
-  margin: 0 auto;
+/* Overall Page Layout */
+.controlCenterView,
+.adminOrdersView,
+.adminShipmentsView,
+.adminParametersView {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  box-sizing: border-box;
-}
-
-/* Attention Banners */
-.paymentAttentionBanner,
-.cancellationAttentionBanner {
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  border-left: 4px solid #f59e0b;
-  border-radius: 10px;
-  padding: 12px 16px;
-  margin: 0 auto 14px;
-  max-width: 1200px;
+  gap: 24px;
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.06);
-  box-sizing: border-box;
-  animation: slideDownAlert 0.3s ease-out;
+  animation: fadeInAdmin 0.25s ease-out;
 }
 
-.cancellationAttentionBanner {
-  background: #fffafa;
-  border: 1px solid #fecaca;
-  border-left: 4px solid #dc2626;
-  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.06);
-}
-
-@keyframes slideDownAlert {
+@keyframes fadeInAdmin {
   from {
     opacity: 0;
-    transform: translateY(-6px);
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
@@ -201,254 +25,425 @@
   }
 }
 
+/* Section Blocks */
+.dashboardSectionBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.sectionBlockHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 0 4px;
+}
+
+.sectionBlockTitle {
+  font-family: var(--admin-font-serif);
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--admin-maroon);
+  margin: 0 0 2px;
+}
+
+.sectionBlockSub {
+  font-size: 12.5px;
+  color: var(--admin-text-muted);
+  margin: 0;
+}
+
+.viewAllSectionBtn {
+  background: transparent;
+  border: none;
+  color: var(--admin-maroon);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: all var(--admin-transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.viewAllSectionBtn:hover {
+  color: var(--admin-gold);
+  transform: translateX(2px);
+}
+
+/* ==========================================================================
+   ATTENTION BANNERS (Cancellations, Payment Verification, All Clear)
+   ========================================================================== */
+
+.cancellationAttentionBanner,
+.paymentAttentionBanner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: var(--admin-radius-md);
+  box-shadow: var(--admin-shadow-sm);
+  flex-wrap: wrap;
+  transition: all var(--admin-transition-fast);
+}
+
+.cancellationAttentionBanner {
+  background: linear-gradient(135deg, #fffbf0 0%, #fff7ed 100%);
+  border: 1px solid #fed7aa;
+}
+
+.paymentAttentionBanner {
+  background: linear-gradient(135deg, #fef2f2 0%, #fff1f2 100%);
+  border: 1px solid #fecdd3;
+}
+
 .attentionIconWrap {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: #fde68a;
-  color: #b45309;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--admin-radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
+.attentionIconWrap {
+  background: #ffe4e6;
+  color: #e11d48;
+}
+
 .attentionIconWrap.iconAmber {
-  background: #fee2e2;
-  color: #dc2626;
+  background: #ffedd5;
+  color: #ea580c;
 }
 
 .attentionText {
   flex: 1;
-  min-width: 0;
+  min-width: 240px;
 }
 
 .attentionText h4 {
-  margin: 0 0 2px 0;
-  font-size: 13.5px;
-  color: #78350f;
+  font-family: var(--admin-font-serif);
+  font-size: 16px;
   font-weight: 700;
-}
-
-.cancellationAttentionBanner .attentionText h4 {
-  color: #991b1b;
+  margin: 0 0 3px;
+  color: var(--admin-maroon);
 }
 
 .attentionText p {
   margin: 0;
-  font-size: 11.5px;
-  color: #92400e;
+  font-size: 13px;
+  color: var(--admin-text-muted);
   line-height: 1.4;
 }
 
-.cancellationAttentionBanner .attentionText p {
-  color: #b91c1c;
-}
-
 .attentionActionBtn {
-  display: inline-flex !important;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px !important;
-  font-size: 11.5px !important;
-  font-weight: 700 !important;
+  margin-left: auto;
+  padding: 9px 16px !important;
+  font-size: 12.5px !important;
+  font-weight: 700;
   white-space: nowrap;
-  background: #d97706 !important;
-  border-color: #b45309 !important;
-  color: #fff !important;
-  border-radius: 6px !important;
-  flex-shrink: 0;
-}
-
-.cancelActionBtn {
-  background: #dc2626 !important;
-  border-color: #b91c1c !important;
-}
-
-.attentionActionBtn:hover {
-  background: #b45309 !important;
 }
 
 .allClearBanner {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  border-radius: 8px;
-  padding: 10px 16px;
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 12px;
+  padding: 12px 18px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--admin-radius-md);
   color: #166534;
-  font-weight: 500;
-  max-width: 1200px;
-  margin: 0 auto 14px;
-  width: 100%;
-  box-sizing: border-box;
+  font-size: 13.5px;
+  font-weight: 600;
 }
 
-.allClearBanner svg {
-  color: #16a34a;
-}
-
-/* 2-Col Layout for Products */
-.adminTwoCol {
-  max-width: 1200px;
-  width: 100%;
-  margin: auto;
-  display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-  gap: 20px;
-  align-items: start;
-  box-sizing: border-box;
-  min-width: 0;
-}
+/* ==========================================================================
+   CARDS & CONTAINERS
+   ========================================================================== */
 
 .adminCard {
-  background: #fff;
-  border: 1px solid #e3d6bb;
-  padding: 20px;
-  box-shadow: 0 2px 12px rgba(91, 42, 26, 0.04);
-  border-radius: 10px;
-  max-width: 1200px;
-  width: 100%;
-  margin: 0 auto;
+  background: var(--admin-card-bg);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-lg);
+  padding: 22px;
+  box-shadow: var(--admin-shadow-sm);
   box-sizing: border-box;
-  min-width: 0;
+  width: 100%;
 }
 
 .cardHeading {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 15px;
-  margin-bottom: 16px;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--admin-border-subtle);
   flex-wrap: wrap;
 }
 
 .cardHeading h3 {
-  font-family: var(--font-serif);
-  color: var(--maroon);
-  font-weight: 600;
-  margin: 0;
+  font-family: var(--admin-font-serif);
   font-size: 18px;
+  font-weight: 700;
+  color: var(--admin-maroon);
+  margin: 0 0 2px;
 }
 
-.cardHeading > span {
-  font-size: 11px;
-  color: #8a7c73;
+.catalogueSub {
+  font-size: 12.5px;
+  color: var(--admin-text-muted);
+  margin: 0;
 }
 
-/* Responsive Media Queries */
-@media (max-width: 900px) {
+.productCountBadge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: var(--admin-bg);
+  color: var(--admin-text-muted);
+  border: 1px solid var(--admin-border);
+}
+
+/* 2-Column Catalog Layout */
+.adminTwoCol {
+  display: grid;
+  grid-template-columns: minmax(360px, 480px) 1fr;
+  gap: 24px;
+  align-items: start;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Suggestions Grid & Cards */
+.suggestionsGridList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+.suggestionItemCard {
+  background: #ffffff;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-md);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all var(--admin-transition-fast);
+  box-shadow: var(--admin-shadow-sm);
+}
+
+.suggestionItemCard:hover {
+  border-color: var(--admin-gold);
+  box-shadow: var(--admin-shadow-md);
+}
+
+.suggestionTopRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.suggestionCatBadge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--admin-maroon);
+  background: var(--admin-maroon-subtle);
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.suggestionTitle {
+  font-family: var(--admin-font-serif);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--admin-text-main);
+  margin: 6px 0 4px;
+}
+
+.suggestionAuthor {
+  font-size: 12px;
+  color: var(--admin-text-muted);
+}
+
+.suggestionWaLink {
+  color: #128c7e;
+  text-decoration: none;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 4px;
+}
+
+.suggestionWaLink:hover {
+  text-decoration: underline;
+}
+
+.suggestionStatusWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.suggestionStatusLabel {
+  font-size: 10.5px;
+  color: var(--admin-text-dim);
+  font-weight: 600;
+}
+
+.suggestionStatusSelect {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: var(--admin-radius-sm);
+  border: 1px solid var(--admin-border);
+  background: #ffffff;
+  color: var(--admin-text-main);
+  cursor: pointer;
+}
+
+.suggestionDesc {
+  font-size: 13px;
+  color: var(--admin-text-main);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.suggestionNotesBox {
+  background: var(--admin-gold-subtle);
+  border: 1px solid rgba(184, 134, 11, 0.2);
+  padding: 10px 12px;
+  border-radius: var(--admin-radius-sm);
+  font-size: 12px;
+  color: #78350f;
+  line-height: 1.4;
+}
+
+.suggestionActions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+/* Empty States */
+.empty.small {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px;
+  text-align: center;
+  color: var(--admin-text-muted);
+  gap: 12px;
+}
+
+.empty.small p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* ==========================================================================
+   BUTTON SYSTEM
+   ========================================================================== */
+
+.goldBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+  color: #ffffff;
+  border: 1px solid #9c7108;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: var(--admin-radius-sm);
+  cursor: pointer;
+  transition: all var(--admin-transition-fast);
+  box-shadow: 0 2px 6px rgba(184, 134, 11, 0.25);
+  text-decoration: none;
+}
+
+.goldBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #e0bc43 0%, #a6790a 100%);
+  box-shadow: 0 4px 12px rgba(184, 134, 11, 0.35);
+  transform: translateY(-1px);
+}
+
+.goldBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.outlineBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #ffffff;
+  color: var(--admin-text-main);
+  border: 1px solid var(--admin-border);
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--admin-radius-sm);
+  cursor: pointer;
+  transition: all var(--admin-transition-fast);
+  text-decoration: none;
+}
+
+.outlineBtn:hover:not(:disabled) {
+  background: #fbf7f1;
+  border-color: var(--admin-gold);
+  color: var(--admin-maroon);
+}
+
+.outlineBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   RESPONSIVE BREAKPOINTS FOR DASHBOARD
+   ========================================================================== */
+
+@media (max-width: 1100px) {
   .adminTwoCol {
-    grid-template-columns: 100%;
-    gap: 16px;
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 768px) {
-  .admin {
-    padding: 12px 8px 60px;
-    overflow-x: hidden;
-  }
-
-  .adminHeader {
+  .cancellationAttentionBanner,
+  .paymentAttentionBanner {
     flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-    margin-bottom: 14px;
+    align-items: flex-start;
+    padding: 14px;
   }
-
-  .adminHeader h1 {
-    font-size: 22px;
-  }
-
-  .adminHeaderActions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .createOrderActionBtn {
-    grid-column: 1 / -1;
-    height: 42px;
-    font-size: 12.5px !important;
-    justify-content: center;
+  
+  .attentionActionBtn {
+    margin-left: 0;
     width: 100%;
   }
-
-  .adminHeaderActions .outlineBtn {
-    height: 38px;
-    font-size: 11.5px !important;
-    justify-content: center;
-    width: 100%;
+  
+  .suggestionsGridList {
+    grid-template-columns: 1fr;
   }
-
-  .adminTabs {
-    overflow-x: auto;
-    white-space: nowrap;
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 6px;
-    border-bottom: 2px solid #e7ddc8;
-    padding-bottom: 6px;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    margin-bottom: 14px;
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    box-sizing: border-box;
-  }
-
-  .adminTabs::-webkit-scrollbar {
-    display: none;
-  }
-
-  .adminTabs button {
-    padding: 8px 12px;
-    font-size: 11.5px;
-    border-radius: 6px;
-    flex-shrink: 0;
-    white-space: nowrap;
-    background: #fcf9f2;
-    border: 1px solid #ebdcc5;
-  }
-
-  .adminTabs button.active {
-    background: var(--maroon, #5b1420);
-    color: #ffffff;
-    border-color: var(--maroon);
-  }
-
-  .adminTabs button.active b {
-    background: rgba(255, 255, 255, 0.25);
-    color: #ffffff;
-  }
-
-  .paymentAttentionBanner,
-  .cancellationAttentionBanner {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 12px;
-    gap: 10px;
-    margin-bottom: 14px;
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-
-  .attentionActionBtn,
-  .cancelActionBtn {
-    width: 100%;
-    height: 38px;
-    justify-content: center;
-    font-size: 12px;
-    box-sizing: border-box;
+  
+  .adminCard {
+    padding: 16px;
+    border-radius: var(--admin-radius-md);
   }
 }

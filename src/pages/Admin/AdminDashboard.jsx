@@ -15,12 +15,19 @@ import {
   PackagePlus,
   Tag,
   Star,
-  AlertTriangle
+  AlertTriangle,
+  Camera,
+  MessageSquareQuote,
+  SlidersHorizontal,
+  Box,
+  Truck
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { compressImage, compressMultipleImages } from '../../utils/imageCompressor';
+import AdminSidebar from '../../components/admin/AdminSidebar';
+import AdminHeader from '../../components/admin/AdminHeader';
 import AdminStats from '../../components/admin/AdminStats';
 import AdminProductForm from '../../components/admin/AdminProductForm';
 import AdminProductList from '../../components/admin/AdminProductList';
@@ -37,7 +44,7 @@ import AdminHallOfFameManager from '../../components/admin/AdminHallOfFameManage
 import AdminHeroManager from '../../components/admin/AdminHeroManager';
 import AdminParameterManager from '../../components/admin/AdminParameterManager';
 import AdminCancellationModal from '../../components/admin/AdminCancellationModal';
-import { Camera, MessageSquareQuote, SlidersHorizontal } from 'lucide-react';
+import '../../components/admin/AdminLayout.css';
 import './AdminDashboard.css';
 
 const emptyForm = {
@@ -59,6 +66,9 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
   const { setToast } = useToast();
 
   const [tab, setTab] = useState('control_center');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
   const [orders, setOrders] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [coupons, setCoupons] = useState([]);
@@ -536,450 +546,373 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
   };
 
   return (
-    <main className="page admin">
-      {/* Top Header */}
-      <div className="adminHeader">
-        <div>
-          <span className="eyebrow">NATHSHIKHA STUDIO CONTROL CENTER</span>
-          <h1>Admin Dashboard</h1>
-          <p>
-            Welcome back, <b>{adminUser?.name || 'Studio Admin'}</b>. Operational overview and order fulfilment.
-          </p>
-        </div>
-        <div className="adminHeaderActions">
-          <button
-            className="goldBtn createOrderActionBtn"
-            onClick={() => setShowCreateOrderModal(true)}
-            type="button"
-            title="Create a new customer order manually"
-          >
-            <Plus size={15} />
-            <span>+ CREATE ORDER</span>
-          </button>
-          <button
-            className="outlineBtn refreshActionBtn"
-            onClick={load}
-            disabled={refreshing}
-            type="button"
-          >
-            <RefreshCw className={refreshing ? 'spinIcon' : ''} size={15} />
-            <span>{refreshing ? 'REFRESHING…' : 'REFRESH'}</span>
-          </button>
-          <button className="outlineBtn" onClick={logoutAdmin} type="button">
-            <LogOut size={15} /> <span>LOG OUT</span>
-          </button>
-        </div>
-      </div>
+    <div className={`adminWorkspace ${sidebarCollapsed ? 'sidebarCollapsed' : ''}`}>
+      {/* 1. Left Sidebar Navigation */}
+      <AdminSidebar
+        activeTab={tab}
+        setActiveTab={setTab}
+        collapsed={sidebarCollapsed}
+        setCollapsed={setSidebarCollapsed}
+        mobileOpen={mobileSidebarOpen}
+        setMobileOpen={setMobileSidebarOpen}
+        analytics={analytics}
+        productsCount={allProducts.length}
+        couponsCount={coupons.length}
+        reviewsCount={reviewsData.reviews?.length || 0}
+        suggestionsCount={suggestions.length}
+        adminUser={adminUser}
+        onLogout={logoutAdmin}
+      />
 
-      {/* Main Navigation Tabs */}
-      <div className="adminTabs">
-        <button
-          className={tab === 'control_center' ? 'active' : ''}
-          onClick={() => setTab('control_center')}
-          type="button"
-        >
-          <Layers size={15} />
-          <span>Operational Control Center</span>
-          {analytics.paymentVerificationCount > 0 && (
-            <b className="tabAlertBadge">{analytics.paymentVerificationCount}</b>
-          )}
-        </button>
+      {/* 2. Main Admin Workspace Area */}
+      <div className="adminMainArea">
+        {/* Top Sticky Header */}
+        <AdminHeader
+          activeTab={tab}
+          onOpenMobileSidebar={() => setMobileSidebarOpen(true)}
+          onOpenCreateOrder={() => setShowCreateOrderModal(true)}
+          onRefresh={load}
+          refreshing={refreshing}
+        />
 
-        <button
-          className={tab === 'products' ? 'active' : ''}
-          onClick={() => setTab('products')}
-          type="button"
-        >
-          <ShoppingBag size={15} />
-          <span>Products Catalogue ({allProducts.length})</span>
-        </button>
-
-        <button
-          className={tab === 'parameters' ? 'active' : ''}
-          onClick={() => setTab('parameters')}
-          type="button"
-        >
-          <SlidersHorizontal size={15} />
-          <span>Parameter Library</span>
-        </button>
-
-        <button
-          className={tab === 'coupons' ? 'active' : ''}
-          onClick={() => setTab('coupons')}
-          type="button"
-        >
-          <Tag size={15} />
-          <span>Coupons & Offers ({coupons.length})</span>
-          {analytics.activeCouponsCount > 0 && <b>{analytics.activeCouponsCount}</b>}
-        </button>
-
-        <button
-          className={tab === 'reviews' ? 'active' : ''}
-          onClick={() => setTab('reviews')}
-          type="button"
-        >
-          <Star size={15} />
-          <span>Customer Reviews ({reviewsData.reviews?.length || 0})</span>
-          {reviewsData.summary?.averageRating > 0 && (
-            <b>{reviewsData.summary.averageRating}★</b>
-          )}
-        </button>
-
-        <button
-          className={tab === 'showcase_reviews' ? 'active' : ''}
-          onClick={() => setTab('showcase_reviews')}
-          type="button"
-        >
-          <MessageSquareQuote size={15} />
-          <span>Homepage Showcase / Google ({showcaseReviews.length})</span>
-        </button>
-
-        <button
-          className={tab === 'suggestions' ? 'active' : ''}
-          onClick={() => setTab('suggestions')}
-          type="button"
-        >
-          <Lightbulb size={15} />
-          <span>Design Requests & Ideas</span>
-          {suggestions.length > 0 && <b>{suggestions.length}</b>}
-        </button>
-
-        <button
-          className={tab === 'hall_of_fame' ? 'active' : ''}
-          onClick={() => setTab('hall_of_fame')}
-          type="button"
-        >
-          <Camera size={15} />
-          <span>Hall of Fame / Our Brides ({hallOfFameStories.length})</span>
-        </button>
-
-        <button
-          className={tab === 'hero_showcase' ? 'active' : ''}
-          onClick={() => setTab('hero_showcase')}
-          type="button"
-        >
-          <Sparkles size={15} />
-          <span>Hero Banners ({heroSlides.length || 3})</span>
-        </button>
-      </div>
-
-      {/* TAB 1: OPERATIONAL CONTROL CENTER */}
-      {tab === 'control_center' && (
-        <div className="controlCenterView">
-          {/* 1. Analytics / Summary Cards */}
-          <AdminStats
-            totalOrders={analytics.totalOrders}
-            paymentVerificationCount={analytics.paymentVerificationCount}
-            cancellationRequestsCount={analytics.cancellationRequestsCount}
-            confirmedOrdersCount={analytics.confirmedOrdersCount}
-            makingOrdersCount={analytics.makingOrdersCount}
-            packingOrdersCount={analytics.packingOrdersCount}
-            deliveredOrdersCount={analytics.deliveredOrdersCount}
-            totalRevenue={analytics.totalRevenue}
-            activeCouponsCount={analytics.activeCouponsCount}
-            onCardClick={(targetFilter) => {
-              if (targetFilter === 'coupons_tab') {
-                setTab('coupons');
-              } else {
-                setOrderFilter(targetFilter);
-              }
-            }}
-          />
-
-          {/* 2. Cancellation Requests Attention Area */}
-          {analytics.cancellationRequestsCount > 0 && (
-            <div className="cancellationAttentionBanner">
-              <div className="attentionIconWrap iconAmber">
-                <AlertTriangle size={24} />
-              </div>
-              <div className="attentionText">
-                <h4>Cancellation Requests ({analytics.cancellationRequestsCount})</h4>
-                <p>
-                  <b>{analytics.cancellationRequestsCount}</b> customer cancellation {analytics.cancellationRequestsCount === 1 ? 'request requires' : 'requests require'} review and refund approval.
-                </p>
-              </div>
-              <button
-                type="button"
-                className="goldBtn attentionActionBtn cancelActionBtn"
-                onClick={() => {
-                  setOrderFilter('cancellation_requested');
-                  document.querySelector('.adminOrdersSection')?.scrollIntoView({ behavior: 'smooth' });
+        {/* Page Content View */}
+        <main className="adminPageBody">
+          {/* TAB 1: OPERATIONAL CONTROL CENTER / DASHBOARD */}
+          {tab === 'control_center' && (
+            <div className="controlCenterView">
+              {/* Executive Analytics / KPI Matrix */}
+              <AdminStats
+                totalOrders={analytics.totalOrders}
+                paymentVerificationCount={analytics.paymentVerificationCount}
+                cancellationRequestsCount={analytics.cancellationRequestsCount}
+                confirmedOrdersCount={analytics.confirmedOrdersCount}
+                makingOrdersCount={analytics.makingOrdersCount}
+                packingOrdersCount={analytics.packingOrdersCount}
+                deliveredOrdersCount={analytics.deliveredOrdersCount}
+                totalRevenue={analytics.totalRevenue}
+                activeCouponsCount={analytics.activeCouponsCount}
+                onCardClick={(targetFilter) => {
+                  if (targetFilter === 'coupons_tab') {
+                    setTab('coupons');
+                  } else {
+                    setOrderFilter(targetFilter);
+                    setTab('orders');
+                  }
                 }}
-              >
-                <span>Review Cancellations ({analytics.cancellationRequestsCount})</span>
-                <ArrowRight size={15} />
-              </button>
-            </div>
-          )}
+              />
 
-          {/* 3. Payment Verification Attention Area */}
-          {analytics.paymentVerificationCount > 0 ? (
-            <div className="paymentAttentionBanner">
-              <div className="attentionIconWrap">
-                <ShieldAlert size={24} />
-              </div>
-              <div className="attentionText">
-                <h4>Payment Verification Pending</h4>
-                <p>
-                  <b>{analytics.paymentVerificationCount}</b> orders require payment verification. Verify the transaction IDs to confirm orders.
-                </p>
-              </div>
-              <button
-                type="button"
-                className="goldBtn attentionActionBtn"
-                onClick={() => {
-                  setOrderFilter('verification_pending');
-                  document.querySelector('.adminOrdersSection')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-              >
-                <span>Review Payments ({analytics.paymentVerificationCount})</span>
-                <ArrowRight size={15} />
-              </button>
-            </div>
-          ) : (
-            <div className="allClearBanner">
-              <CheckCircle2 size={18} />
-              <span>All customer payments are reviewed and up to date.</span>
-            </div>
-          )}
-
-          {/* 4. Main Orders Table */}
-          <AdminOrderList
-            orders={orders}
-            filter={orderFilter}
-            setFilter={setOrderFilter}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            updateOrderStatus={handleUpdateOrderStatus}
-            onVerifyPaymentClick={(order) => setVerifyModalOrder(order)}
-            onViewOrderClick={(order) => setDetailsModalOrder(order)}
-            onOpenShipmentModal={(order, isEdit) => {
-              setShipmentModalOrder(order);
-              setIsEditingShipment(isEdit);
-            }}
-            onReviewCancellationClick={(order) => setCancellationModalOrder(order)}
-          />
-
-          {/* 5. Shipment Details Table */}
-          <AdminShipmentTable
-            orders={orders}
-            onEditShipment={(order) => {
-              setShipmentModalOrder(order);
-              setIsEditingShipment(true);
-            }}
-            onViewOrder={(order) => setDetailsModalOrder(order)}
-          />
-        </div>
-      )}
-
-      {/* TAB 2: PRODUCTS CATALOGUE */}
-      {tab === 'products' && (
-        <div className="adminTwoCol">
-          <AdminProductForm
-            form={form}
-            setForm={setForm}
-            editing={editing}
-            setEditing={setEditing}
-            saveProduct={saveProduct}
-            uploadImage={uploadImage}
-            uploadMultipleImages={uploadMultipleImages}
-            busy={busy}
-            emptyForm={emptyForm}
-          />
-          <AdminProductList
-            allProducts={allProducts}
-            editProduct={editProduct}
-            removeProduct={removeProduct}
-            toggleProductActive={toggleProductActive}
-            toggleProductBestseller={toggleProductBestseller}
-          />
-        </div>
-      )}
-
-      {/* TAB: MASTER PARAMETER LIBRARY */}
-      {tab === 'parameters' && (
-        <div className="adminParametersView">
-          <AdminParameterManager />
-        </div>
-      )}
-
-      {/* TAB 3: CUSTOMER DESIGN SUGGESTIONS */}
-      {tab === 'suggestions' && (
-        <div className="adminCard">
-          <div className="cardHeading">
-            <h3>Customer Design Ideas & Suggestions</h3>
-            <span>{suggestions.length} total received</span>
-          </div>
-
-          {suggestions.length > 0 ? (
-            <div style={{ display: 'grid', gap: 16 }}>
-              {suggestions.map((s) => (
-                <div
-                  key={s.id}
-                  style={{
-                    border: '1px solid #e7ddc8',
-                    padding: 18,
-                    borderRadius: 6,
-                    background: '#fffdf9',
-                    display: 'grid',
-                    gap: 10
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      flexWrap: 'wrap',
-                      gap: 10
+              {/* Cancellation Requests Attention Area */}
+              {analytics.cancellationRequestsCount > 0 && (
+                <div className="cancellationAttentionBanner">
+                  <div className="attentionIconWrap iconAmber">
+                    <AlertTriangle size={24} />
+                  </div>
+                  <div className="attentionText">
+                    <h4>Cancellation Requests ({analytics.cancellationRequestsCount})</h4>
+                    <p>
+                      <b>{analytics.cancellationRequestsCount}</b> customer cancellation {analytics.cancellationRequestsCount === 1 ? 'request requires' : 'requests require'} review and refund approval.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="goldBtn attentionActionBtn cancelActionBtn"
+                    onClick={() => {
+                      setOrderFilter('cancellation_requested');
+                      setTab('orders');
                     }}
                   >
-                    <div>
-                      <span
-                        className="eyebrow"
-                        style={{ color: 'var(--maroon)', fontSize: 10 }}
-                      >
-                        {s.category}
-                      </span>
-                      <h4
-                        style={{
-                          margin: '4px 0',
-                          fontFamily: 'var(--font-serif)',
-                          fontSize: 16,
-                          color: 'var(--char)'
-                        }}
-                      >
-                        {s.title}
-                      </h4>
-                      <div style={{ fontSize: 12, color: '#7a6b65' }}>
-                        By <b>{s.name}</b> · {s.email} ·{' '}
-                        <a
-                          href={`https://wa.me/${s.phone.replace(/\D/g, '')}?text=Hi%20${encodeURIComponent(
-                            s.name
-                          )}%2C%20regarding%20your%20Nathshikha%20design%20suggestion`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            color: '#128c7e',
-                            textDecoration: 'none',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 3,
-                            fontWeight: 600
-                          }}
-                        >
-                          <MessageSquare size={12} /> {s.phone}
-                        </a>
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                      <select
-                        value={s.status}
-                        onChange={(e) => updateSuggestion(s.id, e.target.value, s.admin_notes)}
-                        style={{
-                          fontSize: 12,
-                          padding: '4px 8px',
-                          borderRadius: 4,
-                          border: '1px solid #c9bcae'
-                        }}
-                      >
-                        <option value="new">New</option>
-                        <option value="in_review">In Review</option>
-                        <option value="planned">Planned</option>
-                        <option value="launched">Launched</option>
-                        <option value="declined">Declined</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <p style={{ margin: 0, fontSize: 13, color: '#4a3c36', lineHeight: 1.5 }}>
-                    {s.description}
-                  </p>
-
-                  {s.admin_notes && (
-                    <div
-                      style={{
-                        background: '#f4ede2',
-                        padding: 8,
-                        borderRadius: 4,
-                        fontSize: 12,
-                        color: '#6d1b29'
-                      }}
-                    >
-                      <b>Admin Notes:</b> {s.admin_notes}
-                    </div>
-                  )}
-
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button
-                      type="button"
-                      className="outlineBtn"
-                      style={{ fontSize: 11, padding: '4px 10px' }}
-                      onClick={() => {
-                        const note = window.prompt('Update admin notes:', s.admin_notes || '');
-                        if (note !== null) updateSuggestion(s.id, s.status, note);
-                      }}
-                    >
-                      Edit Notes
-                    </button>
-                  </div>
+                    <span>Review Cancellations ({analytics.cancellationRequestsCount})</span>
+                    <ArrowRight size={15} />
+                  </button>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="empty small">
-              <Lightbulb size={32} color="var(--gold)" />
-              <p>No customer design suggestions submitted yet.</p>
+              )}
+
+              {/* Payment Verification Attention Area */}
+              {analytics.paymentVerificationCount > 0 ? (
+                <div className="paymentAttentionBanner">
+                  <div className="attentionIconWrap">
+                    <ShieldAlert size={24} />
+                  </div>
+                  <div className="attentionText">
+                    <h4>Payment Verification Pending</h4>
+                    <p>
+                      <b>{analytics.paymentVerificationCount}</b> orders require payment verification. Verify the transaction IDs to confirm orders.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="goldBtn attentionActionBtn"
+                    onClick={() => {
+                      setOrderFilter('verification_pending');
+                      setTab('orders');
+                    }}
+                  >
+                    <span>Review Payments ({analytics.paymentVerificationCount})</span>
+                    <ArrowRight size={15} />
+                  </button>
+                </div>
+              ) : (
+                <div className="allClearBanner">
+                  <CheckCircle2 size={18} />
+                  <span>All customer payments are reviewed and up to date.</span>
+                </div>
+              )}
+
+              {/* Quick Orders Pipeline Overview */}
+              <div className="dashboardSectionBlock">
+                <div className="sectionBlockHeader">
+                  <div>
+                    <h3 className="sectionBlockTitle">Recent Orders & Pipeline</h3>
+                    <p className="sectionBlockSub">Live customer orders across all fulfillment stages</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="viewAllSectionBtn"
+                    onClick={() => setTab('orders')}
+                  >
+                    <span>Open Full Orders Manager →</span>
+                  </button>
+                </div>
+
+                <AdminOrderList
+                  orders={orders}
+                  filter={orderFilter}
+                  setFilter={setOrderFilter}
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  updateOrderStatus={handleUpdateOrderStatus}
+                  onVerifyPaymentClick={(order) => setVerifyModalOrder(order)}
+                  onViewOrderClick={(order) => setDetailsModalOrder(order)}
+                  onOpenShipmentModal={(order, isEdit) => {
+                    setShipmentModalOrder(order);
+                    setIsEditingShipment(isEdit);
+                  }}
+                  onReviewCancellationClick={(order) => setCancellationModalOrder(order)}
+                />
+              </div>
+
+              {/* Shipment Details Table */}
+              <div className="dashboardSectionBlock">
+                <div className="sectionBlockHeader">
+                  <div>
+                    <h3 className="sectionBlockTitle">Active Dispatches & Shipments</h3>
+                    <p className="sectionBlockSub">Real-time courier partner assignments and tracking codes</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="viewAllSectionBtn"
+                    onClick={() => setTab('shipments')}
+                  >
+                    <span>Open Full Logistics View →</span>
+                  </button>
+                </div>
+                <AdminShipmentTable
+                  orders={orders}
+                  onEditShipment={(order) => {
+                    setShipmentModalOrder(order);
+                    setIsEditingShipment(true);
+                  }}
+                  onViewOrder={(order) => setDetailsModalOrder(order)}
+                />
+              </div>
             </div>
           )}
-        </div>
-      )}
 
-      {/* TAB 4: COUPONS & DISCOUNTS */}
-      {tab === 'coupons' && (
-        <AdminCouponManager
-          coupons={coupons}
-          onCouponUpdated={load}
-          setToast={setToast}
-        />
-      )}
+          {/* TAB 2: ORDERS MANAGEMENT */}
+          {tab === 'orders' && (
+            <div className="adminOrdersView">
+              <AdminOrderList
+                orders={orders}
+                filter={orderFilter}
+                setFilter={setOrderFilter}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                updateOrderStatus={handleUpdateOrderStatus}
+                onVerifyPaymentClick={(order) => setVerifyModalOrder(order)}
+                onViewOrderClick={(order) => setDetailsModalOrder(order)}
+                onOpenShipmentModal={(order, isEdit) => {
+                  setShipmentModalOrder(order);
+                  setIsEditingShipment(isEdit);
+                }}
+                onReviewCancellationClick={(order) => setCancellationModalOrder(order)}
+              />
+            </div>
+          )}
 
-      {/* TAB 5: CUSTOMER REVIEWS */}
-      {tab === 'reviews' && (
-        <AdminReviewManager
-          reviewsData={reviewsData}
-          onReviewUpdated={load}
-          setToast={setToast}
-        />
-      )}
+          {/* TAB 3: SHIPMENTS LOGISTICS */}
+          {tab === 'shipments' && (
+            <div className="adminShipmentsView">
+              <AdminShipmentTable
+                orders={orders}
+                onEditShipment={(order) => {
+                  setShipmentModalOrder(order);
+                  setIsEditingShipment(true);
+                }}
+                onViewOrder={(order) => setDetailsModalOrder(order)}
+              />
+            </div>
+          )}
 
-      {/* TAB 5B: HOMEPAGE SHOWCASE & GOOGLE REVIEWS */}
-      {tab === 'showcase_reviews' && (
-        <AdminShowcaseReviewManager
-          reviews={showcaseReviews}
-          onRefresh={load}
-          setToast={setToast}
-        />
-      )}
+          {/* TAB 4: PRODUCTS CATALOGUE */}
+          {tab === 'products' && (
+            <div className="adminTwoCol">
+              <AdminProductForm
+                form={form}
+                setForm={setForm}
+                editing={editing}
+                setEditing={setEditing}
+                saveProduct={saveProduct}
+                uploadImage={uploadImage}
+                uploadMultipleImages={uploadMultipleImages}
+                busy={busy}
+                emptyForm={emptyForm}
+              />
+              <AdminProductList
+                allProducts={allProducts}
+                editProduct={editProduct}
+                removeProduct={removeProduct}
+                toggleProductActive={toggleProductActive}
+                toggleProductBestseller={toggleProductBestseller}
+              />
+            </div>
+          )}
 
-      {/* TAB 6: HALL OF FAME / OUR BRIDES */}
-      {tab === 'hall_of_fame' && (
-        <AdminHallOfFameManager
-          stories={hallOfFameStories}
-          onRefresh={load}
-          loading={refreshing}
-        />
-      )}
+          {/* TAB 5: MASTER PARAMETER LIBRARY */}
+          {tab === 'parameters' && (
+            <div className="adminParametersView">
+              <AdminParameterManager />
+            </div>
+          )}
 
-      {/* TAB 7: HERO SHOWCASE BANNERS */}
-      {tab === 'hero_showcase' && (
-        <AdminHeroManager
-          slides={heroSlides}
-          onRefresh={load}
-          loading={refreshing}
-        />
-      )}
+          {/* TAB 6: CUSTOMER DESIGN SUGGESTIONS */}
+          {tab === 'suggestions' && (
+            <div className="adminCard">
+              <div className="cardHeading">
+                <div>
+                  <h3>Customer Design Ideas & Suggestions</h3>
+                  <p className="catalogueSub">Custom jewelry requests submitted by website visitors</p>
+                </div>
+                <span className="productCountBadge">{suggestions.length} total</span>
+              </div>
+
+              {suggestions.length > 0 ? (
+                <div className="suggestionsGridList">
+                  {suggestions.map((s) => (
+                    <div key={s.id} className="suggestionItemCard">
+                      <div className="suggestionTopRow">
+                        <div>
+                          <span className="suggestionCatBadge">{s.category}</span>
+                          <h4 className="suggestionTitle">{s.title}</h4>
+                          <div className="suggestionAuthor">
+                            By <b>{s.name}</b> · {s.email} ·{' '}
+                            <a
+                              href={`https://wa.me/${s.phone.replace(/\D/g, '')}?text=Hi%20${encodeURIComponent(
+                                s.name
+                              )}%2C%20regarding%20your%20Nathshikha%20design%20suggestion`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="suggestionWaLink"
+                            >
+                              <MessageSquare size={13} /> {s.phone}
+                            </a>
+                          </div>
+                        </div>
+
+                        <div className="suggestionStatusWrap">
+                          <label className="suggestionStatusLabel">Status:</label>
+                          <select
+                            value={s.status}
+                            onChange={(e) => updateSuggestion(s.id, e.target.value, s.admin_notes)}
+                            className="suggestionStatusSelect"
+                          >
+                            <option value="new">New</option>
+                            <option value="in_review">In Review</option>
+                            <option value="planned">Planned</option>
+                            <option value="launched">Launched</option>
+                            <option value="declined">Declined</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <p className="suggestionDesc">{s.description}</p>
+
+                      {s.admin_notes && (
+                        <div className="suggestionNotesBox">
+                          <b>Admin Notes:</b> {s.admin_notes}
+                        </div>
+                      )}
+
+                      <div className="suggestionActions">
+                        <button
+                          type="button"
+                          className="outlineBtn"
+                          style={{ fontSize: 12, padding: '5px 12px' }}
+                          onClick={() => {
+                            const note = window.prompt('Update admin notes:', s.admin_notes || '');
+                            if (note !== null) updateSuggestion(s.id, s.status, note);
+                          }}
+                        >
+                          Edit Notes
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty small">
+                  <Lightbulb size={36} color="var(--admin-gold)" />
+                  <p>No customer design suggestions submitted yet.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 7: COUPONS & DISCOUNTS */}
+          {tab === 'coupons' && (
+            <AdminCouponManager
+              coupons={coupons}
+              onCouponUpdated={load}
+              setToast={setToast}
+            />
+          )}
+
+          {/* TAB 8: CUSTOMER REVIEWS */}
+          {tab === 'reviews' && (
+            <AdminReviewManager
+              reviewsData={reviewsData}
+              onReviewUpdated={load}
+              setToast={setToast}
+            />
+          )}
+
+          {/* TAB 9: HOMEPAGE SHOWCASE & GOOGLE REVIEWS */}
+          {tab === 'showcase_reviews' && (
+            <AdminShowcaseReviewManager
+              reviews={showcaseReviews}
+              onRefresh={load}
+              setToast={setToast}
+            />
+          )}
+
+          {/* TAB 10: HALL OF FAME / OUR BRIDES */}
+          {tab === 'hall_of_fame' && (
+            <AdminHallOfFameManager
+              stories={hallOfFameStories}
+              onRefresh={load}
+              loading={refreshing}
+            />
+          )}
+
+          {/* TAB 11: HERO SHOWCASE BANNERS */}
+          {tab === 'hero_showcase' && (
+            <AdminHeroManager
+              slides={heroSlides}
+              onRefresh={load}
+              loading={refreshing}
+            />
+          )}
+        </main>
+      </div>
 
       {/* Payment Verification Modal */}
       <AdminPaymentVerificationModal
@@ -1028,6 +961,6 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
         onReviewCancellation={handleReviewCancellation}
         onProcessRefund={handleProcessRefund}
       />
-    </main>
+    </div>
   );
 }

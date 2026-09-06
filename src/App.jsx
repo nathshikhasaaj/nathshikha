@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { api } from './services/api';
 import { useToast } from './context/ToastContext';
 import { useCart } from './context/CartContext';
@@ -52,6 +52,8 @@ export default function App() {
   const [query, setQuery] = useState('');
   const { setToast } = useToast();
   const { syncWithCatalog } = useCart();
+  const location = useLocation();
+  const isAdminDashboard = location.pathname === '/admin';
 
   const refreshProducts = async () => {
     try {
@@ -76,11 +78,11 @@ export default function App() {
   }, [products, query]);
 
   return (
-    <div className="app">
-      <TopBar />
-      <Header searchOpen={searchOpen} setSearchOpen={setSearchOpen} />
+    <div className={`app ${isAdminDashboard ? 'adminAppShell' : ''}`}>
+      {!isAdminDashboard && <TopBar />}
+      {!isAdminDashboard && <Header searchOpen={searchOpen} setSearchOpen={setSearchOpen} />}
 
-      {searchOpen && (
+      {!isAdminDashboard && searchOpen && (
         <SearchPanel
           query={query}
           setQuery={setQuery}
@@ -144,9 +146,9 @@ export default function App() {
         </Routes>
       </RouteErrorBoundary>
 
-      <WhatsAppButton />
-      <MobileStickyFooter searchOpen={searchOpen} setSearchOpen={setSearchOpen} />
-      <Footer />
+      {!isAdminDashboard && <WhatsAppButton />}
+      {!isAdminDashboard && <MobileStickyFooter searchOpen={searchOpen} setSearchOpen={setSearchOpen} />}
+      {!isAdminDashboard && <Footer />}
       <Toast />
     </div>
   );
