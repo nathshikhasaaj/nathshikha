@@ -496,7 +496,7 @@ export default function ProductDetail() {
   const navigate = useNavigate();
   const { addToCart, toggleWishlist, isInWishlist } = useCart();
   const { setToast } = useToast();
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fullscreenZoom, setFullscreenZoom] = useState(false);
