@@ -18,6 +18,7 @@ import reviewRoutes from './routes/reviewRoutes.js';
 import hallOfFameRoutes from './routes/hallOfFameRoutes.js';
 import showcaseReviewRoutes from './routes/showcaseReviewRoutes.js';
 import heroSlideRoutes from './routes/heroSlideRoutes.js';
+import translateRoutes from './routes/translateRoutes.js';
 import parameterRoutes, { ensureDefaultParameters } from './routes/parameterRoutes.js';
 import { Coupon } from './models/Coupon.js';
 import { Review } from './models/Review.js';
@@ -361,6 +362,7 @@ app.use('/api/suggestions', suggestionRoutes);
 app.use('/api/hall-of-fame', hallOfFameRoutes);
 app.use('/api/showcase-reviews', showcaseReviewRoutes);
 app.use('/api/hero-slides', heroSlideRoutes);
+app.use('/api/translate', translateRoutes);
 
 // Static assets
 const dist = path.resolve(__dirname, '../dist');

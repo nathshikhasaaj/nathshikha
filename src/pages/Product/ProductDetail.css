@@ -646,12 +646,218 @@
   font-weight: 500;
 }
 
-.detailInfo p {
+.detailInfo p:not(.productDescriptionText) {
   line-height: 1.85;
   color: #4f423d;
   font-size: 14.5px;
   margin: 0 0 20px 0;
   text-align: left;
+}
+
+/* ============================================================ */
+/* PRODUCT DESCRIPTION CARD & LIVE TRANSLATION BAR             */
+/* ============================================================ */
+.productDescriptionCard {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  background: #fffdfa;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin: 0 0 20px 0;
+  box-shadow: 0 4px 16px rgba(72, 32, 22, 0.04);
+  position: relative;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.productDescriptionCard:hover {
+  border-color: rgba(212, 175, 55, 0.6);
+  box-shadow: 0 6px 20px rgba(72, 32, 22, 0.07);
+}
+
+.productDescHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(228, 199, 134, 0.25);
+  margin-bottom: 12px;
+}
+
+.productDescTitleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.productDescTitle {
+  font-family: var(--font-serif, 'Playfair Display', serif);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--maroon, #5b2a1a);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.productDescSub {
+  font-size: 11px;
+  color: #8c7a72;
+  letter-spacing: 0.2px;
+}
+
+.productTranslateToolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Dual Language Pill Switcher */
+.descLanguageSwitcher {
+  display: inline-flex;
+  align-items: center;
+  background: #f4ecdc;
+  padding: 2px;
+  border-radius: 20px;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+}
+
+.descLangTab {
+  border: none;
+  background: transparent;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #634b35;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.descLangTab:hover:not(:disabled) {
+  color: var(--maroon, #5b2a1a);
+}
+
+.descLangTab.active {
+  background: var(--maroon, #7a1a28);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(122, 26, 40, 0.3);
+}
+
+/* Action Button */
+.productTranslateBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: rgba(228, 199, 134, 0.18);
+  border: 1px solid rgba(198, 154, 89, 0.5);
+  color: #70471b;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.productTranslateBtn:hover:not(:disabled) {
+  background: var(--gold, #c69a59);
+  color: #ffffff;
+  border-color: var(--gold, #c69a59);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(198, 154, 89, 0.3);
+}
+
+.productTranslateBtn.active {
+  background: #f2e4c8;
+  border-color: #b8860b;
+  color: #59350c;
+}
+
+.productDescBody {
+  position: relative;
+}
+
+.productDescriptionText {
+  line-height: 1.8;
+  color: #3e322d;
+  font-size: 14px;
+  margin: 0;
+  text-align: left;
+  transition: opacity 0.25s ease;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.productDescriptionText.translating {
+  opacity: 0.45;
+  filter: blur(1px);
+}
+
+/* Footer Badge */
+.descTranslationFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(228, 199, 134, 0.3);
+  font-size: 11px;
+}
+
+.descTranslationBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #7b5927;
+  font-weight: 600;
+}
+
+.revertTranslateLink {
+  background: transparent;
+  border: none;
+  color: var(--maroon, #7a1a28);
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  transition: opacity 0.15s ease;
+}
+
+.revertTranslateLink:hover {
+  opacity: 0.75;
+}
+
+@media (max-width: 600px) {
+  .productDescriptionCard {
+    padding: 14px 12px;
+  }
+  .productDescHeader {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .productTranslateToolbar {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .descLangTab {
+    padding: 3px 8px;
+    font-size: 10.5px;
+  }
+  .productTranslateBtn {
+    font-size: 10.5px;
+    padding: 4px 10px;
+  }
 }
 
 .trust {
