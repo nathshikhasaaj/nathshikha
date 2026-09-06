@@ -14,11 +14,11 @@ if [ ! -d "$APP_DIR" ]; then
     exit 0
 fi
 
-echo "--> Loading Node.js environment (Node v20.x)..."
+echo "--> Loading Node.js environment (Node v20.20.0 / v20.x)..."
 if [ -s "$HOME/.nvm/nvm.sh" ]; then
     export NVM_DIR="$HOME/.nvm"
     \. "$NVM_DIR/nvm.sh"
-    nvm use 20 2>/dev/null || true
+    nvm use 20.20.0 2>/dev/null || nvm use 20 2>/dev/null || true
 fi
 echo "Node version: $(node -v || echo 'Not found')"
 echo "NPM version: $(npm -v || echo 'Not found')"
