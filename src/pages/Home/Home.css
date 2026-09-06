@@ -6,6 +6,10 @@
   background-size: 420px 420px;
   background-position: center top;
   background-repeat: repeat;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .homePage > section {

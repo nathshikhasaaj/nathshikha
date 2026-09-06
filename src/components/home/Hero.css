@@ -10,7 +10,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 44px 6vw;
+  padding: 44px 5vw;
 }
 
 /* ============================================================ */
@@ -71,9 +71,9 @@
   width: 100%;
   max-width: 1240px;
   display: grid;
-  grid-template-columns: 1.15fr 0.95fr;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.95fr);
   align-items: center;
-  gap: clamp(24px, 4vw, 56px);
+  gap: clamp(20px, 3.5vw, 48px);
   box-sizing: border-box;
 }
 
@@ -86,11 +86,14 @@
   align-items: flex-start;
   color: #fff8ed;
   max-width: 620px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .heroSlideTag {
   font-size: 11px;
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
   color: #f1d590;
   display: inline-flex;
   align-items: center;
@@ -102,27 +105,34 @@
   border-radius: 20px;
   border: 1px solid rgba(228, 199, 134, 0.3);
   animation: heroTextFade 0.5s ease-out;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .heroSlideTitle {
   font-family: var(--font-serif);
-  font-size: clamp(34px, 4vw, 48px);
-  line-height: 1.14;
+  font-size: clamp(32px, 3.8vw, 46px);
+  line-height: 1.15;
   font-weight: 600;
   margin: 6px 0 14px;
   color: #ffffff;
   text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   word-break: break-word;
   overflow-wrap: break-word;
+  max-width: 100%;
+  box-sizing: border-box;
   animation: heroTextFade 0.7s ease-out;
 }
 
 .heroSlideDesc {
-  font-size: 14.5px;
+  font-size: 14px;
   line-height: 1.65;
   color: #eadecf;
   margin-bottom: 14px;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
   animation: heroTextFade 0.85s ease-out;
 }
 
@@ -137,11 +147,19 @@
   border-radius: 6px;
   border: 1px solid rgba(228, 199, 134, 0.25);
   margin-bottom: 24px;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .heroJewelleryHighlight .highlightDot {
   color: #e4c786;
   font-size: 10px;
+  flex-shrink: 0;
+}
+
+.heroJewelleryHighlight span:last-child {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 @keyframes heroTextFade {
@@ -162,6 +180,9 @@
   flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 24px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .heroMainBtn {
@@ -172,6 +193,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
 }
 
 .heroWhatsAppBtn {
@@ -190,6 +212,8 @@
   text-decoration: none;
   transition: all 0.25s ease;
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-sizing: border-box;
 }
 
 .heroWhatsAppBtn:hover {
@@ -205,6 +229,8 @@
   align-items: center;
   gap: 10px;
   margin-top: 4px;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .heroThumbTab {
@@ -218,6 +244,8 @@
   cursor: pointer;
   transition: all 0.2s ease;
   color: #dfd2c4;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .heroThumbTab img {
@@ -227,12 +255,15 @@
   object-fit: cover;
   object-position: center top;
   border: 1px solid rgba(228, 199, 134, 0.3);
+  flex-shrink: 0;
 }
 
 .thumbTabText {
   display: flex;
   flex-direction: column;
   text-align: left;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .thumbTabText small {
@@ -240,12 +271,17 @@
   letter-spacing: 1px;
   color: #e4c786;
   font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .thumbTabText span {
   font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .heroThumbTab:hover {
@@ -271,6 +307,8 @@
   justify-content: center;
   align-items: center;
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .heroVisualCard {
@@ -281,15 +319,17 @@
   padding: 8px;
   background: linear-gradient(145deg, rgba(228, 199, 134, 0.45) 0%, rgba(90, 20, 32, 0.4) 50%, rgba(228, 199, 134, 0.25) 100%);
   box-shadow: 0 16px 45px rgba(0, 0, 0, 0.65), 0 0 35px rgba(228, 199, 134, 0.15);
+  box-sizing: border-box;
 }
 
 .heroVisualFrame {
   position: relative;
   width: 100%;
-  height: 520px;
+  height: clamp(440px, 50vh, 520px);
   border-radius: 12px;
   overflow: hidden;
   background: #1e0509;
+  box-sizing: border-box;
 }
 
 .heroImageLayer {
@@ -335,7 +375,9 @@
   letter-spacing: 1px;
   color: #f1d590;
   backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
 }
 
 /* In-Frame Navigation Controls */
@@ -356,6 +398,8 @@
   cursor: pointer;
   transition: all 0.2s ease;
   backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  -webkit-tap-highlight-color: transparent;
 }
 
 .heroNavArrow:hover {
@@ -388,6 +432,8 @@
   color: #f1d590;
   font-weight: 700;
   backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  pointer-events: none;
 }
 
 .heroVisualCounter small {
@@ -398,53 +444,140 @@
 }
 
 /* ============================================================ */
-/* 5. DEDICATED PROFESSIONAL MOBILE EXPERIENCE (< 900px)        */
+/* 5. TABLET RESPONSIVENESS (769px - 1024px)                     */
 /* ============================================================ */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .hero {
+    padding: 32px 3.5vw;
+    min-height: 520px;
+  }
+
+  .heroContainer {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    gap: 20px;
+    max-width: 100%;
+  }
+
+  .heroSlideTitle {
+    font-size: clamp(26px, 3.4vw, 36px);
+    margin: 4px 0 10px;
+  }
+
+  .heroSlideDesc {
+    font-size: 13px;
+    line-height: 1.55;
+    margin-bottom: 12px;
+  }
+
+  .heroJewelleryHighlight {
+    font-size: 11px;
+    padding: 5px 10px;
+    margin-bottom: 16px;
+  }
+
+  .heroActionGroup {
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .heroMainBtn {
+    padding: 11px 18px;
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+
+  .heroWhatsAppBtn {
+    padding: 10px 14px;
+    font-size: 10.5px;
+  }
+
+  .heroVisualCard {
+    max-width: 380px;
+    padding: 6px;
+  }
+
+  .heroVisualFrame {
+    height: clamp(380px, 45vh, 460px);
+  }
+
+  .heroSlideThumbTabs {
+    gap: 6px;
+  }
+
+  .heroThumbTab {
+    padding: 4px 8px 4px 5px;
+    gap: 6px;
+  }
+
+  .heroThumbTab img {
+    width: 28px;
+    height: 28px;
+  }
+
+  .thumbTabText small {
+    font-size: 7.5px;
+  }
+
+  .thumbTabText span {
+    font-size: 10px;
+  }
+}
+
 /* ============================================================ */
-/* 5. DEDICATED PROFESSIONAL MOBILE EXPERIENCE (< 900px)        */
+/* 6. MOBILE RESPONSIVE EXPERIENCE (< 768px)                    */
 /* ============================================================ */
-@media (max-width: 900px) {
+@media (max-width: 768px) {
   .hero {
     min-height: auto;
-    padding: 16px 14px 28px;
+    padding: 14px 12px 24px;
     background-color: #1e0509;
+    overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .heroContainer {
     grid-template-columns: 1fr;
-    gap: 14px;
+    gap: 12px;
     width: 100%;
-    max-width: 520px;
+    max-width: 480px;
     margin: 0 auto;
+    box-sizing: border-box;
   }
 
-  /* 1. Top Visual Frame (Uncropped, Full-Scale Jewellery Display) */
+  /* 1. Top Visual Frame (Uncropped, Clean Jewellery Showcase) */
   .heroVisualCol {
     order: 1;
     width: 100%;
+    max-width: 100%;
     display: flex;
     justify-content: center;
+    min-width: 0;
+    box-sizing: border-box;
   }
 
   .heroVisualCard {
     max-width: 100%;
     width: 100%;
     padding: 5px;
-    border-radius: 18px;
+    border-radius: 16px;
     background: linear-gradient(145deg, rgba(228, 199, 134, 0.45) 0%, rgba(90, 20, 32, 0.4) 50%, rgba(228, 199, 134, 0.25) 100%);
-    box-shadow: 0 14px 38px rgba(0, 0, 0, 0.75), 0 0 25px rgba(228, 199, 134, 0.12);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.75), 0 0 20px rgba(228, 199, 134, 0.12);
+    box-sizing: border-box;
   }
 
   .heroVisualFrame {
     width: 100%;
     height: auto;
-    aspect-ratio: 4 / 5.2;
-    max-height: 520px;
-    min-height: 380px;
-    border-radius: 14px;
+    aspect-ratio: 4 / 4.8;
+    max-height: 480px;
+    min-height: auto;
+    border-radius: 12px;
     background: radial-gradient(circle at center, #2e0b13 0%, #150306 100%);
     position: relative;
     overflow: hidden;
+    box-sizing: border-box;
   }
 
   .heroImageLayer {
@@ -463,15 +596,16 @@
   }
 
   .heroLuxuryBadge {
-    top: 12px;
-    left: 12px;
-    font-size: 9.5px;
-    padding: 5px 11px;
+    top: 10px;
+    left: 10px;
+    font-size: 9px;
+    padding: 4px 10px;
+    letter-spacing: 0.8px;
   }
 
   .heroNavArrow {
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
   }
 
   .heroArrowLeft {
@@ -483,118 +617,188 @@
   }
 
   .heroVisualCounter {
-    bottom: 12px;
-    right: 12px;
+    bottom: 10px;
+    right: 10px;
     font-size: 11px;
-    padding: 3px 9px;
+    padding: 3px 8px;
   }
 
-  /* 2. Structured Narrative Card Underneath (Never Overlays Jewelry) */
+  /* 2. Structured Storytelling Card Underneath */
   .heroContentCol {
     order: 2;
     max-width: 100%;
     width: 100%;
+    min-width: 0;
     align-items: center;
     text-align: center;
-    background: rgba(36, 8, 14, 0.68);
+    background: rgba(36, 8, 14, 0.75);
     border: 1px solid rgba(228, 199, 134, 0.25);
-    border-radius: 16px;
-    padding: 18px 16px 14px;
+    border-radius: 14px;
+    padding: 16px 14px 14px;
     box-sizing: border-box;
     backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
   }
 
   .heroSlideTag {
-    font-size: 10px;
-    letter-spacing: 1.5px;
-    padding: 4px 12px;
+    font-size: 9.5px;
+    letter-spacing: 1px;
+    padding: 3px 10px;
     margin-bottom: 8px;
+    max-width: 100%;
+    box-sizing: border-box;
+    white-space: normal;
+    text-align: center;
   }
 
   .heroSlideTitle {
-    font-size: clamp(21px, 5.8vw, 27px);
-    line-height: 1.22;
+    font-size: clamp(20px, 5.5vw, 25px);
+    line-height: 1.2;
     margin: 4px 0 8px;
     text-align: center;
+    width: 100%;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    hyphens: auto;
   }
 
   .heroSlideDesc {
     font-size: 12.5px;
-    line-height: 1.52;
+    line-height: 1.5;
     margin-bottom: 10px;
     text-align: center;
-    max-width: 98%;
+    width: 100%;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .heroJewelleryHighlight {
     font-size: 11px;
-    padding: 5px 12px;
-    margin-bottom: 14px;
+    line-height: 1.4;
+    padding: 5px 10px;
+    margin-bottom: 12px;
     text-align: center;
+    max-width: 100%;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
-  /* Compact 2-Button Grid on Mobile */
+  /* Flexible, non-overflowing Action Buttons */
   .heroActionGroup {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     width: 100%;
-    max-width: 400px;
-    margin-bottom: 14px;
+    max-width: 100%;
+    margin-bottom: 12px;
+    box-sizing: border-box;
   }
 
   .heroMainBtn,
   .heroWhatsAppBtn {
-    padding: 12px 10px;
+    flex: 1 1 130px;
+    min-width: 0;
+    max-width: 100%;
+    padding: 11px 10px;
     font-size: 11px;
-    letter-spacing: 0.8px;
-    width: 100%;
+    letter-spacing: 0.5px;
     box-sizing: border-box;
     text-align: center;
     justify-content: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  /* Minimalist Look Selector on Mobile */
+  /* Minimalist, Responsive Look Selector */
   .heroSlideThumbTabs {
     display: flex;
     justify-content: center;
-    gap: 8px;
+    align-items: center;
+    gap: 6px;
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     margin-top: 2px;
+    overflow-x: auto;
+    padding: 2px 2px 4px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .heroSlideThumbTabs::-webkit-scrollbar {
+    display: none;
   }
 
   .heroThumbTab {
-    padding: 4px 10px 4px 5px;
-    gap: 7px;
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 140px;
+    padding: 4px 6px 4px 4px;
+    gap: 6px;
     border-radius: 8px;
+    box-sizing: border-box;
   }
 
   .heroThumbTab img {
-    width: 28px;
-    height: 28px;
-    border-radius: 5px;
+    width: 26px;
+    height: 26px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .thumbTabText {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
   }
 
   .thumbTabText small {
     font-size: 7.5px;
     letter-spacing: 0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
   }
 
   .thumbTabText span {
-    font-size: 10px;
+    font-size: 9.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
   }
 }
 
+/* ============================================================ */
+/* 7. SMALL MOBILE SCREEN OPTIMIZATIONS (< 420px & < 360px)     */
+/* ============================================================ */
 @media (max-width: 420px) {
   .hero {
-    padding: 12px 10px 24px;
+    padding: 10px 8px 20px;
+  }
+
+  .heroContainer {
+    max-width: 100%;
+    gap: 10px;
   }
 
   .heroVisualFrame {
-    aspect-ratio: 4 / 5.2;
-    max-height: 470px;
-    min-height: 350px;
+    aspect-ratio: 4 / 4.8;
+    max-height: 420px;
   }
 
   .heroModelImg {
@@ -602,27 +806,63 @@
   }
 
   .heroContentCol {
-    padding: 16px 12px 12px;
+    padding: 14px 10px 10px;
+    border-radius: 12px;
   }
 
   .heroSlideTitle {
-    font-size: 21px;
+    font-size: 19.5px;
   }
 
   .heroSlideDesc {
-    font-size: 12px;
+    font-size: 11.5px;
+    line-height: 1.45;
+  }
+
+  .heroJewelleryHighlight {
+    font-size: 10px;
+    padding: 4px 8px;
+    margin-bottom: 10px;
+  }
+
+  .heroActionGroup {
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .heroMainBtn,
+  .heroWhatsAppBtn {
+    padding: 10px 8px;
+    font-size: 10.5px;
+  }
+
+  .heroThumbTab {
+    padding: 3px 5px 3px 3px;
+    gap: 5px;
+  }
+
+  .heroThumbTab img {
+    width: 24px;
+    height: 24px;
+  }
+
+  .thumbTabText small {
+    font-size: 7px;
+  }
+
+  .thumbTabText span {
+    font-size: 9px;
   }
 }
 
 @media (max-width: 360px) {
   .hero {
-    padding: 10px 8px 20px;
+    padding: 8px 6px 16px;
   }
 
   .heroVisualFrame {
-    aspect-ratio: 4 / 5.2;
-    max-height: 420px;
-    min-height: 320px;
+    aspect-ratio: 4 / 4.6;
+    max-height: 360px;
   }
 
   .heroModelImg {
@@ -630,20 +870,38 @@
   }
 
   .heroContentCol {
-    padding: 14px 10px 10px;
+    padding: 12px 8px 8px;
   }
 
   .heroSlideTitle {
-    font-size: 19px;
+    font-size: 18px;
   }
 
   .heroActionGroup {
-    grid-template-columns: 1fr;
-    gap: 8px;
+    flex-direction: column;
+    gap: 6px;
   }
 
   .heroMainBtn,
   .heroWhatsAppBtn {
-    padding: 10px 12px;
+    width: 100%;
+    flex: 1 1 100%;
+    padding: 9px 10px;
+    font-size: 10.5px;
+  }
+
+  .heroThumbTab {
+    padding: 3px 4px 3px 3px;
+    gap: 4px;
+  }
+
+  .heroThumbTab img {
+    width: 20px;
+    height: 20px;
+  }
+
+  .thumbTabText span {
+    font-size: 8px;
   }
 }
+
