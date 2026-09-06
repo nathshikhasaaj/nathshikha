@@ -17,13 +17,19 @@ export async function api(path, opts = {}) {
     ...(opts.headers || {})
   };
 
-  if (!(opts.body instanceof FormData) && !headers['Content-Type'] && opts.body) {
+  let body = opts.body;
+  if (body && typeof body === 'object' && !(body instanceof FormData)) {
+    body = JSON.stringify(body);
+    if (!headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json';
+    }
+  } else if (!(body instanceof FormData) && !headers['Content-Type'] && body) {
     headers['Content-Type'] = 'application/json';
   }
 
   let res;
   try {
-    res = await fetch(API + path, { ...opts, headers });
+    res = await fetch(API + path, { ...opts, headers, body });
   } catch (netErr) {
     throw new Error(netErr.message || 'Network connection failed. Please check your internet connection.');
   }

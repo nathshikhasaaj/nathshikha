@@ -4,12 +4,44 @@ import { api } from './api';
 const sessionCache = new Map();
 
 /**
- * Checks if a string primarily contains Marathi / Devanagari script characters.
+ * Checks if a string contains Marathi / Devanagari script characters.
  */
 export function isDevanagariText(text) {
   if (!text || typeof text !== 'string') return false;
   const devanagariPattern = /[\u0900-\u097F]/;
   return devanagariPattern.test(text);
+}
+
+/**
+ * Cleans HTML entities and abnormal whitespace
+ */
+function cleanText(str) {
+  if (!str || typeof str !== 'string') return '';
+  return str
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Validates if the translation actually converted the language
+ */
+function isValidTranslation(result, source, target, originalText) {
+  if (!result || typeof result !== 'string' || !result.trim()) return false;
+  const clean = cleanText(result);
+  if (clean === originalText) return false;
+
+  if (target === 'en' && isDevanagariText(clean)) {
+    return false; // Still in Marathi/Devanagari
+  }
+  if (target === 'mr' && !isDevanagariText(clean)) {
+    return false; // Still in English
+  }
+  return true;
 }
 
 /**
@@ -20,46 +52,55 @@ function hashKey(str) {
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
     hash = (hash << 5) - hash + char;
-    hash |= 0; // Convert to 32bit integer
+    hash |= 0;
   }
   return `trans_${hash}`;
 }
 
 /**
- * Translates product description or any text between English and Marathi.
+ * Translates product description or text between English and Marathi.
  * @param {string} text - The input text to translate.
- * @param {'mr'|'en'} targetLang - Target language ('mr' for Marathi, 'en' for English).
- * @param {'en'|'mr'|'auto'} sourceLang - Source language ('en' or 'mr' or 'auto').
+ * @param {'mr'|'en'} targetLang - Target language ('mr' or 'en').
+ * @param {'en'|'mr'|'auto'} sourceLang - Source language.
  * @returns {Promise<string>} - The translated text string.
  */
-export async function translateProductDescription(text, targetLang = 'mr', sourceLang = 'en') {
+export async function translateProductDescription(text, targetLang = 'mr', sourceLang = 'auto') {
   if (!text || typeof text !== 'string' || !text.trim()) {
     return text || '';
   }
 
   const trimmed = text.trim();
-  const effectiveSource = sourceLang === 'auto'
-    ? isDevanagariText(trimmed) ? 'mr' : 'en'
-    : sourceLang;
+  const effectiveSource = (!sourceLang || sourceLang === 'auto')
+    ? (isDevanagariText(trimmed) ? 'mr' : 'en')
+    : sourceLang.toLowerCase();
 
-  // If source and target are the same language, no translation needed
-  if (effectiveSource === targetLang) {
+  const target = targetLang.toLowerCase();
+
+  // If source and target are the same, return as-is
+  if (effectiveSource === target) {
     return trimmed;
   }
 
-  const cacheId = `${effectiveSource}_${targetLang}_${hashKey(trimmed)}`;
+  const cacheId = `${effectiveSource}_${target}_${hashKey(trimmed)}`;
 
-  // 1. Check in-memory cache
+  // 1. Check in-memory session cache
   if (sessionCache.has(cacheId)) {
-    return sessionCache.get(cacheId);
+    const cached = sessionCache.get(cacheId);
+    if (isValidTranslation(cached, effectiveSource, target, trimmed)) {
+      return cached;
+    }
   }
 
-  // 2. Check localStorage cache
+  // 2. Check localStorage cache (with validation to purge stale or bad translations)
   try {
     const stored = localStorage.getItem(`nw_${cacheId}`);
     if (stored) {
-      sessionCache.set(cacheId, stored);
-      return stored;
+      if (isValidTranslation(stored, effectiveSource, target, trimmed)) {
+        sessionCache.set(cacheId, stored);
+        return stored;
+      } else {
+        localStorage.removeItem(`nw_${cacheId}`);
+      }
     }
   } catch {
     // ignore storage access issues
@@ -72,12 +113,12 @@ export async function translateProductDescription(text, targetLang = 'mr', sourc
       body: {
         text: trimmed,
         from: effectiveSource,
-        to: targetLang
+        to: target
       }
     });
 
-    if (result && result.translatedText) {
-      const translated = result.translatedText;
+    if (result && result.translatedText && isValidTranslation(result.translatedText, effectiveSource, target, trimmed)) {
+      const translated = cleanText(result.translatedText);
       sessionCache.set(cacheId, translated);
       try {
         localStorage.setItem(`nw_${cacheId}`, translated);
@@ -85,34 +126,58 @@ export async function translateProductDescription(text, targetLang = 'mr', sourc
       return translated;
     }
   } catch (backendErr) {
-    console.warn('Backend translation failed, attempting direct fallback:', backendErr);
+    console.warn('Backend translation failed, attempting direct fallback:', backendErr?.message || backendErr);
   }
 
-  // 4. Direct client-side fallback
+  // 4. Direct client-side fallback Tier A: Google Translate Client API
+  try {
+    const googleUrl = `https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=${effectiveSource}&tl=${target}&q=${encodeURIComponent(
+      trimmed
+    )}`;
+    const res = await fetch(googleUrl, { signal: AbortSignal.timeout(6000) });
+    if (res.ok) {
+      const data = await res.json();
+      let textRes = '';
+      if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'string') {
+        textRes = data[0];
+      } else if (Array.isArray(data) && Array.isArray(data[0])) {
+        textRes = data[0].map((item) => (Array.isArray(item) ? item[0] : item)).join(' ');
+      }
+
+      if (textRes && isValidTranslation(textRes, effectiveSource, target, trimmed)) {
+        const cleaned = cleanText(textRes);
+        sessionCache.set(cacheId, cleaned);
+        try {
+          localStorage.setItem(`nw_${cacheId}`, cleaned);
+        } catch {}
+        return cleaned;
+      }
+    }
+  } catch (gErr) {
+    console.warn('Client Google translation fallback failed:', gErr?.message || gErr);
+  }
+
+  // 5. Direct client-side fallback Tier B: MyMemory API
   try {
     const apiUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(
       trimmed
-    )}&langpair=${encodeURIComponent(`${effectiveSource}|${targetLang}`)}`;
+    )}&langpair=${encodeURIComponent(`${effectiveSource}|${target}`)}&de=info@nathshikha.in`;
 
     const res = await fetch(apiUrl, { signal: AbortSignal.timeout(7000) });
     if (res.ok) {
       const data = await res.json();
-      let textRes = data?.responseData?.translatedText || trimmed;
-      textRes = textRes
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'")
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>');
-
-      sessionCache.set(cacheId, textRes);
-      try {
-        localStorage.setItem(`nw_${cacheId}`, textRes);
-      } catch {}
-      return textRes;
+      let textRes = data?.responseData?.translatedText;
+      if (textRes && isValidTranslation(textRes, effectiveSource, target, trimmed)) {
+        const cleaned = cleanText(textRes);
+        sessionCache.set(cacheId, cleaned);
+        try {
+          localStorage.setItem(`nw_${cacheId}`, cleaned);
+        } catch {}
+        return cleaned;
+      }
     }
   } catch (clientErr) {
-    console.warn('Direct translation failed:', clientErr);
+    console.warn('Direct MyMemory fallback failed:', clientErr?.message || clientErr);
   }
 
   return trimmed;

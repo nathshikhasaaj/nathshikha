@@ -519,114 +519,83 @@ export default function ProductDetail() {
   const [lightboxPhoto, setLightboxPhoto] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
 
-  // Description Translation State
-  const [descLang, setDescLang] = useState('en'); // 'en' | 'mr'
-  const [translatedDesc, setTranslatedDesc] = useState('');
-  const [isTranslating, setIsTranslating] = useState(false);
-  const [hasTranslated, setHasTranslated] = useState(false);
-
-  // Check if original description is primarily in Marathi / Devanagari script
+  // Description Translation State (Dual-way: English <-> Marathi)
+  const rawDesc = product?.description || '';
   const isOriginalMarathi = React.useMemo(() => {
-    return isDevanagariText(product?.description || '');
-  }, [product?.description]);
+    return isDevanagariText(rawDesc);
+  }, [rawDesc]);
+  const originalLang = isOriginalMarathi ? 'mr' : 'en';
 
-  // Sync initial description language with site language or content script
+  const [currentViewLang, setCurrentViewLang] = useState('en');
+  const [translations, setTranslations] = useState({ en: '', mr: '' });
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translatingTo, setTranslatingTo] = useState(null);
+
+  // Initialize and sync translations on product load or global language switch
   useEffect(() => {
-    if (!product?.description) return;
+    if (!rawDesc) return;
 
-    if (lang === 'mr') {
-      setDescLang('mr');
-      if (product.descriptionMr || product.description_mr) {
-        setTranslatedDesc(product.descriptionMr || product.description_mr);
-        setHasTranslated(true);
-      } else if (!isOriginalMarathi) {
-        // Auto-fetch Marathi translation in background for Marathi visitors
-        setIsTranslating(true);
-        translateProductDescription(product.description, 'mr', 'en')
-          .then((res) => {
-            if (res && res !== product.description) {
-              setTranslatedDesc(res);
-              setHasTranslated(true);
-            }
-          })
-          .catch(() => {})
-          .finally(() => setIsTranslating(false));
-      }
-    } else {
-      setDescLang(isOriginalMarathi ? 'mr' : 'en');
+    const isMr = isDevanagariText(rawDesc);
+    const explicitEn = product?.descriptionEn || '';
+    const explicitMr = product?.descriptionMr || product?.description_mr || '';
+
+    const initialTranslations = {
+      en: isMr ? explicitEn : rawDesc,
+      mr: isMr ? rawDesc : explicitMr
+    };
+
+    setTranslations(initialTranslations);
+
+    // Initial view: show matching explicit translation or native original language
+    const initialViewLang = lang === 'mr' ? 'mr' : (isMr ? 'mr' : 'en');
+    setCurrentViewLang(initialViewLang);
+  }, [id, rawDesc, lang, product?.descriptionEn, product?.descriptionMr, product?.description_mr]);
+
+  // Handle switching between English and Marathi
+  const handleSwitchLanguage = async (targetLang) => {
+    if (isTranslating || !rawDesc) return;
+    if (targetLang === currentViewLang) return;
+
+    // If we already have the translation in memory, switch immediately
+    if (translations[targetLang] && translations[targetLang].trim()) {
+      setCurrentViewLang(targetLang);
+      return;
     }
-  }, [id, product?.description, lang, isOriginalMarathi]);
 
-  const handleToggleDescriptionLanguage = async (requestedLang) => {
-    if (isTranslating || !product?.description) return;
-
-    const targetLang = requestedLang || (descLang === 'en' ? 'mr' : 'en');
-    if (targetLang === descLang) return;
-
-    setDescLang(targetLang);
-
-    if (targetLang === 'mr') {
-      if (product.descriptionMr || product.description_mr) {
-        setTranslatedDesc(product.descriptionMr || product.description_mr);
-        setHasTranslated(true);
-        return;
+    // Fetch live translation
+    setIsTranslating(true);
+    setTranslatingTo(targetLang);
+    try {
+      const sourceLang = isOriginalMarathi ? 'mr' : 'en';
+      const result = await translateProductDescription(rawDesc, targetLang, sourceLang);
+      if (result && result.trim() && result !== rawDesc) {
+        setTranslations((prev) => ({
+          ...prev,
+          [targetLang]: result
+        }));
+        setCurrentViewLang(targetLang);
+      } else {
+        setToast({
+          type: 'info',
+          message: targetLang === 'en' ? 'Translation not available. Showing original text.' : 'भाषांतर उपलब्ध नाही.'
+        });
       }
-      if (translatedDesc && !isOriginalMarathi) {
-        setHasTranslated(true);
-        return;
-      }
-
-      setIsTranslating(true);
-      try {
-        const source = isOriginalMarathi ? 'mr' : 'en';
-        const res = await translateProductDescription(product.description, 'mr', source);
-        if (res) {
-          setTranslatedDesc(res);
-          setHasTranslated(true);
-        }
-      } catch (err) {
-        console.error('Translation error:', err);
-        setToast({ type: 'warning', message: 'Translation temporarily unavailable. Showing original.' });
-      } finally {
-        setIsTranslating(false);
-      }
-    } else {
-      // targetLang === 'en'
-      if (isOriginalMarathi && !translatedDesc) {
-        setIsTranslating(true);
-        try {
-          const res = await translateProductDescription(product.description, 'en', 'mr');
-          if (res) {
-            setTranslatedDesc(res);
-            setHasTranslated(true);
-          }
-        } catch (err) {
-          console.error('Translation error:', err);
-        } finally {
-          setIsTranslating(false);
-        }
-      }
+    } catch (err) {
+      console.error('Translation error:', err);
+      setToast({ type: 'warning', message: 'Translation temporarily unavailable. Showing original.' });
+    } finally {
+      setIsTranslating(false);
+      setTranslatingTo(null);
     }
   };
 
-  const activeDescriptionText = React.useMemo(() => {
-    if (!product?.description) return '';
-    if (descLang === 'mr') {
-      if (product.descriptionMr || product.description_mr) {
-        return product.descriptionMr || product.description_mr;
-      }
-      if (isOriginalMarathi) {
-        return product.description;
-      }
-      return translatedDesc || product.description;
-    } else {
-      // 'en'
-      if (!isOriginalMarathi) {
-        return product.description;
-      }
-      return translatedDesc || product.description;
-    }
-  }, [product, descLang, translatedDesc, isOriginalMarathi]);
+  // Active text to render
+  const activeDescriptionText = currentViewLang === 'mr'
+    ? (translations.mr || (isOriginalMarathi ? rawDesc : ''))
+    : (translations.en || (!isOriginalMarathi ? rawDesc : ''));
+
+  // Flag if the currently shown text was auto-translated from opposite language
+  const isCurrentlyTranslated = currentViewLang !== originalLang && Boolean(translations[currentViewLang]);
 
   const isFavorite = isInWishlist(product?.id || product?._id);
 
@@ -865,31 +834,31 @@ export default function ProductDetail() {
             <div className="productDescHeader">
               <div className="productDescTitleGroup">
                 <span className="productDescTitle">
-                  {descLang === 'mr' ? 'दागिन्यांचे वर्णन' : 'Product Description'}
+                  {currentViewLang === 'mr' ? 'दागिन्यांचे वर्णन' : 'Product Description'}
                 </span>
                 <span className="productDescSub">
-                  {descLang === 'mr' ? 'अस्सल पारंपरिक कलाकुसर' : 'Heirloom Craftsmanship & Heritage Details'}
+                  {currentViewLang === 'mr' ? 'अस्सल पारंपरिक कलाकुसर व वारसा' : 'Heirloom Craftsmanship & Heritage Details'}
                 </span>
               </div>
 
-              {product.description && (
+              {rawDesc && (
                 <div className="productTranslateToolbar">
                   {/* Dual language pill switcher */}
                   <div className="descLanguageSwitcher" role="group" aria-label="Translate description">
                     <button
                       type="button"
-                      className={`descLangTab ${descLang === 'en' ? 'active' : ''}`}
-                      onClick={() => handleToggleDescriptionLanguage('en')}
-                      disabled={isTranslating && descLang === 'en'}
+                      className={`descLangTab ${currentViewLang === 'en' ? 'active' : ''}`}
+                      onClick={() => handleSwitchLanguage('en')}
+                      disabled={isTranslating}
                       title="View description in English"
                     >
                       <span>English</span>
                     </button>
                     <button
                       type="button"
-                      className={`descLangTab ${descLang === 'mr' ? 'active' : ''}`}
-                      onClick={() => handleToggleDescriptionLanguage('mr')}
-                      disabled={isTranslating && descLang === 'mr'}
+                      className={`descLangTab ${currentViewLang === 'mr' ? 'active' : ''}`}
+                      onClick={() => handleSwitchLanguage('mr')}
+                      disabled={isTranslating}
                       title="मराठीत भाषांतर करा (View description in Marathi)"
                     >
                       <span>मराठी</span>
@@ -899,26 +868,28 @@ export default function ProductDetail() {
                   {/* One-click quick toggle button */}
                   <button
                     type="button"
-                    className={`productTranslateBtn ${descLang === 'mr' ? 'active' : ''}`}
-                    onClick={() => handleToggleDescriptionLanguage()}
+                    className={`productTranslateBtn ${currentViewLang !== originalLang ? 'active' : ''}`}
+                    onClick={() => handleSwitchLanguage(currentViewLang === 'en' ? 'mr' : 'en')}
                     disabled={isTranslating}
                     title={
-                      descLang === 'en'
-                        ? 'मराठीत भाषांतर करा (Translate description to Marathi)'
-                        : 'Translate description to English (मूळ इंग्रजीत पहा)'
+                      currentViewLang === 'en'
+                        ? 'मराठीत भाषांतर करा (Translate to Marathi)'
+                        : 'Translate to English (इंग्रजीत भाषांतर करा)'
                     }
                     aria-label="Translate description"
                   >
                     {isTranslating ? (
                       <>
                         <Loader2 size={13} className="btnSpinner" />
-                        <span>भाषांतर करत आहे...</span>
+                        <span>
+                          {translatingTo === 'mr' ? 'मराठीत भाषांतर होत आहे...' : 'Translating to English...'}
+                        </span>
                       </>
                     ) : (
                       <>
                         <Languages size={14} />
                         <span>
-                          {descLang === 'en' ? 'मराठीत वाचा' : 'In English'}
+                          {currentViewLang === 'en' ? 'मराठीत वाचा' : 'Read in English'}
                         </span>
                       </>
                     )}
@@ -929,26 +900,26 @@ export default function ProductDetail() {
 
             <div className="productDescBody">
               <p
-                key={`desc-${descLang}-${isTranslating}`}
+                key={`desc-${currentViewLang}-${isTranslating}`}
                 className={`productDescriptionText ${isTranslating ? 'translating' : 'animateFadeIn'}`}
               >
-                {activeDescriptionText || product.description}
+                {activeDescriptionText || rawDesc}
               </p>
 
-              {hasTranslated && (
+              {isCurrentlyTranslated && (
                 <div className="descTranslationFooter">
                   <span className="descTranslationBadge">
                     <Sparkles size={11} color="var(--gold, #b8860b)" />
-                    {descLang === 'mr'
+                    {currentViewLang === 'mr'
                       ? 'अस्सल मराठी भाषांतर • Auto-translated to Marathi'
-                      : 'Translated to English from Marathi'}
+                      : 'Auto-translated to English from Marathi'}
                   </span>
                   <button
                     type="button"
                     className="revertTranslateLink"
-                    onClick={() => handleToggleDescriptionLanguage(descLang === 'mr' ? 'en' : 'mr')}
+                    onClick={() => handleSwitchLanguage(originalLang)}
                   >
-                    {descLang === 'mr' ? 'मूळ इंग्रजी पहा (Show Original)' : 'मराठीत पहा'}
+                    {originalLang === 'mr' ? 'मूळ मराठी पहा (Show Original)' : 'मूळ इंग्रजी पहा (Show Original)'}
                   </button>
                 </div>
               )}
