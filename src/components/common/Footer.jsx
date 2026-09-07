@@ -97,11 +97,11 @@ export default function Footer() {
             </div>
           </a>
 
-          <a href="mailto:nakharewali.saaj@gmail.com" className="footerStudioItem">
+          <a href="mailto:nathshikha.saaj@gmail.com" className="footerStudioItem">
             <Mail size={14} className="footerStudioIcon" />
             <div className="footerStudioText">
               <small>EMAIL SUPPORT</small>
-              <strong>nakharewali.saaj@gmail.com</strong>
+              <strong>nathshikha.saaj@gmail.com</strong>
             </div>
           </a>
 

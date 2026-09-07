@@ -84,7 +84,7 @@ export default function TermsOfService() {
         <ul>
           <li><strong>Instagram:</strong> <a href="https://www.instagram.com/nakharewali.handmade" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--maroon)' }}>@nakharewali.handmade</a></li>
           <li><strong>Facebook:</strong> <a href="https://www.facebook.com/Nakharewali.handmade" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--maroon)' }}>Nakharewali.handmade</a></li>
-          <li><strong>Email:</strong> nakharewali.saaj@gmail.com</li>
+          <li><strong>Email:</strong> nathshikha.saaj@gmail.com</li>
           <li><strong>WhatsApp / Phone:</strong> +91 9699668421</li>
         </ul>
 

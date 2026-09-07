@@ -64,7 +64,7 @@ export default function PrivacyPolicy() {
 
         <h2>7. Your Rights & Contact</h2>
         <p>
-          You have the right to access, review, or request the deletion of your personal account data at any time. To exercise these rights, reach out to our team at <strong>nakharewali.saaj@gmail.com</strong>, message us on Instagram <strong>@nakharewali.handmade</strong>, or on Facebook at <strong>Nakharewali.handmade</strong>.
+          You have the right to access, review, or request the deletion of your personal account data at any time. To exercise these rights, reach out to our team at <strong>nathshikha.saaj@gmail.com</strong>, message us on Instagram <strong>@nakharewali.handmade</strong>, or on Facebook at <strong>Nakharewali.handmade</strong>.
         </p>
 
         <div className="legalActions">

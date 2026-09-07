@@ -82,48 +82,6 @@ export default function Home({ products = [] }) {
         </Link>
       </section>
 
-      {/* Hall of Fame Showcase Section on Homepage */}
-      <section className="section hofHomeSection">
-        <SectionTitle
-          eyebrow={t('hof_home_eyebrow', '✦ REAL PATRONS & BRIDES ✦')}
-          title={t('hof_home_title', 'Hall of Fame')}
-          sub={t(
-            'hof_home_sub',
-            'Celebrate cherished moments of heritage and royal elegance styled by real patrons.'
-          )}
-        />
-        <div className="hofHomeBannerCard">
-          <div className="hofHomeContent">
-            <span className="hofHomeBadge">✦ REAL BRIDAL HERITAGE ✦</span>
-            <h3>Royal Elegance Worn with Pride</h3>
-            <p>
-              Witness how our patrons style their handcrafted Peshwai thushis, royal saaj sets, and luminous pearl malas for auspicious wedding ceremonies and festive celebrations.
-            </p>
-            <Link className="goldBtn hofHomeActionBtn" to="/hall-of-fame">
-              {t('explore_hall_of_fame', 'EXPLORE HALL OF FAME →')}
-            </Link>
-          </div>
-          <div className="hofHomePhotosGrid">
-            <div className="hofHomePhotoItem">
-              <img src="/assets/nath-category.jpg" alt="Priya Sharma-Patil" loading="lazy" />
-              <span>Priya · Wedding</span>
-            </div>
-            <div className="hofHomePhotoItem">
-              <img src="/assets/hero.jpg" alt="Ananya Deshpande" loading="lazy" />
-              <span>Ananya · Engagement</span>
-            </div>
-            <div className="hofHomePhotoItem">
-              <img src="/assets/pearl-category.jpg" alt="Shweta Kulkarni" loading="lazy" />
-              <span>Shweta · Reception</span>
-            </div>
-            <div className="hofHomePhotoItem">
-              <img src="/assets/thushi-category.jpg" alt="Tanvi Bhosale" loading="lazy" />
-              <span>Tanvi · Mehendi</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <Testimonials />
       <Features />
     </main>

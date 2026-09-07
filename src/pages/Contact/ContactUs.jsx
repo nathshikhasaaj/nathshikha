@@ -115,7 +115,7 @@ export default function ContactUs() {
               <Mail />
               <div>
                 <b>Email Support</b>
-                <a href="mailto:nakharewali.saaj@gmail.com">nakharewali.saaj@gmail.com</a>
+                <a href="mailto:nathshikha.saaj@gmail.com">nathshikha.saaj@gmail.com</a>
               </div>
             </div>
 
