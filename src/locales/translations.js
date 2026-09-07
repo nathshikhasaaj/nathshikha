@@ -8,7 +8,8 @@ export const translations = {
     // Navigation
     nav_our_collections: 'Our Collections',
     nav_all_jewellery: 'All Jewellery',
-    nav_our_brides: 'Our Brides',
+    nav_our_brides: 'Hall of Fame',
+    nav_hall_of_fame: 'Hall of Fame',
     nav_signature_collections: 'Signature Collections',
     nav_handmade_collections: 'Handmade Collections',
     nav_traditional_collections: 'Traditional Collections',
@@ -26,6 +27,12 @@ export const translations = {
     search_popular: 'Popular: Nath · Thushi · Moti · Kolhapuri Saaj · Tanmani · Accessories',
     no_pieces_found: 'No pieces found matching',
     add: 'Add',
+
+    // Hall of Fame Home Section
+    hof_home_eyebrow: '✦ REAL PATRONS & BRIDES ✦',
+    hof_home_title: 'Hall of Fame',
+    hof_home_sub: 'Celebrate cherished moments of heritage and royal elegance styled by real patrons.',
+    explore_hall_of_fame: 'EXPLORE HALL OF FAME',
 
     // Hero Section
     festive_tag: 'FESTIVE PESHWAI OFFER',
@@ -173,9 +180,9 @@ export const translations = {
     share_whatsapp: 'SHARE ON WHATSAPP',
     dm_on_instagram: 'DM @NAKHAREWALI.HANDMADE',
 
-    // Hall of Fame & Our Brides
+    // Hall of Fame
     hof_eyebrow: '✦ REAL CUSTOMERS · REAL MOMENTS ✦',
-    hof_title: 'Our Brides & Hall of Fame',
+    hof_title: 'Hall of Fame',
     hof_subtitle: 'The beautiful women who made Nathshikha a part of their special moments. Handcrafted heirloom jewellery, cherished for a lifetime.',
     hof_filter_all: 'All Moments',
     hof_filter_wedding: 'Weddings',
@@ -217,7 +224,8 @@ export const translations = {
     // Navigation
     nav_our_collections: 'आमचे कलेक्शन्स',
     nav_all_jewellery: 'सर्व दागिने',
-    nav_our_brides: 'आमच्या नवरी (ब्राइड्स)',
+    nav_our_brides: 'हॉल ऑफ फेम',
+    nav_hall_of_fame: 'हॉल ऑफ फेम',
     nav_signature_collections: 'शाही साज संग्रह',
     nav_handmade_collections: 'हस्तनिर्मित संग्रह',
     nav_traditional_collections: 'पारंपरिक संग्रह',
@@ -235,6 +243,12 @@ export const translations = {
     search_popular: 'लोकप्रिय: नथ · ठुशी · मोती · कोल्हापुरी साज · तन्मणी · अ‍ॅक्सेसरीज',
     no_pieces_found: 'या नावाचे कोणतेही दागिने सापडले नाहीत',
     add: 'जोडा',
+
+    // Hall of Fame Home Section
+    hof_home_eyebrow: '✦ आमचे ग्राहक व नवरी ✦',
+    hof_home_title: 'हॉल ऑफ फेम (Hall of Fame)',
+    hof_home_sub: 'महाराष्ट्राच्या अस्सल परंपरेचे अप्रतिम क्षण आणि दागिन्यांचे देखणे रूप.',
+    explore_hall_of_fame: 'हॉल ऑफ फेम पहा',
 
     // Hero Section
     festive_tag: 'सणासुदीची पेशवाई ऑफर',
@@ -380,9 +394,9 @@ export const translations = {
     share_whatsapp: 'व्हॉट्सॲपवर शेअर करा',
     dm_on_instagram: 'इन्स्टाग्रामवर DM करा (@nakharewali.handmade)',
 
-    // Hall of Fame & Our Brides
+    // Hall of Fame
     hof_eyebrow: '✦ अस्सल ग्राहक · खास क्षण ✦',
-    hof_title: 'आमच्या नवरी व गौरव दालन',
+    hof_title: 'हॉल ऑफ फेम (Hall of Fame)',
     hof_subtitle: 'ज्या सुंदर स्त्रियांनी त्यांच्या खास क्षणांमध्ये नथशिखाच्या दागिन्यांना स्थान दिले. पिढ्यानपिढ्या जपून ठेवावा असा अस्सल वारसा.',
     hof_filter_all: 'सर्व क्षण',
     hof_filter_wedding: 'लग्नाचे क्षण',

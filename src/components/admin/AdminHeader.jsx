@@ -51,8 +51,8 @@ const TAB_TITLES = {
   },
   hall_of_fame: {
     category: 'Reviews & Content',
-    title: 'Hall of Fame / Our Brides',
-    description: 'Real bridal jewelry stories, high-res wedding photos & spotlight features'
+    title: 'Hall of Fame',
+    description: 'Real bridal jewelry stories, high-res customer photos & spotlight features'
   },
   hero_showcase: {
     category: 'Reviews & Content',

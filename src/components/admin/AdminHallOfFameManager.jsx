@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Plus,
   Search,
@@ -61,6 +61,26 @@ export default function AdminHallOfFameManager({
 }) {
   const { setToast } = useToast();
   const fileInputRef = useRef(null);
+
+  // Local products state with sync and fallback
+  const [localProducts, setLocalProducts] = useState(Array.isArray(products) ? products : []);
+
+  useEffect(() => {
+    if (Array.isArray(products) && products.length > 0) {
+      setLocalProducts(products);
+    }
+  }, [products]);
+
+  useEffect(() => {
+    if (!products || products.length === 0) {
+      api('/products')
+        .then((data) => {
+          const list = Array.isArray(data) ? data : data?.products || [];
+          if (list.length > 0) setLocalProducts(list);
+        })
+        .catch(() => {});
+    }
+  }, [products]);
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
@@ -148,7 +168,7 @@ export default function AdminHallOfFameManager({
       occasion: isCustomOcc ? 'Other' : (story.occasion || 'Wedding'),
       customOccasion: isCustomOcc ? story.occasion : '',
       description: story.description || '',
-      products: (story.products || []).map((p) => (typeof p === 'object' ? p.id || p._id : p)),
+      products: (story.products || []).map((p) => String(typeof p === 'object' && p !== null ? p.id || p._id : p)),
       is_visible: story.is_visible !== false,
       display_order: story.display_order ?? 1,
       photo_consent: story.photo_consent !== false,
@@ -230,13 +250,14 @@ export default function AdminHallOfFameManager({
 
   // Product Selection Toggle
   const handleToggleProduct = (prodId) => {
+    const sId = String(prodId);
     setFormData((prev) => {
-      const exists = prev.products.includes(prodId);
+      const exists = prev.products.some((id) => String(id) === sId);
       return {
         ...prev,
         products: exists
-          ? prev.products.filter((id) => id !== prodId)
-          : [...prev.products, prodId]
+          ? prev.products.filter((id) => String(id) !== sId)
+          : [...prev.products, sId]
       };
     });
   };
@@ -338,14 +359,15 @@ export default function AdminHallOfFameManager({
 
   // Filter products for the modal selector
   const selectableProducts = useMemo(() => {
-    if (!productSearch.trim()) return products;
+    const list = Array.isArray(localProducts) ? localProducts : [];
+    if (!productSearch.trim()) return list;
     const q = productSearch.toLowerCase();
-    return products.filter(
+    return list.filter(
       (p) =>
-        p.name.toLowerCase().includes(q) ||
-        (p.category || '').toLowerCase().includes(q)
+        (p?.name || '').toLowerCase().includes(q) ||
+        (p?.category || '').toLowerCase().includes(q)
     );
-  }, [products, productSearch]);
+  }, [localProducts, productSearch]);
 
   return (
     <div className="hofManagerContainer">
@@ -806,13 +828,14 @@ export default function AdminHallOfFameManager({
                     <div className="selectedProductsTags">
                       <span className="selectedLabel">Selected ({formData.products.length}):</span>
                       {formData.products.map((pId) => {
-                        const prod = products.find((p) => p.id === pId || p._id === pId);
+                        const sId = String(pId);
+                        const prod = localProducts.find((p) => String(p.id || p._id) === sId);
                         return (
-                          <span key={pId} className="selectedProductPill">
+                          <span key={sId} className="selectedProductPill">
                             {prod ? prod.name : 'Selected Item'}
                             <button
                               type="button"
-                              onClick={() => handleToggleProduct(pId)}
+                              onClick={() => handleToggleProduct(sId)}
                             >
                               <X size={12} />
                             </button>
@@ -836,8 +859,11 @@ export default function AdminHallOfFameManager({
 
                     <div className="pickerItemsList">
                       {selectableProducts.map((p) => {
-                        const pId = p.id || p._id;
-                        const isSelected = formData.products.includes(pId);
+                        const pId = String(p.id || p._id);
+                        const isSelected = formData.products.some((id) => String(id) === pId);
+                        const pImg = Array.isArray(p.images) && p.images.length > 0
+                          ? p.images[0]
+                          : (p.img || p.image || '/assets/thushi.jpg');
                         return (
                           <div
                             key={pId}
@@ -851,14 +877,14 @@ export default function AdminHallOfFameManager({
                               tabIndex={-1}
                             />
                             <img
-                              src={p.img || '/assets/thushi.jpg'}
-                              alt={p.name}
+                              src={pImg}
+                              alt={p.name || 'Product'}
                               className="pickerItemThumb"
                             />
                             <div className="pickerItemInfo">
                               <span className="pickerItemName">{p.name}</span>
                               <span className="pickerItemMeta">
-                                {p.category} · {money(p.price)}
+                                {p.category || 'Jewellery'} · {money(p.price || 0)}
                               </span>
                             </div>
                           </div>

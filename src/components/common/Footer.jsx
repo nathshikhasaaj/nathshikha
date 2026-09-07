@@ -69,7 +69,7 @@ export default function Footer() {
         <div className="footerNavCol">
           <b>HELP & INFO</b>
           <Link to="/orders">Track Order</Link>
-          <Link to="/hall-of-fame">Our Brides</Link>
+          <Link to="/hall-of-fame">Hall of Fame</Link>
           <Link to="/account">My Account</Link>
           <Link to="/about">About Studio</Link>
           <Link to="/suggestion">Suggestions</Link>

@@ -127,7 +127,7 @@ export default function AdminSidebar({
         },
         {
           id: 'hall_of_fame',
-          label: 'Hall of Fame / Brides',
+          label: 'Hall of Fame',
           icon: Camera
         },
         {

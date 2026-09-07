@@ -898,6 +898,7 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
           {tab === 'hall_of_fame' && (
             <AdminHallOfFameManager
               stories={hallOfFameStories}
+              products={allProducts}
               onRefresh={load}
               loading={refreshing}
             />
