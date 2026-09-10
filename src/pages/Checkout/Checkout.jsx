@@ -20,18 +20,22 @@ import {
   PackagePlus,
   Check,
   ArrowRight,
-  Gift
+  Gift,
+  Copy,
+  Download,
+  Smartphone,
+  QrCode
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { money, formatOrderStatus } from '../../utils/formatters';
+import { money, formatOrderStatus, copyToClipboard } from '../../utils/formatters';
 import SectionTitle from '../../components/common/SectionTitle';
 import './Checkout.css';
 
-const DEFAULT_UPI_ID = 'shwetadarekar04-1@okhdfcbank';
+const DEFAULT_UPI_ID = '7038172478@pthdfc';
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -42,6 +46,8 @@ export default function Checkout() {
 
   // Delivery Address Mode: 'my_address' | 'gift_address'
   const [addressMode, setAddressMode] = useState('my_address');
+  const [qrViewMode, setQrViewMode] = useState('dynamic'); // 'dynamic' | 'card'
+  const [copiedKey, setCopiedKey] = useState(null); // 'upi' | 'amount' | null
 
   const [form, setForm] = useState({
     name: '',
@@ -344,11 +350,14 @@ export default function Checkout() {
     setToast('Coupon removed.');
   };
 
-  const configuredUpiId = import.meta.env.VITE_UPI_ID || DEFAULT_UPI_ID;
+  const configuredUpiId = (import.meta.env.VITE_UPI_ID || DEFAULT_UPI_ID).trim();
+  const payeeName = 'Miss Shweta Satish Darekar';
+  const formattedAmount = Number(grandTotal || 0).toFixed(2);
 
+  // Standard NPCI UPI URI with exact order total and currency
   const upiLink = `upi://pay?pa=${encodeURIComponent(configuredUpiId)}&pn=${encodeURIComponent(
-    'Nathshikha Handmade Jewellery'
-  )}&am=${grandTotal}&cu=INR&tn=${encodeURIComponent('Nathshikha Jewellery Order')}`;
+    payeeName
+  )}&am=${formattedAmount}&cu=INR`;
 
   const placeOrder = async (e) => {
     e?.preventDefault();
@@ -1231,20 +1240,95 @@ export default function Checkout() {
             </small>
           </div>
 
-          {/* Studio UPI ID box */}
+          {/* Payee, UPI ID & Amount details box with 1-click copy */}
           <div className="studioUpiBox">
-            <span>Studio UPI ID:</span>
-            <b>{configuredUpiId}</b>
+            <div className="studioUpiHeader">
+              <span>Payee: Miss Shweta Satish Darekar</span>
+            </div>
+            <div className="studioUpiRow">
+              <span className="studioUpiLabel">UPI ID:</span>
+              <b className="studioUpiVal">{configuredUpiId}</b>
+              <button
+                type="button"
+                className={`copyUpiMiniBtn ${copiedKey === 'upi' ? 'copied' : ''}`}
+                onClick={async () => {
+                  const success = await copyToClipboard(configuredUpiId);
+                  if (success) {
+                    setCopiedKey('upi');
+                    setToast('UPI ID copied: ' + configuredUpiId);
+                    setTimeout(() => setCopiedKey(null), 2500);
+                  } else {
+                    setToast('UPI ID: ' + configuredUpiId);
+                  }
+                }}
+                title="Copy UPI ID"
+              >
+                {copiedKey === 'upi' ? (
+                  <>
+                    <Check size={12} color="#16a34a" /> COPIED!
+                  </>
+                ) : (
+                  <>
+                    <Copy size={12} /> COPY
+                  </>
+                )}
+              </button>
+            </div>
+            <div className="studioUpiRow">
+              <span className="studioUpiLabel">Amount:</span>
+              <b className="studioUpiVal studioUpiAmount">{money(grandTotal)}</b>
+              <button
+                type="button"
+                className={`copyUpiMiniBtn ${copiedKey === 'amount' ? 'copied' : ''}`}
+                onClick={async () => {
+                  const success = await copyToClipboard(String(grandTotal));
+                  if (success) {
+                    setCopiedKey('amount');
+                    setToast(`Amount ₹${grandTotal} copied to clipboard!`);
+                    setTimeout(() => setCopiedKey(null), 2500);
+                  } else {
+                    setToast(`Amount: ₹${grandTotal}`);
+                  }
+                }}
+                title="Copy Amount"
+              >
+                {copiedKey === 'amount' ? (
+                  <>
+                    <Check size={12} color="#16a34a" /> COPIED!
+                  </>
+                ) : (
+                  <>
+                    <Copy size={12} /> COPY
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Quick 3-Step Mobile Guide */}
+          <div className="mobilePaymentGuide">
+            <div className="guideStep">
+              <span className="guideStepNum">1</span>
+              <span>Click <b>COPY</b> above to copy UPI ID & Amount.</span>
+            </div>
+            <div className="guideStep">
+              <span className="guideStepNum">2</span>
+              <span>Open <b>GPay, PhonePe, Paytm or BHIM</b> & make payment.</span>
+            </div>
+            <div className="guideStep">
+              <span className="guideStepNum">3</span>
+              <span>Click <b>"I HAVE PAID"</b> below to place your order.</span>
+            </div>
           </div>
 
           {/* Open UPI App Link (Mobile) */}
           <a className="outlineBtn openUpiBtn" href={upiLink}>
-            <ExternalLink size={14} /> OPEN UPI APP DIRECTLY
+            <ExternalLink size={14} /> OPEN UPI APP
           </a>
-
-          <p className="paymentInstructionNote">
-            ✦ Scan & pay the exact total above. Once done, click <b>"I HAVE PAID"</b> to complete your order.
-          </p>
+          
+          <small className="bankLimitNotice">
+            ℹ️ <em>If your UPI app displays "Bank limit exceeded" when clicking the link, please use the <b>COPY</b> buttons above to pay directly inside your UPI app.</em>
+          </small>
 
           {/* I Have Paid Submit Button */}
           <button

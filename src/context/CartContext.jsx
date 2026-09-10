@@ -68,6 +68,16 @@ export function CartProvider({ children }) {
   const addToCart = useCallback((product, qty = 1, options = {}) => {
     if (!product) return;
     const pId = String(product.id || product._id);
+
+    if (product.stock !== undefined && product.stock <= 0) {
+      setToast({
+        type: 'warning',
+        message: `Sorry, "${product.name}" is currently out of stock.`,
+        duration: 4000
+      });
+      return { success: false, error: 'out_of_stock' };
+    }
+
     const selectedParameters =
       (options?.selectedParameters && typeof options.selectedParameters === 'object'
         ? options.selectedParameters
@@ -79,6 +89,8 @@ export function CartProvider({ children }) {
 
     let isExisting = false;
     let newQty = qty;
+    let limitReached = false;
+    const maxAvailable = product.stock !== undefined ? product.stock : 10;
 
     setCart((prev) => {
       const existingIndex = prev.findIndex(
@@ -88,9 +100,13 @@ export function CartProvider({ children }) {
       if (existingIndex !== -1) {
         isExisting = true;
         const existing = prev[existingIndex];
-        newQty = existing.qty + qty;
+        if (existing.qty >= maxAvailable) {
+          limitReached = true;
+          return prev;
+        }
+        newQty = Math.min(maxAvailable, existing.qty + qty);
         return prev.map((item, idx) =>
-          idx === existingIndex ? { ...item, qty: newQty } : item
+          idx === existingIndex ? { ...item, qty: newQty, stock: product.stock } : item
         );
       }
 
@@ -103,10 +119,20 @@ export function CartProvider({ children }) {
           selectedParameters,
           selectedOptions: selectedParameters,
           img: product.img || (Array.isArray(product.images) ? product.images[0] : '/assets/thushi.jpg'),
-          qty
+          qty: Math.min(maxAvailable, qty),
+          stock: product.stock
         }
       ];
     });
+
+    if (limitReached) {
+      setToast({
+        type: 'warning',
+        message: `Only ${maxAvailable} unit${maxAvailable === 1 ? ' is' : 's are'} available in stock for "${product.name}".`,
+        duration: 4000
+      });
+      return { success: false, error: 'limit_reached' };
+    }
 
     if (options?.showToast !== false) {
       const productImg = product.img || (Array.isArray(product.images) && product.images[0]) || '/assets/thushi.jpg';
@@ -141,10 +167,23 @@ export function CartProvider({ children }) {
       prev.map((item) => {
         const itemKey = item.cartKey || getCartParameterKey(item.id, item.selectedParameters || item.selectedOptions);
         const match = itemKey === String(cartKeyOrId) || String(item.id) === String(cartKeyOrId);
-        return match ? { ...item, qty: Math.max(1, item.qty + delta) } : item;
+        if (!match) return item;
+
+        const maxAvailable = item.stock !== undefined ? item.stock : 10;
+        if (delta > 0 && item.qty >= maxAvailable) {
+          setToast({
+            type: 'warning',
+            message: `Only ${maxAvailable} unit${maxAvailable === 1 ? ' is' : 's are'} available in stock for "${item.name}".`,
+            duration: 3500
+          });
+          return item;
+        }
+
+        const nextQty = delta > 0 ? Math.min(maxAvailable, item.qty + delta) : Math.max(1, item.qty + delta);
+        return { ...item, qty: nextQty };
       })
     );
-  }, []);
+  }, [setToast]);
 
   const removeFromCart = useCallback((cartKeyOrId) => {
     setCart((prev) => {

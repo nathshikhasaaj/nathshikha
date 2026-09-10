@@ -904,12 +904,51 @@
   margin-bottom: 18px;
 }
 
+.productStockStatus--low {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #b45309;
+}
+
+.productStockStatus--out {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
 .stockDot {
   width: 7px;
   height: 7px;
   background: #2e7d32;
   border-radius: 50%;
   box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.2);
+}
+
+.stockDot--low {
+  background: #d97706;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2);
+}
+
+.stockDot--out {
+  background: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+}
+
+.optionPillBtn--outOfStock,
+.colorSwatchBtn--outOfStock {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+  text-decoration: line-through;
+}
+
+.detailAddBagBtn--outOfStock,
+.buyNowBtn--outOfStock {
+  background: #e5e5e5 !important;
+  border-color: #d4d4d4 !important;
+  color: #737373 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  opacity: 0.8;
 }
 
 /* Quantity Selector Row */

@@ -1,9 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Minus, Plus, Trash2, ShoppingBag, Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingBag, Sparkles, CheckCircle2, ArrowRight, AlertTriangle } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { money } from '../../utils/formatters';
+import { getCartParameterKey } from '../../utils/parameterHelpers';
 import SectionTitle from '../../components/common/SectionTitle';
 import './Cart.css';
 
@@ -16,6 +17,8 @@ export default function Cart() {
   const isFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
   const freeShippingLeft = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
   const freeShippingProgress = Math.min(100, Math.round((subtotal / FREE_SHIPPING_THRESHOLD) * 100));
+
+  const hasOutOfStockItems = cart.some((p) => p.stock !== undefined && p.stock <= 0);
 
   return (
     <main className="page cartPageMain">
@@ -52,14 +55,35 @@ export default function Cart() {
               </div>
             </div>
 
+            {hasOutOfStockItems && (
+              <div style={{
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
+                color: '#991b1b',
+                padding: '10px 14px',
+                borderRadius: '6px',
+                marginBottom: '16px',
+                fontSize: '12.5px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <AlertTriangle size={16} />
+                <span>Some items in your bag are currently out of stock. Please remove them before proceeding to checkout.</span>
+              </div>
+            )}
+
             {cart.map((p) => {
               const selectedParams =
                 (p.selectedParameters && typeof p.selectedParameters === 'object' ? p.selectedParameters : null) ||
                 (p.selectedOptions && typeof p.selectedOptions === 'object' ? p.selectedOptions : {});
               const hasOptions = Object.keys(selectedParams).length > 0;
+              const itemKey = p.cartKey || getCartParameterKey(p.id, selectedParams);
+              const isItemOutOfStock = p.stock !== undefined && p.stock <= 0;
+              const maxItemStock = p.stock !== undefined ? p.stock : 10;
 
               return (
-                <div className="cartItem" key={itemKey}>
+                <div className={`cartItem ${isItemOutOfStock ? 'cartItem--outOfStock' : ''}`} key={itemKey}>
                   <Link to={`/product/${p.id}`} className="cartItemImgLink">
                     <img src={p.img || '/assets/thushi.jpg'} alt={p.name} />
                   </Link>
@@ -68,6 +92,21 @@ export default function Cart() {
                       <Link to={`/product/${p.id}`}>
                         <h3>{p.name}</h3>
                       </Link>
+
+                      {isItemOutOfStock && (
+                        <div style={{
+                          display: 'inline-block',
+                          background: '#fee2e2',
+                          color: '#b91c1c',
+                          padding: '2px 8px',
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          marginBottom: '6px'
+                        }}>
+                          {t('out_of_stock', 'Out of stock')}
+                        </div>
+                      )}
 
                       {/* Dynamic Selected Parameters Badges */}
                       {hasOptions && (
@@ -94,6 +133,7 @@ export default function Cart() {
                         type="button"
                         onClick={() => updateCartQty(itemKey, -1)}
                         aria-label="Decrease quantity"
+                        disabled={p.qty <= 1}
                       >
                         <Minus size={13} />
                       </button>
@@ -102,6 +142,7 @@ export default function Cart() {
                         type="button"
                         onClick={() => updateCartQty(itemKey, 1)}
                         aria-label="Increase quantity"
+                        disabled={p.qty >= maxItemStock || p.qty >= 10 || isItemOutOfStock}
                       >
                         <Plus size={13} />
                       </button>
@@ -142,10 +183,16 @@ export default function Cart() {
               <span>{t('total', 'Total')}</span>
               <b>{money(subtotal)}</b>
             </p>
-            <Link className="goldBtn cartCheckoutBtn" to="/checkout">
-              <span>{t('proceed_checkout', 'PROCEED TO CHECKOUT')}</span>
-              <ArrowRight size={15} />
-            </Link>
+            {hasOutOfStockItems ? (
+              <button className="goldBtn cartCheckoutBtn" disabled style={{ opacity: 0.6, cursor: 'not-allowed' }}>
+                <span>{t('remove_out_of_stock_first', 'REMOVE OUT OF STOCK ITEMS')}</span>
+              </button>
+            ) : (
+              <Link className="goldBtn cartCheckoutBtn" to="/checkout">
+                <span>{t('proceed_checkout', 'PROCEED TO CHECKOUT')}</span>
+                <ArrowRight size={15} />
+              </Link>
+            )}
           </aside>
 
           {/* Sticky Mobile Checkout Bar for Thumb-Reach UX */}
@@ -154,10 +201,16 @@ export default function Cart() {
               <small>{t('total', 'Total')}</small>
               <strong>{money(subtotal)}</strong>
             </div>
-            <Link className="mobileStickyCheckoutBtn" to="/checkout">
-              <span>{t('checkout', 'CHECKOUT')}</span>
-              <ArrowRight size={15} />
-            </Link>
+            {hasOutOfStockItems ? (
+              <button className="mobileStickyCheckoutBtn" disabled style={{ opacity: 0.6, cursor: 'not-allowed' }}>
+                <span>{t('out_of_stock', 'OUT OF STOCK')}</span>
+              </button>
+            ) : (
+              <Link className="mobileStickyCheckoutBtn" to="/checkout">
+                <span>{t('checkout', 'CHECKOUT')}</span>
+                <ArrowRight size={15} />
+              </Link>
+            )}
           </div>
         </div>
       ) : (

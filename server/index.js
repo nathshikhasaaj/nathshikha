@@ -31,7 +31,7 @@ import { noSqlSanitizer } from './middleware/securityMiddleware.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = Number(process.env.PORT || 4000);
-const UPI_ID = process.env.UPI_ID || 'shwetadarekar04-1@okhdfcbank';
+const UPI_ID = process.env.UPI_ID || '7038172478@pthdfc';
 
 // Enable trust proxy for production reverse proxies (Nginx, Cloudflare, cPanel, Vercel)
 app.set('trust proxy', 1);

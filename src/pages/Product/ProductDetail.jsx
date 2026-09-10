@@ -713,6 +713,15 @@ export default function ProductDetail() {
 
   const handleAddToCart = () => {
     if (isAdding || !product) return;
+    const isOutOfStock = product.stock !== undefined && product.stock <= 0;
+    if (isOutOfStock) {
+      setToast({
+        type: 'warning',
+        message: `${product.name} is currently out of stock`,
+        duration: 3500
+      });
+      return;
+    }
     if (!validateRequiredParameters()) return;
 
     setIsAdding(true);
@@ -732,6 +741,15 @@ export default function ProductDetail() {
 
   const handleBuyNow = () => {
     if (!product) return;
+    const isOutOfStock = product.stock !== undefined && product.stock <= 0;
+    if (isOutOfStock) {
+      setToast({
+        type: 'warning',
+        message: `${product.name} is currently out of stock`,
+        duration: 3500
+      });
+      return;
+    }
     if (!validateRequiredParameters()) return;
 
     addToCart(product, qty, {
@@ -777,6 +795,10 @@ export default function ProductDetail() {
   const productImages = Array.isArray(product.images) && product.images.length > 0
     ? product.images
     : (product.img ? [product.img] : ['/assets/thushi.jpg']);
+
+  const isOutOfStock = product.stock !== undefined && product.stock <= 0;
+  const availableStock = product.stock !== undefined ? product.stock : 10;
+  const isLowStock = availableStock > 0 && availableStock <= 5;
 
   return (
     <main className="productPage">
@@ -824,10 +846,22 @@ export default function ProductDetail() {
           </div>
 
           {/* Live stock and craft readiness badge */}
-          <div className="productStockStatus">
-            <span className="stockDot"></span>
-            <span>{t('in_stock_ready', 'In Stock • Handcrafted & Ready to Dispatch')}</span>
-          </div>
+          {isOutOfStock ? (
+            <div className="productStockStatus productStockStatus--out">
+              <span className="stockDot stockDot--out"></span>
+              <span>{t('out_of_stock', 'Currently Out of Stock')}</span>
+            </div>
+          ) : isLowStock ? (
+            <div className="productStockStatus productStockStatus--low">
+              <span className="stockDot stockDot--low"></span>
+              <span>{t('low_stock', `Only ${availableStock} unit${availableStock === 1 ? '' : 's'} left in stock • Ready to Dispatch`)}</span>
+            </div>
+          ) : (
+            <div className="productStockStatus">
+              <span className="stockDot"></span>
+              <span>{t('in_stock_ready', 'In Stock • Handcrafted & Ready to Dispatch')}</span>
+            </div>
+          )}
 
           {/* Product Description with Live English <-> Marathi Translation */}
           <div className="productDescriptionCard">
@@ -969,13 +1003,18 @@ export default function ProductDetail() {
                         className="productOptionSelect"
                         value={currentSelected || ''}
                         onChange={(e) => handleSelectParameter(param.name, e.target.value)}
+                        disabled={isOutOfStock}
                       >
                         <option value="" disabled>
                           Select {param.name}
                         </option>
                         {paramValues.map((v) => (
-                          <option key={v.value || v.label} value={v.value || v.label}>
-                            {v.label}
+                          <option
+                            key={v.value || v.label}
+                            value={v.value || v.label}
+                            disabled={v.inStock === false}
+                          >
+                            {v.label}{v.inStock === false ? ` (${t('out_of_stock', 'Out of stock')})` : ''}
                           </option>
                         ))}
                       </select>
@@ -985,6 +1024,7 @@ export default function ProductDetail() {
                           const valKey = v.value || v.label;
                           const isSelected = currentSelected === valKey;
                           const colorCode = v.colorCode || '#b8860b';
+                          const isValOutOfStock = v.inStock === false;
 
                           return (
                             <button
@@ -992,9 +1032,10 @@ export default function ProductDetail() {
                               type="button"
                               role="radio"
                               aria-checked={isSelected}
-                              className={`colorSwatchBtn ${isSelected ? 'isSelected' : ''}`}
-                              onClick={() => handleSelectParameter(param.name, valKey)}
-                              title={v.label}
+                              disabled={isValOutOfStock || isOutOfStock}
+                              className={`colorSwatchBtn ${isSelected ? 'isSelected' : ''} ${isValOutOfStock ? 'colorSwatchBtn--outOfStock' : ''}`}
+                              onClick={() => !isValOutOfStock && !isOutOfStock && handleSelectParameter(param.name, valKey)}
+                              title={isValOutOfStock ? `${v.label} (${t('out_of_stock', 'Out of stock')})` : v.label}
                             >
                               <span
                                 className="colorDot"
@@ -1020,6 +1061,7 @@ export default function ProductDetail() {
                         {paramValues.map((v) => {
                           const valKey = v.value || v.label;
                           const isSelected = currentSelected === valKey;
+                          const isValOutOfStock = v.inStock === false;
 
                           return (
                             <button
@@ -1027,10 +1069,15 @@ export default function ProductDetail() {
                               type="button"
                               role="radio"
                               aria-checked={isSelected}
-                              className={`optionPillBtn ${isSelected ? 'isSelected' : ''}`}
-                              onClick={() => handleSelectParameter(param.name, valKey)}
+                              disabled={isValOutOfStock || isOutOfStock}
+                              className={`optionPillBtn ${isSelected ? 'isSelected' : ''} ${isValOutOfStock ? 'optionPillBtn--outOfStock' : ''}`}
+                              onClick={() => !isValOutOfStock && !isOutOfStock && handleSelectParameter(param.name, valKey)}
+                              title={isValOutOfStock ? `${v.label} (${t('out_of_stock', 'Out of stock')})` : v.label}
                             >
                               <span>{v.label}</span>
+                              {isValOutOfStock && (
+                                <small style={{ fontSize: 9, marginLeft: 4, opacity: 0.8 }}>({t('out_of_stock', 'Out of stock')})</small>
+                              )}
                               {isSelected && <Check size={13} className="pillCheckIcon" />}
                             </button>
                           );
@@ -1054,15 +1101,16 @@ export default function ProductDetail() {
               <button
                 type="button"
                 onClick={() => setQty((prev) => Math.max(1, prev - 1))}
-                disabled={qty <= 1}
+                disabled={qty <= 1 || isOutOfStock}
                 aria-label="Decrease quantity"
               >
                 <Minus size={14} />
               </button>
-              <span className="qtyValue">{qty}</span>
+              <span className="qtyValue">{isOutOfStock ? 0 : qty}</span>
               <button
                 type="button"
-                onClick={() => setQty((prev) => Math.min(10, prev + 1))}
+                onClick={() => setQty((prev) => Math.min(availableStock, Math.min(10, prev + 1)))}
+                disabled={qty >= availableStock || qty >= 10 || isOutOfStock}
                 aria-label="Increase quantity"
               >
                 <Plus size={14} />
@@ -1072,12 +1120,14 @@ export default function ProductDetail() {
 
           <div className="detailActions">
             <button
-              className={`goldBtn detailAddBagBtn ${justAdded ? 'detailAddBagBtn--added' : ''}`}
+              className={`goldBtn detailAddBagBtn ${isOutOfStock ? 'detailAddBagBtn--outOfStock' : ''} ${justAdded ? 'detailAddBagBtn--added' : ''}`}
               type="button"
               onClick={handleAddToCart}
-              disabled={isAdding}
+              disabled={isAdding || isOutOfStock}
             >
-              {isAdding ? (
+              {isOutOfStock ? (
+                <span>{t('out_of_stock', 'OUT OF STOCK')}</span>
+              ) : isAdding ? (
                 <>
                   <Loader2 size={16} className="btnSpinner" style={{ marginRight: 6 }} />
                   {t('adding', 'ADDING...')}
@@ -1095,14 +1145,17 @@ export default function ProductDetail() {
               )}
             </button>
 
-            <button
-              className="buyNowBtn"
-              type="button"
-              onClick={handleBuyNow}
-            >
-              <Zap size={16} style={{ marginRight: 6 }} />
-              {t('buy_now', 'BUY NOW')}
-            </button>
+            {!isOutOfStock && (
+              <button
+                className="buyNowBtn"
+                type="button"
+                onClick={handleBuyNow}
+                disabled={isOutOfStock}
+              >
+                <Zap size={16} style={{ marginRight: 6 }} />
+                {t('buy_now', 'BUY NOW')}
+              </button>
+            )}
 
             <div className="detailSecondaryActions">
               <button

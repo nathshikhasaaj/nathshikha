@@ -253,31 +253,79 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
 
     const productMap = new Map(products.map((p) => [p._id.toString(), p]));
 
+    // Aggregate total requested quantity per product ID to handle multi-variant cart selections accurately
+    const productTotalQtyMap = new Map();
+    for (const item of items) {
+      const pId = String(item.id || item.productId);
+      const qty = parseInt(item.qty, 10);
+      if (isNaN(qty) || qty < 1 || qty > 10) {
+        return res.status(400).json({ error: 'Invalid quantity provided. Quantity per item must be between 1 and 10.' });
+      }
+      productTotalQtyMap.set(pId, (productTotalQtyMap.get(pId) || 0) + qty);
+    }
+
+    // Validate overall product stock against total requested quantity
+    for (const [pId, totalRequestedQty] of productTotalQtyMap.entries()) {
+      const p = productMap.get(pId);
+      if (!p) {
+        return res.status(400).json({ error: 'A product in your cart is currently unavailable.' });
+      }
+
+      if (p.stock === 0) {
+        return res.status(400).json({
+          error: `Sorry, "${p.name}" is currently out of stock.`
+        });
+      }
+
+      if (p.stock < totalRequestedQty) {
+        const unitText = p.stock === 1 ? '1 unit is' : `${p.stock} units are`;
+        return res.status(400).json({
+          error: `Sorry, only ${unitText} currently available in stock for "${p.name}".`
+        });
+      }
+    }
+
     let subtotal = 0;
     const normalizedItems = [];
 
     for (const item of items) {
       const pId = String(item.id || item.productId);
       const p = productMap.get(pId);
-      if (!p) {
-        return res.status(400).json({ error: `A product in your cart is currently unavailable.` });
-      }
-
       const qty = parseInt(item.qty, 10);
-      if (isNaN(qty) || qty < 1 || qty > 10) {
-        return res.status(400).json({ error: `Invalid quantity for ${p.name}. Quantity must be between 1 and 10.` });
-      }
 
-      if (p.stock < qty) {
-        return res.status(400).json({
-          error: `Sorry, only ${p.stock} units of "${p.name}" are currently available in stock.`
-        });
-      }
-
-      subtotal += p.price * qty;
       const effectiveSelectedParams =
         (item.selectedParameters && typeof item.selectedParameters === 'object' ? item.selectedParameters : null) ||
         (item.selectedOptions && typeof item.selectedOptions === 'object' ? item.selectedOptions : {});
+
+      // Validate variant / parameter selections if product has assigned parameters
+      if (Array.isArray(p.productParameters) && p.productParameters.length > 0) {
+        for (const param of p.productParameters) {
+          const selectedVal = effectiveSelectedParams[param.name];
+          if (param.required && (!selectedVal || String(selectedVal).trim() === '')) {
+            return res.status(400).json({
+              error: `Please select an option for "${param.name}" on "${p.name}".`
+            });
+          }
+
+          if (selectedVal) {
+            const paramVals = Array.isArray(param.selectedValues) && param.selectedValues.length > 0
+              ? param.selectedValues
+              : (Array.isArray(param.values) ? param.values : []);
+
+            const matchingVal = paramVals.find(
+              (v) => String(v.value || v.label).trim().toLowerCase() === String(selectedVal).trim().toLowerCase()
+            );
+
+            if (matchingVal && matchingVal.inStock === false) {
+              return res.status(400).json({
+                error: `Sorry, the selected option "${selectedVal}" for "${p.name}" is currently out of stock.`
+              });
+            }
+          }
+        }
+      }
+
+      subtotal += p.price * qty;
 
       normalizedItems.push({
         productId: p._id,
@@ -294,11 +342,12 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
       return res.status(400).json({ error: 'No valid products in order.' });
     }
 
-    // Atomic stock deduction with rollback safety
-    for (const item of normalizedItems) {
+    // Atomic stock deduction with aggregate per-product safety and rollback
+    for (const [pId, totalQty] of productTotalQtyMap.entries()) {
+      const p = productMap.get(pId);
       const updatedProduct = await Product.findOneAndUpdate(
-        { _id: item.productId, stock: { $gte: item.qty } },
-        { $inc: { stock: -item.qty } },
+        { _id: p._id, stock: { $gte: totalQty } },
+        { $inc: { stock: -totalQty } },
         { new: true }
       );
 
@@ -308,11 +357,11 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
           await Product.findByIdAndUpdate(deducted.productId, { $inc: { stock: deducted.qty } }).catch(() => {});
         }
         return res.status(400).json({
-          error: `Item "${item.name}" ran out of stock during checkout. Please adjust your cart.`
+          error: `Item "${p.name}" ran out of stock during checkout. Please adjust your cart.`
         });
       }
 
-      deductedStockItems.push(item);
+      deductedStockItems.push({ productId: p._id, qty: totalQty });
     }
 
     // Coupon Validation & Atomic Usage Increment

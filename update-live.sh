@@ -3,54 +3,71 @@ set -e
 
 echo "=========================================================="
 echo "  Nathshikha Luxury Jewellery — Live Server Update       "
-echo "  Domain: nathshikha.in                                  "
+echo "  Target Node: NVM 20.20.2 (Node 20 LTS)                 "
 echo "=========================================================="
 
-APP_DIR="/var/www/nathshikha"
-
-if [ ! -d "$APP_DIR" ]; then
-    echo "Directory $APP_DIR does not exist. Running full deploy script..."
-    bash deploy-server.sh
-    exit 0
-fi
-
-echo "--> Loading Node.js environment (Node v20.20.2 / v20.x)..."
-if [ -s "$HOME/.nvm/nvm.sh" ]; then
-    export NVM_DIR="$HOME/.nvm"
+# 1. Load NVM Environment
+export NVM_DIR="$HOME/.nvm"
+if [ -s "$NVM_DIR/nvm.sh" ]; then
     \. "$NVM_DIR/nvm.sh"
-    nvm use 20.20.2 2>/dev/null || nvm use 20.20.0 2>/dev/null || nvm use 20 2>/dev/null || true
+elif [ -s "/root/.nvm/nvm.sh" ]; then
+    export NVM_DIR="/root/.nvm"
+    \. "/root/.nvm/nvm.sh"
+elif [ -s "$HOME/.nvm/nvm.sh" ]; then
+    \. "$HOME/.nvm/nvm.sh"
+else
+    echo "--> Installing NVM..."
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 fi
-echo "Node version: $(node -v || echo 'Not found')"
-echo "NPM version: $(npm -v || echo 'Not found')"
 
-echo "--> Navigating to application directory..."
-cd "$APP_DIR"
+# 2. Use or Install Node.js 20.20.2 (or Node 20 LTS)
+echo "--> Setting up Node.js via NVM..."
+nvm install 20.20.2 2>/dev/null || nvm install 20
+nvm use 20.20.2 2>/dev/null || nvm use 20
+nvm alias default $(node -v)
 
-echo "--> Pulling latest changes from GitHub main branch..."
-git pull origin main
+echo "Active Node Version : $(node -v)"
+echo "Active NPM Version  : $(npm -v)"
 
-echo "--> Ensuring uploads directory exists..."
-mkdir -p "$APP_DIR/public/uploads"
-chmod -R 755 "$APP_DIR/public/uploads"
+# 3. Locate App Directory
+APP_DIR="/var/www/nathshikha"
+if [ -d "$APP_DIR" ]; then
+    cd "$APP_DIR"
+else
+    APP_DIR="$(pwd)"
+    cd "$APP_DIR"
+fi
+echo "App Directory       : $APP_DIR"
 
-echo "--> Installing dependencies..."
+# 4. Install Dependencies
+echo "--> Installing npm dependencies..."
 npm install --production=false
 
-echo "--> Building production Vite frontend..."
+# 5. Build Frontend SPA Bundle
+echo "--> Building production Vite bundle..."
 npm run build
 
-echo "--> Updating Nginx configuration if changed..."
-if [ -f "$APP_DIR/server/nginx/nathshikha.conf" ]; then
-    cp "$APP_DIR/server/nginx/nathshikha.conf" /etc/nginx/sites-available/nathshikha
-    ln -sf /etc/nginx/sites-available/nathshikha /etc/nginx/sites-enabled/
-    nginx -t && systemctl reload nginx
+# 6. Restart PM2 Process
+echo "--> Restarting PM2 process manager..."
+if ! command -v pm2 &> /dev/null; then
+    npm install -g pm2
 fi
 
-echo "--> Restarting API backend on PM2..."
-pm2 restart nathshikha-api || pm2 start server/index.js --name "nathshikha-api" -i max
+pm2 delete nathshikha-api 2>/dev/null || true
+pm2 start server/index.js --name "nathshikha-api" -i max
 pm2 save
+pm2 startup systemd -u root --hp /root 2>/dev/null | bash 2>/dev/null || true
+
+# 7. Reload Nginx
+if command -v nginx &> /dev/null; then
+    echo "--> Testing and reloading Nginx..."
+    nginx -t
+    systemctl reload nginx 2>/dev/null || systemctl restart nginx 2>/dev/null || true
+fi
 
 echo "=========================================================="
-echo "  ✓ LIVE UPDATE SUCCESSFUL!                               "
+echo "  ✓ LIVE SERVER UPDATED SUCCESSFULLY WITH NODE $(node -v)! "
 echo "  Website URL: https://nathshikha.in                      "
 echo "=========================================================="

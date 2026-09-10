@@ -217,6 +217,20 @@
   animation: bagBtnPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.bagBtn--outOfStock {
+  background: #f8f6f0 !important;
+  border-color: #d6cfc7 !important;
+  color: #8c827a !important;
+  cursor: not-allowed !important;
+  opacity: 0.85;
+}
+
+.productCardTag--soldOut {
+  background: #fef2f2 !important;
+  color: #991b1b !important;
+  border-color: #fecaca !important;
+}
+
 .bagBtn--loading {
   opacity: 0.85;
   cursor: wait;

@@ -70,10 +70,10 @@ Copy `.env.example` to `.env` and set your desired values:
 ```env
 PORT=4000
 JWT_SECRET=your-secret-key
-UPI_ID=shwetadarekar04-1@okhdfcbank
+UPI_ID=7038172478@pthdfc
 ADMIN_EMAIL=admin@nathshikha.local
 ADMIN_PASSWORD=your-secure-password
-VITE_UPI_ID=shwetadarekar04-1@okhdfcbank
+VITE_UPI_ID=7038172478@pthdfc
 ```
 
 ### 3. Create Studio Admin

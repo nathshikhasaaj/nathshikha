@@ -94,3 +94,51 @@ export function formatOrderStatus(status) {
   }
 }
 
+/**
+ * Safely copy text to clipboard across all browser contexts (HTTPS, HTTP LAN IP, WebViews)
+ * @param {string} text 
+ * @returns {Promise<boolean>}
+ */
+export async function copyToClipboard(text) {
+  if (!text) return false;
+  
+  // 1. Try modern navigator.clipboard API if available (HTTPS or localhost)
+  if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (e) {
+      console.warn('navigator.clipboard writeText failed, trying fallback:', e);
+    }
+  }
+
+  // 2. Fallback for non-secure / HTTP contexts (e.g. mobile testing on LAN IP)
+  try {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.top = '0';
+    textArea.style.left = '0';
+    textArea.style.width = '2em';
+    textArea.style.height = '2em';
+    textArea.style.padding = '0';
+    textArea.style.border = 'none';
+    textArea.style.outline = 'none';
+    textArea.style.boxShadow = 'none';
+    textArea.style.background = 'transparent';
+    textArea.style.opacity = '0';
+    textArea.setAttribute('readonly', '');
+    document.body.appendChild(textArea);
+    
+    textArea.focus();
+    textArea.select();
+    textArea.setSelectionRange(0, 99999);
+    
+    const successful = document.execCommand('copy');
+    document.body.removeChild(textArea);
+    return Boolean(successful);
+  } catch (err) {
+    console.error('All copy methods failed:', err);
+    return false;
+  }
+}

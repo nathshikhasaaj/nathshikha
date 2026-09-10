@@ -21,10 +21,12 @@ export default function ProductCard({ p }) {
   const primaryImg = p.img || imagesList[0];
   const secondaryImg = imagesList.length > 1 ? imagesList[1] : null;
 
+  const isOutOfStock = p.stock !== undefined && p.stock <= 0;
+
   const handleAdd = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (isAdding) return;
+    if (isAdding || isOutOfStock) return;
 
     setIsAdding(true);
     addToCart(p, 1);
@@ -46,9 +48,13 @@ export default function ProductCard({ p }) {
   };
 
   return (
-    <article className="card">
+    <article className={`card ${isOutOfStock ? 'card--outOfStock' : ''}`}>
       <div className={`pic ${secondaryImg ? 'hasHoverImage' : ''}`}>
-        {p.tag && <span className="productCardTag">{p.tag}</span>}
+        {isOutOfStock ? (
+          <span className="productCardTag productCardTag--soldOut">{t('out_of_stock', 'OUT OF STOCK')}</span>
+        ) : p.tag ? (
+          <span className="productCardTag">{p.tag}</span>
+        ) : null}
         {imagesList.length > 1 && (
           <span className="cardMultiPhotoBadge" title={`${imagesList.length} photos available`}>
             <Images size={10} /> {imagesList.length}
@@ -81,13 +87,15 @@ export default function ProductCard({ p }) {
         </Link>
         <strong>{money(p.price)}</strong>
         <button
-          className={`bagBtn ${justAdded ? 'bagBtn--added' : ''} ${isAdding ? 'bagBtn--loading' : ''}`}
+          className={`bagBtn ${isOutOfStock ? 'bagBtn--outOfStock' : ''} ${justAdded ? 'bagBtn--added' : ''} ${isAdding ? 'bagBtn--loading' : ''}`}
           type="button"
           onClick={handleAdd}
-          disabled={isAdding}
-          aria-label={`Add ${p.name} to bag`}
+          disabled={isAdding || isOutOfStock}
+          aria-label={isOutOfStock ? `${p.name} is out of stock` : `Add ${p.name} to bag`}
         >
-          {isAdding ? (
+          {isOutOfStock ? (
+            <span>{t('out_of_stock', 'OUT OF STOCK')}</span>
+          ) : isAdding ? (
             <>
               <Loader2 className="btnSpinner" size={13} />
               <span>{t('adding', 'ADDING...')}</span>
