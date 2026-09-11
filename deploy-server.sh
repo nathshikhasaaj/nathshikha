@@ -54,6 +54,10 @@ JWT_SECRET=650e4df09b9acb71046ff5d8488066b407a06d784db12df19d3f51d3b5aeba20
 UPI_ID=7038172478@pthdfc
 VITE_WHATSAPP_NUMBER=919699668421
 VITE_UPI_ID=7038172478@pthdfc
+SMTP_USER=nathshikha.saaj@gmail.com
+SMTP_PASSWORD=wjkd gqaw sekk dqtx
+EMAIL_FROM=nathshikha.saaj@gmail.com
+APP_BASE_URL=https://nathshikha.in
 MONGO_URI="mongodb://36nakharewali_db_user:GHDoNQUww84P4cyN@ac-8evlyx5-shard-00-00.ha7uwx6.mongodb.net:27017,ac-8evlyx5-shard-00-01.ha7uwx6.mongodb.net:27017,ac-8evlyx5-shard-00-02.ha7uwx6.mongodb.net:27017/nakhrewali?ssl=true&replicaSet=atlas-xrh8s9-shard-0&authSource=admin&appName=Cluster0"
 EOF
 
