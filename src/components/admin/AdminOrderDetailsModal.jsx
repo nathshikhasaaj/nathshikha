@@ -853,22 +853,17 @@ export default function AdminOrderDetailsModal({
             </div>
 
             {/* Email Notifications Management Section */}
-            <div className="adminEmailNotificationsCard" style={{
-              marginTop: 20,
-              padding: '16px 20px',
-              background: '#fdfbf7',
-              border: '1.5px solid #ebdcc6',
-              borderRadius: 8
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <h4 style={{ margin: 0, fontSize: 13.5, color: '#6d1b29', display: 'flex', alignItems: 'center', gap: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  <Mail size={15} /> Email Notifications & Delivery Status
+            <div className="adminEmailNotificationsCard">
+              <div className="adminEmailCardHeader">
+                <h4 className="adminEmailCardTitle">
+                  <Mail size={16} />
+                  <span>Email Notifications & Delivery Status</span>
                 </h4>
-                <div style={{ display: 'flex', gap: 6 }}>
+                <div className="adminEmailCardActions">
                   <select
                     id="resendEmailSelect"
                     defaultValue="ORDER_CONFIRMED"
-                    style={{ fontSize: 11, padding: '4px 8px', borderRadius: 4, border: '1px solid #d8c7b0', background: '#fff' }}
+                    className="adminEmailSelect"
                   >
                     <option value="ORDER_PLACED">Order Placed Email</option>
                     <option value="ORDER_CONFIRMED">Order Confirmed Email</option>
@@ -879,8 +874,7 @@ export default function AdminOrderDetailsModal({
                   </select>
                   <button
                     type="button"
-                    className="goldBtn compact"
-                    style={{ fontSize: 11, padding: '4px 10px', whiteSpace: 'nowrap' }}
+                    className="goldBtn compact adminEmailResendBtn"
                     onClick={async () => {
                       const select = document.getElementById('resendEmailSelect');
                       const emailType = select ? select.value : 'ORDER_CONFIRMED';
@@ -900,8 +894,8 @@ export default function AdminOrderDetailsModal({
                   </button>
                 </div>
               </div>
-              <div style={{ fontSize: 12, color: '#6e5d56', lineHeight: 1.5 }}>
-                <p style={{ margin: 0 }}>
+              <div className="adminEmailCardFooter">
+                <p>
                   Recipient: <strong>{order.customer_email || order.email || 'customer@nathshikha.com'}</strong> · All emails are dispatched automatically using Nathshikha business Gmail SMTP.
                 </p>
               </div>

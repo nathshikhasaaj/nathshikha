@@ -627,6 +627,96 @@
   border-radius: 6px !important;
 }
 
+/* Email Notifications Card */
+.adminEmailNotificationsCard {
+  margin-top: 18px;
+  padding: 16px 18px;
+  background: #fdfbf7;
+  border: 1.5px solid #ebdcc6;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.adminEmailCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.adminEmailCardTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--maroon, #6d1b29);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.adminEmailCardActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.adminEmailSelect {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 5px;
+  border: 1px solid #d8c7b0;
+  background: #ffffff;
+  color: #3b2b25;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+  max-width: 100%;
+}
+
+.adminEmailSelect:focus {
+  border-color: var(--maroon, #6d1b29);
+}
+
+.adminEmailResendBtn {
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  padding: 6px 14px !important;
+  white-space: nowrap !important;
+  border-radius: 5px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.adminEmailCardFooter {
+  font-size: 12px;
+  color: #6e5d56;
+  line-height: 1.5;
+  border-top: 1px dashed #ebdcc6;
+  padding-top: 8px;
+  word-break: break-word;
+}
+
+.adminEmailCardFooter p {
+  margin: 0;
+}
+
+.adminEmailCardFooter strong {
+  color: #2b1f1a;
+  word-break: break-all;
+}
+
 /* Mobile Responsive (< 768px) */
 @media (max-width: 768px) {
   .orderDetailsOverlay {
@@ -675,6 +765,37 @@
     max-width: 100%;
   }
 
+  .adminEmailNotificationsCard {
+    padding: 14px 12px;
+  }
+
+  .adminEmailCardHeader {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .adminEmailCardActions {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .adminEmailSelect {
+    width: 100%;
+    height: 38px;
+    font-size: 12.5px;
+    box-sizing: border-box;
+  }
+
+  .adminEmailResendBtn {
+    width: 100%;
+    height: 38px !important;
+    font-size: 12.5px !important;
+    box-sizing: border-box;
+  }
+
   .orderDetailsFooter {
     padding: 10px 14px;
     flex-direction: column;
@@ -704,3 +825,45 @@
     justify-content: center;
   }
 }
+
+@media (max-width: 480px) {
+  .modalHeaderTitle h3 {
+    font-size: 16px;
+  }
+
+  .modalBadge {
+    width: 32px;
+    height: 32px;
+  }
+
+  .modalHeaderRight {
+    gap: 4px;
+  }
+
+  .printBtn span {
+    display: none;
+  }
+
+  .printBtn {
+    padding: 6px 8px !important;
+  }
+
+  .infoItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+  }
+
+  .infoVal {
+    text-align: left;
+  }
+
+  .phoneVal {
+    justify-content: flex-start;
+  }
+
+  .addressVal {
+    text-align: left;
+  }
+}
+

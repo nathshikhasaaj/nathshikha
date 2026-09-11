@@ -1380,13 +1380,13 @@
   border-color: #bfdbfe;
 }
 
-@media (max-width: 650px) {
+@media (max-width: 768px) {
   .ordersPageContainer {
-    padding: 0 4px 60px;
+    padding: 0 8px 60px;
   }
 
   .liveOrderTrackerWidget {
-    padding: 16px 14px;
+    padding: 18px 16px;
     border-radius: 8px;
   }
 
@@ -1396,26 +1396,35 @@
 
   .trackerModeTabs {
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
   }
 
   .trackerModeTab {
-    flex: 1;
+    width: 100%;
     justify-content: center;
-    padding: 7px 10px;
-    font-size: 11px;
+    padding: 9px 12px;
+    font-size: 12px;
   }
 
-  .trackForm {
+  .orderTrackerForm {
+    display: flex;
     flex-direction: column;
-  }
-
-  .trackInputGroup {
+    gap: 12px;
     width: 100%;
+    align-items: stretch;
   }
 
-  .trackSubmitBtn {
+  .trackerInputGroup {
+    width: 100% !important;
+    grid-column: span 1 !important;
+  }
+
+  .trackerSubmitBtn {
     width: 100%;
     justify-content: center;
+    height: 42px;
   }
 
   .trackResultHeader {
@@ -1459,6 +1468,40 @@
   .fbDiscussBtn {
     width: 100%;
     justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .ordersPageContainer {
+    padding: 0 4px 50px;
+  }
+
+  .liveOrderTrackerWidget {
+    padding: 14px 12px;
+  }
+
+  .trackerIconWrap {
+    width: 38px;
+    height: 38px;
+  }
+
+  .trackerHeader h3 {
+    font-size: 17px;
+  }
+
+  .lifecycleProgressBar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .orderProductItem {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .orderProductImg {
+    width: 60px;
+    height: 60px;
   }
 }
 
