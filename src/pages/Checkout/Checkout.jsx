@@ -49,6 +49,7 @@ export default function Checkout() {
   const [addressMode, setAddressMode] = useState('my_address');
   const [qrViewMode, setQrViewMode] = useState('dynamic'); // 'dynamic' | 'card'
   const [copiedKey, setCopiedKey] = useState(null); // 'upi' | 'amount' | null
+  const [liveUpiId, setLiveUpiId] = useState(() => (import.meta.env.VITE_UPI_ID || DEFAULT_UPI_ID).trim());
 
   const [form, setForm] = useState({
     name: '',
@@ -108,6 +109,17 @@ export default function Checkout() {
   if (!cart.length && !orderPlacedModal) {
     return <Navigate to="/cart" replace />;
   }
+
+  // Fetch live UPI ID from server to ensure perfect sync with .env
+  useEffect(() => {
+    api('/health')
+      .then((data) => {
+        if (data?.upiId && typeof data.upiId === 'string' && data.upiId.trim()) {
+          setLiveUpiId(data.upiId.trim());
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Fetch saved customer addresses if logged in
   useEffect(() => {
@@ -353,7 +365,7 @@ export default function Checkout() {
     setToast('Coupon removed.');
   };
 
-  const configuredUpiId = (import.meta.env.VITE_UPI_ID || DEFAULT_UPI_ID).trim();
+  const configuredUpiId = (liveUpiId || import.meta.env.VITE_UPI_ID || DEFAULT_UPI_ID).trim();
   const payeeName = 'Miss Shweta Satish Darekar';
   const formattedAmount = Number(grandTotal || 0).toFixed(2);
 
@@ -1003,7 +1015,7 @@ export default function Checkout() {
             {/* Checkbox 1: Agree to Terms and Conditions */}
             <div
               ref={termsRef}
-              className={`checkoutTermsWrapper ${termsError ? 'hasTermsError' : ''}`}
+              className={`checkoutCheckboxItem checkoutTermsWrapper ${termsError ? 'hasTermsError' : ''}`}
             >
               <label className="checkoutCheckboxLabel" htmlFor="agreeTerms">
                 <input
@@ -1053,7 +1065,7 @@ export default function Checkout() {
 
             {/* Checkbox 2: Create User Account with Details */}
             {!user ? (
-              <div className="accountCreationWrapper">
+              <div className="checkoutCheckboxItem accountCreationWrapper">
                 <label className="checkoutCheckboxLabel" htmlFor="createAccount">
                   <input
                     type="checkbox"
@@ -1101,32 +1113,41 @@ export default function Checkout() {
             )}
 
             {/* Checkbox 3: Save Details for Later */}
-            <label className="checkoutCheckboxLabel" htmlFor="saveDetails">
-              <input
-                type="checkbox"
-                id="saveDetails"
-                checked={saveDetails}
-                onChange={(e) => setSaveDetails(e.target.checked)}
-              />
-              <span className="checkboxCustom"></span>
-              <span className="checkboxText">
-                {t(
-                  'save_details_checkbox',
-                  'Save this delivery information for future orders'
-                )}
-              </span>
-            </label>
+            <div className="checkoutCheckboxItem">
+              <label className="checkoutCheckboxLabel" htmlFor="saveDetails">
+                <input
+                  type="checkbox"
+                  id="saveDetails"
+                  checked={saveDetails}
+                  onChange={(e) => setSaveDetails(e.target.checked)}
+                />
+                <span className="checkboxCustom"></span>
+                <span className="checkboxText">
+                  {t(
+                    'save_details_checkbox',
+                    'Save this delivery information for future orders'
+                  )}
+                </span>
+              </label>
+            </div>
           </div>
 
-          <div className="payment">
-            <b>{t('payment_method', 'Payment Method')}</b>
-            <div className="prepaidUpiBadge">
-              <ShieldCheck size={18} />
-              <span>{t('pay_upi', 'Prepaid UPI — Google Pay / PhonePe / Paytm / BHIM')}</span>
+          <div className="checkoutPaymentSection">
+            <div className="checkoutSectionTitleRow">
+              <ShieldCheck size={16} className="sectionTitleIcon" />
+              <span className="checkoutSectionTitleText">{t('payment_method', 'Payment Method')}</span>
             </div>
-            <small className="prepaidUpiNote">
-              ✦ 100% Handcrafted artisanal jewellery — only prepaid UPI accepted.
-            </small>
+            <div className="prepaidUpiBadge">
+              <div className="upiBadgeIconWrap">
+                <ShieldCheck size={18} />
+              </div>
+              <div className="upiBadgeContent">
+                <span className="upiBadgeTitle">{t('pay_upi', 'Prepaid UPI — Google Pay / PhonePe / Paytm / BHIM')}</span>
+                <small className="prepaidUpiNote">
+                  ✦ 100% Handcrafted artisanal jewellery — only prepaid UPI accepted.
+                </small>
+              </div>
+            </div>
           </div>
         </form>
 
