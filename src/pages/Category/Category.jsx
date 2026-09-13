@@ -4,6 +4,8 @@ import { api } from '../../services/api';
 import { useLanguage } from '../../context/LanguageContext';
 import SectionTitle from '../../components/common/SectionTitle';
 import ProductCard from '../../components/product/ProductCard';
+import Breadcrumbs from '../../components/common/Breadcrumbs';
+import CategoryNavBar from '../../components/common/CategoryNavBar';
 import './Category.css';
 
 export default function Category() {
@@ -22,6 +24,15 @@ export default function Category() {
 
   return (
     <main className="page">
+      <Breadcrumbs
+        items={[
+          { label: t('nav_all_jewellery', 'All Jewellery'), path: '/shop' },
+          { label: `${cat} Collection` }
+        ]}
+        backPath="/shop"
+        backLabel={t('nav_all_jewellery', 'All Jewellery')}
+      />
+
       <SectionTitle
         title={`${cat} Collection`}
         sub={t(
@@ -29,6 +40,8 @@ export default function Category() {
           'Crafted with tradition, finished with a modern heirloom feel.'
         )}
       />
+
+      <CategoryNavBar activeCategory={cat} />
 
       {loading ? (
         <div className="empty">

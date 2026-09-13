@@ -1,0 +1,75 @@
+/* ============================================================ */
+/* NATHSHIKHA SAAJ - PAGE SUB-NAVIGATION TABS                  */
+/* ============================================================ */
+
+.pageSubNavWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0 28px 0;
+  width: 100%;
+}
+
+.pageSubNavScroll {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fdfaf4;
+  border: 1px solid #ebdcc5;
+  border-radius: 30px;
+  padding: 4px;
+  overflow-x: auto;
+  max-width: 100%;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.pageSubNavScroll::-webkit-scrollbar {
+  display: none;
+}
+
+.pageSubNavLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 24px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #6a5a54;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.pageSubNavLink:hover {
+  color: var(--maroon, #6d1b29);
+  background: #f7edd8;
+}
+
+.pageSubNavLink.active {
+  background: var(--maroon, #6d1b29);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(109, 27, 41, 0.18);
+}
+
+.pageSubNavLink.active svg {
+  color: var(--gold, #d4af37);
+}
+
+@media (max-width: 600px) {
+  .pageSubNavWrapper {
+    justify-content: flex-start;
+    margin-bottom: 20px;
+  }
+
+  .pageSubNavScroll {
+    width: 100%;
+    border-radius: 8px;
+  }
+
+  .pageSubNavLink {
+    padding: 6px 12px;
+    font-size: 11.5px;
+  }
+}

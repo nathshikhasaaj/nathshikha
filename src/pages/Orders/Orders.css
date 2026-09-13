@@ -1473,7 +1473,7 @@
 
 @media (max-width: 480px) {
   .ordersPageContainer {
-    padding: 0 4px 50px;
+    padding: 0 8px 50px;
   }
 
   .liveOrderTrackerWidget {
@@ -1490,8 +1490,9 @@
   }
 
   .lifecycleProgressBar {
-    flex-wrap: wrap;
-    gap: 8px;
+    grid-template-columns: repeat(3, 1fr);
+    row-gap: 14px;
+    gap: 6px;
   }
 
   .orderProductItem {
@@ -1502,6 +1503,29 @@
   .orderProductImg {
     width: 60px;
     height: 60px;
+  }
+}
+
+@media (max-width: 380px) {
+  .ordersPageContainer {
+    padding: 0 4px 50px;
+  }
+
+  .liveOrderTrackerWidget {
+    padding: 12px 8px;
+  }
+
+  .orderCard {
+    padding: 12px 10px;
+  }
+
+  .trackerModeTab {
+    padding: 7px 8px;
+    font-size: 11px;
+  }
+
+  .stepTitle {
+    font-size: 9.5px;
   }
 }
 

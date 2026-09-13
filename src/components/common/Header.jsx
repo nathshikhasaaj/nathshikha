@@ -76,7 +76,8 @@ export default function Header({ searchOpen, setSearchOpen }) {
   useEffect(() => {
     setCollectionsOpen(false);
     setMobileMenuOpen(false);
-  }, [location.pathname]);
+    if (setSearchOpen) setSearchOpen(false);
+  }, [location.pathname, location.search]);
 
   // Lock body scroll when mobile drawer is open
   useEffect(() => {

@@ -5,6 +5,7 @@ import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import SectionTitle from '../../components/common/SectionTitle';
+import Breadcrumbs from '../../components/common/Breadcrumbs';
 import './Auth.css';
 
 export default function Auth({ defaultMode = 'login' }) {
@@ -158,6 +159,23 @@ export default function Auth({ defaultMode = 'login' }) {
 
   return (
     <main className="page authPage">
+      <Breadcrumbs
+        items={[
+          {
+            label:
+              mode === 'login'
+                ? 'Login'
+                : mode === 'register'
+                ? 'Create Account'
+                : mode === 'forgot'
+                ? 'Reset Password'
+                : 'Verify Email'
+          }
+        ]}
+        backPath="/shop"
+        backLabel="Shop"
+      />
+
       <SectionTitle
         title={
           mode === 'login'

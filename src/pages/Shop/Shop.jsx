@@ -2,6 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import SectionTitle from '../../components/common/SectionTitle';
 import ProductCard from '../../components/product/ProductCard';
+import Breadcrumbs from '../../components/common/Breadcrumbs';
+import CategoryNavBar from '../../components/common/CategoryNavBar';
 import './Shop.css';
 
 export default function Shop({ products = [] }) {
@@ -18,6 +20,8 @@ export default function Shop({ products = [] }) {
 
   return (
     <main className="page">
+      <Breadcrumbs items={[{ label: t('all_jewellery_title', 'All Jewellery') }]} showBack={false} />
+
       <SectionTitle
         title={t('all_jewellery_title', 'All Jewellery')}
         sub={t(
@@ -25,6 +29,8 @@ export default function Shop({ products = [] }) {
           'Handmade Maharashtrian heirlooms, made to be treasured.'
         )}
       />
+
+      <CategoryNavBar />
 
       <div className="shopTools">
         <span>

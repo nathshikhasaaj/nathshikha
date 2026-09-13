@@ -36,6 +36,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { money } from '../../utils/formatters';
 import { translateProductDescription, isDevanagariText } from '../../services/translationService';
 import ProductCard from '../../components/product/ProductCard';
+import Breadcrumbs from '../../components/common/Breadcrumbs';
 import './ProductDetail.css';
 
 // Helper to render star rating
@@ -802,9 +803,25 @@ export default function ProductDetail() {
 
   return (
     <main className="productPage">
-      <Link to="/shop" className="back">
-        <ArrowLeft /> {t('back_to_collection', 'Back to collection')}
-      </Link>
+      <Breadcrumbs
+        items={
+          product.category
+            ? [
+                { label: t('nav_all_jewellery', 'All Jewellery'), path: '/shop' },
+                {
+                  label: product.category,
+                  path: `/category/${encodeURIComponent(product.category)}`
+                },
+                { label: product.name }
+              ]
+            : [
+                { label: t('nav_all_jewellery', 'All Jewellery'), path: '/shop' },
+                { label: product.name }
+              ]
+        }
+        backPath={product.category ? `/category/${encodeURIComponent(product.category)}` : '/shop'}
+        backLabel={t('back_to_collection', 'Back')}
+      />
 
       <div className="productDetail">
         <div className="detailImage">

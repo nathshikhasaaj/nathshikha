@@ -598,15 +598,23 @@ router.post('/orders', async (req, res) => {
   }
 });
 
+// Helper function to find order by MongoDB ObjectId or orderNo (e.g. NW89463805)
+async function findOrderByIdOrNo(id) {
+  if (!id) return null;
+  const cleanId = String(id).trim();
+  if (mongoose.Types.ObjectId.isValid(cleanId)) {
+    const found = await Order.findById(cleanId);
+    if (found) return found;
+  }
+  return await Order.findOne({ orderNo: cleanId });
+}
+
 // Get single order by id
 router.get('/orders/:id', async (req, res) => {
   const { id } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(404).json({ error: 'Order not found' });
-  }
 
   try {
-    const order = await Order.findById(id);
+    const order = await findOrderByIdOrNo(id);
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
     }
@@ -629,12 +637,8 @@ router.patch('/orders/:id', async (req, res) => {
   const { id } = req.params;
   const { orderStatus, paymentStatus } = req.body;
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(404).json({ error: 'Order not found' });
-  }
-
   try {
-    const order = await Order.findById(id);
+    const order = await findOrderByIdOrNo(id);
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
     }
@@ -671,10 +675,6 @@ router.post('/orders/:id/ship', async (req, res) => {
   const { id } = req.params;
   const { shipmentPartner, trackingId } = req.body;
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(404).json({ error: 'Order not found' });
-  }
-
   if (!shipmentPartner || !String(shipmentPartner).trim()) {
     return res.status(400).json({ error: 'Please select a shipment partner.' });
   }
@@ -690,7 +690,7 @@ router.post('/orders/:id/ship', async (req, res) => {
   }
 
   try {
-    const order = await Order.findById(id);
+    const order = await findOrderByIdOrNo(id);
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
     }
@@ -744,7 +744,7 @@ router.post('/orders/:id/ship', async (req, res) => {
       });
     }
 
-    const updatedOrder = await Order.findById(id);
+    const updatedOrder = await Order.findById(order._id);
     res.json({ ok: true, order: updatedOrder });
   } catch (err) {
     res.status(500).json({ error: err.message || 'Failed to save shipment details' });
@@ -756,10 +756,6 @@ router.post('/orders/:id/verify-payment', async (req, res) => {
   const { id } = req.params;
   const { transactionId, paymentApp } = req.body;
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(404).json({ error: 'Order not found' });
-  }
-
   if (!transactionId || !String(transactionId).trim()) {
     return res.status(400).json({ error: 'Transaction ID is required' });
   }
@@ -769,7 +765,7 @@ router.post('/orders/:id/verify-payment', async (req, res) => {
   }
 
   try {
-    const order = await Order.findById(id);
+    const order = await findOrderByIdOrNo(id);
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
     }
@@ -800,16 +796,12 @@ router.post('/orders/:id/cancellation/review', async (req, res) => {
   const { id } = req.params;
   const { action, refundType = 'full', cancellationCharge = 0, notes = '' } = req.body;
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(404).json({ error: 'Order not found' });
-  }
-
   if (!['approve', 'reject'].includes(action)) {
     return res.status(400).json({ error: 'Action must be either "approve" or "reject".' });
   }
 
   try {
-    const order = await Order.findById(id);
+    const order = await findOrderByIdOrNo(id);
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
     }
@@ -873,12 +865,8 @@ router.post('/orders/:id/cancellation/process-refund', async (req, res) => {
   const { id } = req.params;
   const { notes = '', transactionRef = '' } = req.body;
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(404).json({ error: 'Order not found' });
-  }
-
   try {
-    const order = await Order.findById(id);
+    const order = await findOrderByIdOrNo(id);
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
     }
@@ -925,12 +913,13 @@ router.post('/orders/:id/cancellation/process-refund', async (req, res) => {
 // Get email notification history for an order
 router.get('/orders/:id/emails', async (req, res) => {
   const { id } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(404).json({ error: 'Order not found' });
-  }
 
   try {
-    const events = await EmailEvent.find({ orderId: id }).sort({ createdAt: -1 });
+    const order = await findOrderByIdOrNo(id);
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+    const events = await EmailEvent.find({ orderId: order._id }).sort({ createdAt: -1 });
     res.json(events);
   } catch (err) {
     res.status(500).json({ error: err.message || 'Failed to fetch email logs' });
@@ -942,16 +931,12 @@ router.post('/orders/:id/resend-email', async (req, res) => {
   const { id } = req.params;
   const { emailType } = req.body;
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(404).json({ error: 'Order not found' });
-  }
-
   if (!emailType) {
     return res.status(400).json({ error: 'Email type is required' });
   }
 
   try {
-    const order = await Order.findById(id);
+    const order = await findOrderByIdOrNo(id);
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
     }

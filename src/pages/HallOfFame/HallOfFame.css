@@ -1028,6 +1028,11 @@
     margin-bottom: 20px;
   }
 
+  .hofGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
   .hofFilterSection {
     padding: 12px 14px;
     top: 60px;

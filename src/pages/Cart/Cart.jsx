@@ -6,6 +6,8 @@ import { useLanguage } from '../../context/LanguageContext';
 import { money } from '../../utils/formatters';
 import { getCartParameterKey } from '../../utils/parameterHelpers';
 import SectionTitle from '../../components/common/SectionTitle';
+import Breadcrumbs from '../../components/common/Breadcrumbs';
+import CheckoutSteps from '../../components/common/CheckoutSteps';
 import './Cart.css';
 
 const FREE_SHIPPING_THRESHOLD = 2999;
@@ -22,6 +24,10 @@ export default function Cart() {
 
   return (
     <main className="page cartPageMain">
+      <Breadcrumbs items={[{ label: t('your_bag', 'Your Bag') }]} backPath="/shop" backLabel={t('nav_all_jewellery', 'Shop')} />
+
+      <CheckoutSteps currentStep={1} />
+
       <SectionTitle
         title={t('your_bag', 'Your Bag')}
         sub={t('your_bag_sub', 'Your handcrafted treasures are almost home.')}

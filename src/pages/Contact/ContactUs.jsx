@@ -19,6 +19,8 @@ import {
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import SectionTitle from '../../components/common/SectionTitle';
+import Breadcrumbs from '../../components/common/Breadcrumbs';
+import { InfoSubNav } from '../../components/common/PageSubNav';
 import './ContactUs.css';
 
 export default function ContactUs() {
@@ -82,9 +84,7 @@ export default function ContactUs() {
 
   return (
     <main className="page">
-      <Link to="/" className="back">
-        <ArrowLeft /> {t('back_to_collection', 'Back to store')}
-      </Link>
+      <Breadcrumbs items={[{ label: t('nav_contact', 'Contact Us') }]} backPath="/" backLabel="Home" />
 
       <SectionTitle
         title={t('contact_title', 'Contact & Studio Support')}
@@ -93,6 +93,8 @@ export default function ContactUs() {
           'We are here to assist with your bespoke Maharashtrian jewellery queries.'
         )}
       />
+
+      <InfoSubNav />
 
       <div className="contactContainer">
         <div className="contactInfoCard">

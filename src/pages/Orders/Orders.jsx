@@ -36,6 +36,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import SectionTitle from '../../components/common/SectionTitle';
+import Breadcrumbs from '../../components/common/Breadcrumbs';
 import ReviewModal from '../../components/review/ReviewModal';
 import CancelOrderModal from '../../components/common/CancelOrderModal';
 import OrderStatusVisualBanner, { ORDER_STAGE_CONFIG } from '../../components/common/OrderStatusVisualBanner';
@@ -334,6 +335,8 @@ export default function Orders() {
 
   return (
     <main className="page ordersPageContainer">
+      <Breadcrumbs items={[{ label: t('nav_track_order', 'Track Order & My Orders') }]} backPath="/" backLabel={t('home', 'Home')} />
+
       <SectionTitle
         title={t('my_orders_title', 'Track Order & My Orders')}
         sub={t('my_orders_sub', 'Track your live shipment status and manage your jewellery journey.')}

@@ -118,3 +118,32 @@
     padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
   }
 }
+
+@media (max-width: 380px) {
+  .mobileStickyFooter {
+    height: 52px;
+  }
+
+  .mobileFooterTab {
+    padding: 3px 1px;
+    min-height: 44px;
+  }
+
+  .tabIconWrap svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .tabLabel {
+    font-size: 8.5px;
+    letter-spacing: 0;
+  }
+
+  .mobileCartBadge {
+    top: -5px;
+    right: -8px;
+    font-size: 8px;
+    min-width: 14px;
+    height: 14px;
+  }
+}

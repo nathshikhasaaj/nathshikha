@@ -15,6 +15,7 @@ import {
 import { api } from '../../services/api';
 import { money } from '../../utils/formatters';
 import SectionTitle from '../../components/common/SectionTitle';
+import Breadcrumbs from '../../components/common/Breadcrumbs';
 import './ReviewPage.css';
 
 const RATING_LABELS = {
@@ -199,6 +200,8 @@ export default function ReviewPage() {
 
   return (
     <main className="page reviewPageContainer">
+      <Breadcrumbs items={[{ label: 'Reviews & Testimonials' }]} backPath="/shop" backLabel="Shop" />
+
       <SectionTitle
         title="Share Your Feedback ❤️"
         sub={`Hello ${tokenData?.customerName || 'Customer'}, tell us about your experience.`}

@@ -849,32 +849,69 @@
   }
 }
 
-/* Extra Small Phones (<= 380px) */
+/* Extra Small Phones (<= 380px & <= 330px) */
 @media (max-width: 380px) {
   .header {
-    padding: 0 8px;
+    padding: 0 6px;
+    height: 56px;
+  }
+
+  .headerMobileMenuBtn {
+    width: 36px;
+    height: 36px;
+    margin-right: 2px;
+  }
+
+  .brand {
+    gap: 6px;
   }
 
   .brand-logo {
-    height: 32px;
+    height: 30px;
+    max-width: 60px;
   }
 
   .brandText b {
-    font-size: 12px;
-    letter-spacing: 1px;
+    font-size: 11.5px;
+    letter-spacing: 0.8px;
   }
 
   .brandText small {
-    font-size: 7px;
-    letter-spacing: 1px;
+    font-size: 6.5px;
+    letter-spacing: 0.8px;
   }
 
   .actions {
     gap: 2px;
   }
 
+  .langBtn {
+    padding: 2px 5px;
+    font-size: 9px;
+  }
+
   .iconBtn {
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
+  }
+
+  .mobileDrawer {
+    width: 280px;
+    max-width: 86vw;
+  }
+}
+
+@media (max-width: 330px) {
+  .brandText small {
+    display: none;
+  }
+
+  .langBtn {
+    display: none;
+  }
+
+  .brandText b {
+    font-size: 11px;
+    letter-spacing: 0.5px;
   }
 }

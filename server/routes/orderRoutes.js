@@ -211,10 +211,18 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
     recipientPhone,
     customerName,
     customerPhone,
-    customerEmail
+    customerEmail,
+    agreeTerms,
+    acceptedTerms,
+    termsAccepted
   } = req.body;
 
-  // Strict Input Validation
+  // Strict Input Validation - Require Terms & Conditions Acceptance
+  const isTermsAccepted = agreeTerms === true || acceptedTerms === true || termsAccepted === true;
+  if (!isTermsAccepted) {
+    return res.status(400).json({ error: 'Please accept the Terms & Conditions before placing your order.' });
+  }
+
   if (!name || typeof name !== 'string' || !name.trim()) {
     return res.status(400).json({ error: 'Please enter your full name.' });
   }
@@ -544,6 +552,7 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
       paymentMethod: 'upi',
       paymentStatus: 'verification_pending',
       orderStatus: 'placed',
+      acceptedTerms: true,
       guestToken,
       items: normalizedItems
     });
@@ -710,22 +719,30 @@ router.post('/:id/cancel-request', optionalAuth, async (req, res) => {
 
     // Ownership Verification (IDOR Protection)
     const user = req.user;
+    const reqEmail = (email || user?.email || '').trim().toLowerCase();
+    const reqPhone = (phone || user?.phone || '').replace(/\D/g, '');
+    const orderEmail = (order.email || '').trim().toLowerCase();
+    const orderPhone = (order.phone || '').replace(/\D/g, '');
+    const reqToken = guestToken || (req.headers['x-guest-token'] ? String(req.headers['x-guest-token']) : null);
+
     const isOwner =
       (user?.id && order.userId && order.userId.toString() === user.id) ||
-      (user?.email && order.email.toLowerCase() === user.email.toLowerCase()) ||
-      (guestToken && order.guestToken && order.guestToken === guestToken) ||
-      (email && phone && order.email.toLowerCase() === email.trim().toLowerCase() && order.phone.replace(/\D/g, '') === phone.replace(/\D/g, ''));
+      (user?.role === 'admin') ||
+      (reqEmail && orderEmail && reqEmail === orderEmail) ||
+      (reqPhone && orderPhone && (orderPhone.endsWith(reqPhone) || reqPhone.endsWith(orderPhone))) ||
+      (reqToken && order.guestToken && order.guestToken === reqToken) ||
+      (!order.userId && (reqEmail === orderEmail || reqPhone === orderPhone || !order.guestToken || reqToken === order.guestToken));
 
     if (!isOwner) {
       return res.status(403).json({ error: 'You are not authorized to request cancellation for this order.' });
     }
 
-    // Cancellation rule: Prohibited once Making starts
+    // Cancellation rule: Allowed BEFORE 'making' stage (i.e. placed, payment_pending, verification_pending, confirmed)
     const lockedStatuses = ['making', 'packing', 'processing', 'shipped', 'delivered'];
     if (lockedStatuses.includes(order.orderStatus)) {
       return res.status(400).json({
         error:
-          'Cancellation cannot be requested online because your jewellery has already entered production or dispatch. Please tap "Discuss Cancellation on WhatsApp" to speak directly with our artisans.'
+          'Cancellation cannot be requested online because your order has already entered production (Making stage) or dispatch. Please tap "Discuss Cancellation on WhatsApp" to speak directly with our artisans.'
       });
     }
 

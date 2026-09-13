@@ -24,6 +24,8 @@ import {
 import { api } from '../../services/api';
 import { useLanguage } from '../../context/LanguageContext';
 import { money } from '../../utils/formatters';
+import Breadcrumbs from '../../components/common/Breadcrumbs';
+import { InfoSubNav } from '../../components/common/PageSubNav';
 import './HallOfFame.css';
 
 const OCCASION_FILTERS = [
@@ -497,6 +499,11 @@ export default function HallOfFame() {
 
   return (
     <div className="hallOfFamePage">
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 16px' }}>
+        <Breadcrumbs items={[{ label: t('nav_hall_of_fame', 'Hall of Fame') }]} backPath="/" backLabel="Home" />
+        <InfoSubNav />
+      </div>
+
       {/* 1. Hero Banner */}
       <section className="hofHero">
         <div className="hofHeroBackdrop" />

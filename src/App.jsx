@@ -71,6 +71,12 @@ export default function App() {
     refreshProducts();
   }, []);
 
+  // Close search panel and clear query on any route navigation
+  useEffect(() => {
+    setSearchOpen(false);
+    setQuery('');
+  }, [location.pathname, location.search]);
+
   const filteredProducts = useMemo(() => {
     return products.filter((p) =>
       `${p.name} ${p.category}`.toLowerCase().includes(query.toLowerCase())
@@ -87,6 +93,10 @@ export default function App() {
           query={query}
           setQuery={setQuery}
           results={filteredProducts}
+          onClose={() => {
+            setSearchOpen(false);
+            setQuery('');
+          }}
         />
       )}
 

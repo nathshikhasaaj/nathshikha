@@ -908,9 +908,20 @@ export default function AdminOrderDetailsModal({
           <div className="statusChangerRow">
             <span className="statusChangerLabel">Update Status:</span>
             <select
-              value={order.order_status}
-              onChange={(e) => onStatusChange && onStatusChange(order, e.target.value)}
-              className={`orderStatusSelect statusSelect_${order.order_status}`}
+              value={order.order_status || order.orderStatus || 'placed'}
+              onChange={(e) => {
+                const newStatus = e.target.value;
+                if (newStatus === 'shipped') {
+                  if (onEditShipmentClick) {
+                    onEditShipmentClick(order, Boolean(order.shipment_partner || order.tracking_id || order.trackingId));
+                  }
+                  return;
+                }
+                if (onStatusChange) {
+                  onStatusChange(order.id || order._id || order, newStatus);
+                }
+              }}
+              className={`orderStatusSelect statusSelect_${order.order_status || order.orderStatus || 'placed'}`}
             >
               <option value="placed">Order Received</option>
               <option value="confirmed">Order Confirmed</option>

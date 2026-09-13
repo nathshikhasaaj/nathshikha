@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, AlertTriangle, Loader2 } from 'lucide-react';
 import { api } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import './CancelOrderModal.css';
 
 export default function CancelOrderModal({
@@ -10,6 +11,7 @@ export default function CancelOrderModal({
   onSuccess,
   setToast
 }) {
+  const { user } = useAuth();
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -28,9 +30,25 @@ export default function CancelOrderModal({
 
     try {
       const orderId = order.id || order._id || order.order_no;
+      let lastOrderData = null;
+      let savedCheckoutData = null;
+      try {
+        lastOrderData = JSON.parse(localStorage.getItem('nw-last-order') || 'null');
+        savedCheckoutData = JSON.parse(localStorage.getItem('nw-saved-checkout-details') || 'null');
+      } catch {
+        // ignore parse error
+      }
+
+      const payload = {
+        reason: reason.trim(),
+        guestToken: order.guestToken || order.guest_token || lastOrderData?.token || null,
+        email: order.email || user?.email || lastOrderData?.order?.email || savedCheckoutData?.email || null,
+        phone: order.phone || user?.phone || lastOrderData?.order?.phone || savedCheckoutData?.phone || null
+      };
+
       const res = await api(`/orders/${orderId}/cancel-request`, {
         method: 'POST',
-        body: JSON.stringify({ reason: reason.trim() })
+        body: JSON.stringify(payload)
       });
 
       if (res.ok) {

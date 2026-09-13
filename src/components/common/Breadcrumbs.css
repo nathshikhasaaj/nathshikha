@@ -1,0 +1,132 @@
+/* ============================================================ */
+/* NATHSHIKHA SAAJ - LUXURY BREADCRUMBS STYLES                 */
+/* ============================================================ */
+
+.breadcrumbsBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0 16px;
+  margin-bottom: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  flex-wrap: wrap;
+}
+
+.breadcrumbsList {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+  color: #7a6b65;
+}
+
+.breadcrumbItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.breadcrumbLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #6a5a54;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.breadcrumbLink:hover {
+  color: var(--maroon, #6d1b29);
+}
+
+.breadcrumbLink.homeLink svg {
+  color: var(--gold, #d4af37);
+  transition: transform 0.15s ease;
+}
+
+.breadcrumbLink.homeLink:hover svg {
+  transform: scale(1.1);
+}
+
+.breadcrumbSeparator {
+  color: #c9baa8;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  user-select: none;
+}
+
+.breadcrumbCurrent {
+  color: var(--maroon, #6d1b29);
+  font-weight: 700;
+  max-width: 280px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+}
+
+.breadcrumbBackBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #fdfaf4;
+  border: 1px solid #ebdcc5;
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #5c4e47;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.breadcrumbBackBtn:hover {
+  background: var(--maroon, #6d1b29);
+  border-color: var(--maroon, #6d1b29);
+  color: #ffffff;
+}
+
+.breadcrumbBackBtn svg {
+  transition: transform 0.15s ease;
+}
+
+.breadcrumbBackBtn:hover svg {
+  transform: translateX(-2px);
+}
+
+@media (max-width: 600px) {
+  .breadcrumbsBar {
+    padding: 8px 0 12px;
+    gap: 8px;
+  }
+
+  .breadcrumbsList {
+    font-size: 11.5px;
+    gap: 6px;
+  }
+
+  .breadcrumbCurrent {
+    max-width: 180px;
+  }
+
+  .breadcrumbBackBtn {
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 400px) {
+  .breadcrumbCurrent {
+    max-width: 140px;
+  }
+}

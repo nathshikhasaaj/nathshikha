@@ -6,6 +6,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import SectionTitle from '../../components/common/SectionTitle';
+import Breadcrumbs from '../../components/common/Breadcrumbs';
+import { InfoSubNav } from '../../components/common/PageSubNav';
 import './Suggestion.css';
 
 export default function Suggestion() {
@@ -182,9 +184,7 @@ export default function Suggestion() {
 
   return (
     <main className="page">
-      <Link to="/" className="back">
-        <ArrowLeft /> {t('back_to_collection', 'Back to store')}
-      </Link>
+      <Breadcrumbs items={[{ label: t('nav_suggestions', 'Suggestions') }]} backPath="/" backLabel="Home" />
 
       <SectionTitle
         title={t('suggestion_title', 'Custom Ideas & Suggestions')}
@@ -193,6 +193,8 @@ export default function Suggestion() {
           'Share your dream jewellery design or suggest improvements for our craft.'
         )}
       />
+
+      <InfoSubNav />
 
       <div className="suggestionLayout">
         <div className="suggestionInfoCard">

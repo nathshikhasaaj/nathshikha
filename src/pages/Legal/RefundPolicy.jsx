@@ -1,20 +1,22 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, RefreshCw, AlertCircle } from 'lucide-react';
+import { RefreshCw, AlertCircle } from 'lucide-react';
 import SectionTitle from '../../components/common/SectionTitle';
+import Breadcrumbs from '../../components/common/Breadcrumbs';
+import { LegalSubNav } from '../../components/common/PageSubNav';
 import './Legal.css';
 
 export default function RefundPolicy() {
   return (
     <main className="page legalPage">
-      <Link to="/" className="back">
-        <ArrowLeft /> Back to store
-      </Link>
+      <Breadcrumbs items={[{ label: 'Legal Policies', path: '/privacy-policy' }, { label: 'Refund & Returns Policy' }]} backPath="/" backLabel="Home" />
 
       <SectionTitle
         title="Refund & Return Policy"
         sub="Clear and transparent guidelines for returns, replacements, and cancellations."
       />
+
+      <LegalSubNav />
 
       <div className="legalCard">
         <span className="legalDate">Last updated: August 2026</span>

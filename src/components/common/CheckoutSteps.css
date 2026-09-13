@@ -1,0 +1,121 @@
+/* ============================================================ */
+/* NATHSHIKHA SAAJ - CHECKOUT STEPS PROGRESS BAR               */
+/* ============================================================ */
+
+.checkoutStepsContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 28px;
+  max-width: 680px;
+  width: 100%;
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+
+.checkoutStepsList {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  position: relative;
+}
+
+.stepItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  z-index: 2;
+  text-decoration: none;
+  cursor: default;
+}
+
+.stepItem.clickable {
+  cursor: pointer;
+}
+
+.stepBubble {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #ddd1be;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #8c7d76;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.stepItem.active .stepBubble {
+  background: var(--maroon, #6d1b29);
+  border-color: var(--maroon, #6d1b29);
+  color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(109, 27, 41, 0.15);
+  transform: scale(1.06);
+}
+
+.stepItem.completed .stepBubble {
+  background: #166534;
+  border-color: #166534;
+  color: #ffffff;
+}
+
+.stepTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: #8c7d76;
+  text-align: center;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.stepItem.active .stepTitle {
+  color: var(--maroon, #6d1b29);
+  font-weight: 700;
+}
+
+.stepItem.completed .stepTitle {
+  color: #166534;
+  font-weight: 600;
+}
+
+/* Connecting Line Between Steps */
+.stepConnector {
+  flex: 1;
+  height: 2px;
+  background: #ebdcc5;
+  margin: -18px 8px 0;
+  position: relative;
+  z-index: 1;
+  transition: background 0.25s ease;
+}
+
+.stepConnector.completed {
+  background: #166534;
+}
+
+@media (max-width: 600px) {
+  .checkoutStepsContainer {
+    margin-bottom: 20px;
+  }
+
+  .stepBubble {
+    width: 28px;
+    height: 28px;
+    font-size: 11.5px;
+  }
+
+  .stepTitle {
+    font-size: 10.5px;
+  }
+
+  .stepConnector {
+    margin: -14px 4px 0;
+  }
+}

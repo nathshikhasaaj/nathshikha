@@ -259,14 +259,34 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
   }, [orders, coupons]);
 
   // Handle Order Status Update (dropdown)
-  const handleUpdateOrderStatus = async (orderId, newStatus) => {
+  const handleUpdateOrderStatus = async (targetOrderOrId, newStatus) => {
+    const orderId =
+      typeof targetOrderOrId === 'object' && targetOrderOrId !== null
+        ? (targetOrderOrId.id || targetOrderOrId._id || targetOrderOrId.order_no || targetOrderOrId.orderNo)
+        : targetOrderOrId;
+
+    if (!orderId) {
+      setToast('Invalid order ID');
+      return;
+    }
+
     try {
       // Optimistic update
       setOrders((prev) =>
-        prev.map((o) => (o.id === orderId ? { ...o, order_status: newStatus, orderStatus: newStatus } : o))
+        prev.map((o) =>
+          (o.id === orderId || o._id === orderId || o.order_no === orderId || o.orderNo === orderId)
+            ? { ...o, order_status: newStatus, orderStatus: newStatus }
+            : o
+        )
       );
 
-      if (detailsModalOrder && detailsModalOrder.id === orderId) {
+      if (
+        detailsModalOrder &&
+        (detailsModalOrder.id === orderId ||
+          detailsModalOrder._id === orderId ||
+          detailsModalOrder.order_no === orderId ||
+          detailsModalOrder.orderNo === orderId)
+      ) {
         setDetailsModalOrder((prev) => ({
           ...prev,
           order_status: newStatus,
@@ -279,7 +299,10 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
         body: JSON.stringify({ orderStatus: newStatus })
       });
 
-      setToast(`Order #${orders.find((o) => o.id === orderId)?.order_no || ''} updated to ${newStatus}`);
+      const matchedOrder = orders.find(
+        (o) => o.id === orderId || o._id === orderId || o.order_no === orderId || o.orderNo === orderId
+      );
+      setToast(`Order #${matchedOrder?.order_no || matchedOrder?.orderNo || orderId} updated to ${newStatus}`);
     } catch (err) {
       setToast(err.message || 'Failed to update order status');
       await load(); // Revert on failure

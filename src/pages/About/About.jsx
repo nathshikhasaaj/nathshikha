@@ -16,6 +16,8 @@ import {
   Facebook
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
+import Breadcrumbs from '../../components/common/Breadcrumbs';
+import { InfoSubNav } from '../../components/common/PageSubNav';
 import './About.css';
 
 export default function About() {
@@ -247,6 +249,9 @@ export default function About() {
 
   return (
     <main className="page aboutPage">
+      <Breadcrumbs items={[{ label: content.founderRole ? 'About Us' : 'About Us' }]} backPath="/" backLabel="Home" />
+      <InfoSubNav />
+
       {/* 1. Hero Section */}
       <section className="aboutHeroSection">
         <div className="aboutHeroContainer">

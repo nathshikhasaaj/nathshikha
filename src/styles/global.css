@@ -153,6 +153,18 @@ select {
   }
 }
 
+@media (max-width: 480px) {
+  .page {
+    padding: 24px 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  .page {
+    padding: 18px 8px;
+  }
+}
+
 /* Empty State */
 .empty {
   min-height: 220px;
@@ -221,6 +233,9 @@ select {
 input,
 textarea,
 select {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   padding: 12px;
   border: 1px solid var(--line);
   background: var(--white);
@@ -256,4 +271,12 @@ select:focus {
   z-index: 9999;
   padding: 16px;
   box-sizing: border-box;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 480px) {
+  .modalOverlay {
+    padding: 10px 8px;
+  }
 }

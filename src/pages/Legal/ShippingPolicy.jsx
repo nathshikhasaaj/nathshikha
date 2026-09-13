@@ -1,20 +1,22 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Truck, ArrowLeft, Clock, ShieldAlert } from 'lucide-react';
+import { Truck, Clock, ShieldAlert } from 'lucide-react';
 import SectionTitle from '../../components/common/SectionTitle';
+import Breadcrumbs from '../../components/common/Breadcrumbs';
+import { LegalSubNav } from '../../components/common/PageSubNav';
 import './Legal.css';
 
 export default function ShippingPolicy() {
   return (
     <main className="page legalPage">
-      <Link to="/" className="back">
-        <ArrowLeft /> Back to store
-      </Link>
+      <Breadcrumbs items={[{ label: 'Legal Policies', path: '/privacy-policy' }, { label: 'Shipping Policy' }]} backPath="/" backLabel="Home" />
 
       <SectionTitle
         title="Shipping & Delivery Policy"
         sub="Safe, secure, and insured Pan-India transit for your precious jewellery."
       />
+
+      <LegalSubNav />
 
       <div className="legalCard">
         <span className="legalDate">Last updated: August 2026</span>

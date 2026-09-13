@@ -2,6 +2,8 @@ import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Clock, CheckCircle2, ShoppingBag, Package, Instagram, Facebook } from 'lucide-react';
 import { money } from '../../utils/formatters';
+import Breadcrumbs from '../../components/common/Breadcrumbs';
+import CheckoutSteps from '../../components/common/CheckoutSteps';
 import './OrderSuccess.css';
 
 export default function OrderSuccess() {
@@ -13,6 +15,16 @@ export default function OrderSuccess() {
 
   return (
     <main className="page successPage">
+      <Breadcrumbs
+        items={[
+          { label: 'Orders', path: '/orders' },
+          { label: `Order #${orderNo}` }
+        ]}
+        showBack={false}
+      />
+
+      <CheckoutSteps currentStep={3} />
+
       <div className="successCard">
         <div className="successIcon">🎉</div>
         <span className="eyebrow">ORDER RECEIVED</span>

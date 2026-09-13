@@ -306,3 +306,73 @@
     letter-spacing: 0.4px;
   }
 }
+
+@media (max-width: 380px) {
+  .cardBody {
+    padding: 9px 7px 11px;
+  }
+
+  .card h3 {
+    font-size: 11.5px;
+    line-height: 1.3;
+    min-height: 2.6em;
+  }
+
+  .card strong {
+    font-size: 13.5px;
+  }
+
+  .bagBtn {
+    font-size: 9.5px;
+    padding: 7px 3px;
+    min-height: 36px;
+    letter-spacing: 0.2px;
+  }
+
+  .heart {
+    width: 28px;
+    height: 28px;
+    top: 6px;
+    right: 6px;
+  }
+
+  .heart svg {
+    width: 13px;
+  }
+
+  .productCardTag,
+  .pic > span:not(.cardMultiPhotoBadge) {
+    top: 6px;
+    left: 6px;
+    font-size: 7.5px;
+    padding: 2px 5px;
+  }
+
+  .cardMultiPhotoBadge {
+    bottom: 6px;
+    right: 6px;
+    font-size: 8px;
+    padding: 2px 5px;
+  }
+}
+
+@media (max-width: 330px) {
+  .cardBody {
+    padding: 8px 5px 10px;
+  }
+
+  .card h3 {
+    font-size: 11px;
+  }
+
+  .card strong {
+    font-size: 12.5px;
+  }
+
+  .bagBtn {
+    font-size: 9px;
+    padding: 6px 2px;
+    min-height: 34px;
+    letter-spacing: 0;
+  }
+}

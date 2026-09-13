@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import {
@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   Clock,
   ShoppingBag,
-  ExternalLink,
   MapPin,
   Truck,
   Store,
@@ -33,6 +32,8 @@ import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { money, formatOrderStatus, copyToClipboard } from '../../utils/formatters';
 import SectionTitle from '../../components/common/SectionTitle';
+import Breadcrumbs from '../../components/common/Breadcrumbs';
+import CheckoutSteps from '../../components/common/CheckoutSteps';
 import './Checkout.css';
 
 const DEFAULT_UPI_ID = '7038172478@pthdfc';
@@ -94,6 +95,8 @@ export default function Checkout() {
   const [couponError, setCouponError] = useState('');
 
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [termsError, setTermsError] = useState('');
+  const termsRef = useRef(null);
   const [createAccount, setCreateAccount] = useState(false);
   const [accountPassword, setAccountPassword] = useState('');
   const [saveDetails, setSaveDetails] = useState(false);
@@ -414,9 +417,16 @@ export default function Checkout() {
     }
 
     if (!agreeTerms) {
-      return setToast(
-        t('terms_required_error', 'Please agree to the Terms & Conditions and Privacy Policy to proceed.')
+      const errorMsg = t(
+        'terms_required_error',
+        'Please accept the Terms & Conditions before placing your order.'
       );
+      setTermsError(errorMsg);
+      setToast(errorMsg);
+      if (termsRef.current) {
+        termsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
     }
 
     const effectiveBuyerName = isGiftOrder ? (buyerForm.name.trim() || user?.name || '') : form.name.trim();
@@ -486,6 +496,8 @@ export default function Checkout() {
         couponCode: appliedCoupon ? appliedCoupon.code : null,
         city: locationData.city,
         state: locationData.state,
+        agreeTerms: true,
+        acceptedTerms: true,
         items: cart.map((x) => {
           const selectedParams =
             (x.selectedParameters && typeof x.selectedParameters === 'object' ? x.selectedParameters : null) ||
@@ -540,6 +552,17 @@ export default function Checkout() {
 
   return (
     <main className="page checkoutPage">
+      <Breadcrumbs
+        items={[
+          { label: t('your_bag', 'Your Bag'), path: '/cart' },
+          { label: t('checkout_title', 'Checkout') }
+        ]}
+        backPath="/cart"
+        backLabel={t('your_bag', 'Bag')}
+      />
+
+      <CheckoutSteps currentStep={2} />
+
       <SectionTitle
         title={t('checkout_title', 'Checkout')}
         sub={t(
@@ -978,39 +1001,55 @@ export default function Checkout() {
           {/* 3 Checkboxes Section */}
           <div className="checkoutCheckboxes">
             {/* Checkbox 1: Agree to Terms and Conditions */}
-            <label className="checkoutCheckboxLabel" htmlFor="agreeTerms">
-              <input
-                type="checkbox"
-                id="agreeTerms"
-                checked={agreeTerms}
-                onChange={(e) => setAgreeTerms(e.target.checked)}
-                required
-              />
-              <span className="checkboxCustom"></span>
-              <span className="checkboxText">
-                {t('agree_terms_text', 'I agree to the')}{' '}
-                <Link
-                  to="/terms"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="policyLink"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {t('terms_of_service', 'Terms & Conditions')}
-                </Link>{' '}
-                {t('and', 'and')}{' '}
-                <Link
-                  to="/privacy-policy"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="policyLink"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {t('privacy_policy', 'Privacy Policy')}
-                </Link>
-                <span className="requiredStar"> *</span>
-              </span>
-            </label>
+            <div
+              ref={termsRef}
+              className={`checkoutTermsWrapper ${termsError ? 'hasTermsError' : ''}`}
+            >
+              <label className="checkoutCheckboxLabel" htmlFor="agreeTerms">
+                <input
+                  type="checkbox"
+                  id="agreeTerms"
+                  checked={agreeTerms}
+                  onChange={(e) => {
+                    setAgreeTerms(e.target.checked);
+                    if (e.target.checked) {
+                      setTermsError('');
+                    }
+                  }}
+                />
+                <span className={`checkboxCustom ${termsError ? 'checkboxCustomError' : ''}`}></span>
+                <span className="checkboxText">
+                  {t('agree_terms_text', 'I agree to the')}{' '}
+                  <Link
+                    to="/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="policyLink"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {t('terms_of_service', 'Terms & Conditions')}
+                  </Link>{' '}
+                  {t('and', 'and')}{' '}
+                  <Link
+                    to="/privacy-policy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="policyLink"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {t('privacy_policy', 'Privacy Policy')}
+                  </Link>
+                  <span className="requiredStar"> *</span>
+                </span>
+              </label>
+
+              {termsError && (
+                <div className="termsInlineError" role="alert">
+                  <AlertCircle size={14} className="termsErrorIcon" />
+                  <span>{termsError}</span>
+                </div>
+              )}
+            </div>
 
             {/* Checkbox 2: Create User Account with Details */}
             {!user ? (
@@ -1081,24 +1120,11 @@ export default function Checkout() {
 
           <div className="payment">
             <b>{t('payment_method', 'Payment Method')}</b>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                padding: '12px 14px',
-                background: '#fbf7ee',
-                border: '1.5px solid var(--gold)',
-                borderRadius: 4,
-                color: 'var(--maroon)',
-                fontSize: 12,
-                fontWeight: 600
-              }}
-            >
+            <div className="prepaidUpiBadge">
               <ShieldCheck size={18} />
               <span>{t('pay_upi', 'Prepaid UPI — Google Pay / PhonePe / Paytm / BHIM')}</span>
             </div>
-            <small style={{ color: '#887870', fontSize: '10px', marginTop: 4, display: 'block' }}>
+            <small className="prepaidUpiNote">
               ✦ 100% Handcrafted artisanal jewellery — only prepaid UPI accepted.
             </small>
           </div>
@@ -1321,15 +1347,6 @@ export default function Checkout() {
             </div>
           </div>
 
-          {/* Open UPI App Link (Mobile) */}
-          <a className="outlineBtn openUpiBtn" href={upiLink}>
-            <ExternalLink size={14} /> OPEN UPI APP
-          </a>
-          
-          <small className="bankLimitNotice">
-            ℹ️ <em>If your UPI app displays "Bank limit exceeded" when clicking the link, please use the <b>COPY</b> buttons above to pay directly inside your UPI app.</em>
-          </small>
-
           {/* I Have Paid Submit Button */}
           <button
             className="goldBtn iHavePaidBtn"
@@ -1339,7 +1356,7 @@ export default function Checkout() {
           >
             {loading ? (
               <>
-                <Loader2 size={16} className="btnSpinner" style={{ marginRight: 8 }} />
+                <Loader2 size={16} className="btnSpinner" />
                 <span>{t('processing', 'PROCESSING ORDER…')}</span>
               </>
             ) : (

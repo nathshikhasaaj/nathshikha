@@ -1,20 +1,21 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
 import SectionTitle from '../../components/common/SectionTitle';
+import Breadcrumbs from '../../components/common/Breadcrumbs';
+import { LegalSubNav } from '../../components/common/PageSubNav';
 import './Legal.css';
 
 export default function TermsOfService() {
   return (
     <main className="page legalPage">
-      <Link to="/" className="back">
-        <ArrowLeft /> Back to store
-      </Link>
+      <Breadcrumbs items={[{ label: 'Legal Policies', path: '/privacy-policy' }, { label: 'Terms of Service' }]} backPath="/" backLabel="Home" />
 
       <SectionTitle
         title="Terms of Service"
         sub="Guidelines and agreement for shopping at Nathshikha."
       />
+
+      <LegalSubNav />
 
       <div className="legalCard">
         <span className="legalDate">Last updated: August 2026</span>

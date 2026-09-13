@@ -139,7 +139,7 @@ export const translations = {
     create_account_checkbox: 'Create an account with these details for faster checkout & order tracking',
     account_password_placeholder: 'Create password for your account (min 6 characters)',
     save_details_checkbox: 'Save this delivery information for future orders',
-    terms_required_error: 'Please agree to the Terms & Conditions and Privacy Policy to proceed.',
+    terms_required_error: 'Please accept the Terms & Conditions before placing your order.',
     password_required_error: 'Password must be at least 6 characters to create an account.',
     logged_in_as: 'Logged in as',
 
@@ -356,7 +356,7 @@ export const translations = {
     create_account_checkbox: 'या माहितीसह नवीन खाते तयार करा (जलद चेकआउट आणि ट्रॅकिंगसाठी)',
     account_password_placeholder: 'खात्यासाठी पासवर्ड तयार करा (किमान ६ अक्षरे)',
     save_details_checkbox: 'पुढील खरेदीसाठी ही माहिती सेव्ह करा',
-    terms_required_error: 'कृपया पुढे जाण्यासाठी नियम व अटी आणि गोपनीयता धोरणास सहमती द्या.',
+    terms_required_error: 'कृपया तुमची ऑर्डर देण्यापूर्वी नियम व अटी मान्य करा.',
     password_required_error: 'खाते तयार करण्यासाठी पासवर्ड किमान ६ अक्षरांचा असणे आवश्यक आहे.',
     logged_in_as: 'लॉगिन केलेले खाते:',
 

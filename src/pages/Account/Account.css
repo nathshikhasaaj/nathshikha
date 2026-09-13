@@ -592,8 +592,26 @@
 }
 
 @media (max-width: 600px) {
+  .accountGrid {
+    gap: 10px;
+  }
+
+  .accountGrid a,
+  .accountGrid button {
+    padding: 14px 10px;
+    gap: 4px;
+  }
+
+  .accountGrid b {
+    font-size: 13.5px;
+  }
+
+  .accountGrid span {
+    font-size: 10.5px;
+  }
+
   .accountCard {
-    padding: 20px 16px;
+    padding: 18px 14px;
   }
 
   .securityInfoRow {
@@ -613,5 +631,29 @@
 
   .addressFormGrid .fullWidth {
     grid-column: span 1;
+  }
+}
+
+@media (max-width: 380px) {
+  .accountGrid {
+    gap: 8px;
+  }
+
+  .accountGrid a,
+  .accountGrid button {
+    padding: 12px 7px;
+  }
+
+  .accountGrid b {
+    font-size: 12.5px;
+  }
+
+  .accountGrid svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .accountCard {
+    padding: 14px 10px;
   }
 }

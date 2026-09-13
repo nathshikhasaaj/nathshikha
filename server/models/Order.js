@@ -156,6 +156,10 @@ const orderSchema = new mongoose.Schema(
       enum: ['pending', 'verification_pending', 'verified', 'paid'],
       default: 'verification_pending'
     },
+    acceptedTerms: {
+      type: Boolean,
+      default: true
+    },
     orderStatus: {
       type: String,
       enum: [

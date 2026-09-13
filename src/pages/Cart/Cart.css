@@ -365,3 +365,58 @@
   }
 }
 
+@media (max-width: 380px) {
+  .cartItem {
+    gap: 10px;
+    padding: 10px 8px;
+  }
+
+  .cartItem img {
+    width: 72px;
+    height: 72px;
+  }
+
+  .cartItemDetails h3 {
+    font-size: 13px;
+  }
+
+  .cartOptionPill {
+    font-size: 10px;
+    padding: 2px 5px;
+  }
+
+  .qty {
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .qty button {
+    width: 28px;
+    height: 28px;
+  }
+
+  .qty b {
+    min-width: 18px;
+    font-size: 12px;
+  }
+
+  .summary {
+    padding: 16px 12px;
+  }
+}
+
+@media (max-width: 330px) {
+  .cartItem img {
+    width: 64px;
+    height: 64px;
+  }
+
+  .cartItemDetails h3 {
+    font-size: 12px;
+  }
+
+  .cartItemUnitPrice {
+    font-size: 13px;
+  }
+}
+

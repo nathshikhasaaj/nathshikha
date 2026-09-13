@@ -25,6 +25,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { api } from '../../services/api';
 import SectionTitle from '../../components/common/SectionTitle';
+import Breadcrumbs from '../../components/common/Breadcrumbs';
 import './Account.css';
 
 const INDIAN_STATES = [
@@ -367,6 +368,8 @@ export default function Account() {
 
   return (
     <main className="page accountPage">
+      <Breadcrumbs items={[{ label: 'My Account' }]} backPath="/" backLabel="Home" />
+
       <SectionTitle
         title="My Account"
         sub={
