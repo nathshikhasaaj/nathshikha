@@ -1131,6 +1131,11 @@
     flex-shrink: 0;
   }
 
+  .switchesContainer {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
   .manualUrlBar {
     flex-direction: column;
   }

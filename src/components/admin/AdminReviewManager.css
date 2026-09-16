@@ -333,6 +333,56 @@
   color: #8c786c;
 }
 
+/* Toggle Switch */
+.toggleSwitch {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 22px;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+.toggleSwitch input {
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute;
+  pointer-events: none;
+}
+
+.toggleSlider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #cbd5e1;
+  transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 24px;
+}
+
+.toggleSlider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.toggleSwitch input:checked + .toggleSlider {
+  background-color: #198754;
+}
+
+.toggleSwitch input:checked + .toggleSlider:before {
+  transform: translateX(16px);
+}
+
 /* Visibility Switch */
 .visibleToggleCell {
   white-space: nowrap;

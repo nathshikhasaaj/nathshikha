@@ -351,22 +351,32 @@ export default function AdminParameterManager({ onParametersUpdated }) {
 
               {/* Required & Active Toggles */}
               <div className="paramFormToggles">
-                <label className="paramToggleLabel">
+                <label className={`paramToggleCard ${formRequired ? 'active' : ''}`}>
                   <input
                     type="checkbox"
+                    className="paramNativeCheckbox"
                     checked={formRequired}
                     onChange={(e) => setFormRequired(e.target.checked)}
                   />
-                  <span>Required (Customer must {formDisplayType === 'text' ? 'enter text' : 'choose'})</span>
+                  <div className="paramToggleInfo">
+                    <span className="paramToggleTitle">Required Parameter</span>
+                    <span className="paramToggleDesc">
+                      Customer must {formDisplayType === 'text' ? 'type custom text' : 'choose an option'}
+                    </span>
+                  </div>
                 </label>
 
-                <label className="paramToggleLabel">
+                <label className={`paramToggleCard ${formIsActive ? 'active' : ''}`}>
                   <input
                     type="checkbox"
+                    className="paramNativeCheckbox"
                     checked={formIsActive}
                     onChange={(e) => setFormIsActive(e.target.checked)}
                   />
-                  <span>Active in Library</span>
+                  <div className="paramToggleInfo">
+                    <span className="paramToggleTitle">Active in Library</span>
+                    <span className="paramToggleDesc">Available to assign across products</span>
+                  </div>
                 </label>
               </div>
             </div>

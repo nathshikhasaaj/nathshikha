@@ -230,7 +230,7 @@ select {
 }
 
 /* Form Styles */
-input,
+input:not([type='checkbox']):not([type='radio']),
 textarea,
 select {
   width: 100%;
@@ -244,14 +244,27 @@ select {
   transition: border-color 0.2s ease;
 }
 
-input:focus,
+input[type='checkbox'],
+input[type='radio'] {
+  width: 18px;
+  height: 18px;
+  max-width: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  accent-color: var(--maroon, #5b1420);
+}
+
+input:not([type='checkbox']):not([type='radio']):focus,
 textarea:focus,
 select:focus {
   border-color: var(--gold);
 }
 
 @media (max-width: 768px) {
-  input,
+  input:not([type='checkbox']):not([type='radio']),
   textarea,
   select {
     font-size: 16px;

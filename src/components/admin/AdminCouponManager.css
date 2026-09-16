@@ -567,6 +567,16 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--char, #1c1815);
+  user-select: none;
+}
+
+.toggleLabel input[type='checkbox'] {
+  width: 18px !important;
+  height: 18px !important;
+  accent-color: var(--maroon, #5b1420);
+  cursor: pointer;
+  margin: 0 !important;
+  flex-shrink: 0;
 }
 
 .toggleStatusText.activeText {
