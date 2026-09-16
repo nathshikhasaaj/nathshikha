@@ -31,6 +31,7 @@ import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { money, formatOrderStatus, copyToClipboard } from '../../utils/formatters';
+import { getParameterEntries } from '../../utils/parameterHelpers';
 import SectionTitle from '../../components/common/SectionTitle';
 import Breadcrumbs from '../../components/common/Breadcrumbs';
 import CheckoutSteps from '../../components/common/CheckoutSteps';
@@ -1158,6 +1159,58 @@ export default function Checkout() {
             <h3>Order Summary & Payment</h3>
           </div>
 
+          {/* Review Order Items with Custom Parameters / Names */}
+          <div className="checkoutItemsReviewBox">
+            <div className="checkoutItemsHeader">
+              <ShoppingBag size={15} />
+              <span>Items in Your Order ({cart.reduce((sum, item) => sum + (item.qty || 1), 0)})</span>
+            </div>
+
+            <div className="checkoutItemsList">
+              {cart.map((item, idx) => {
+                const selectedParams =
+                  (item.selectedParameters && typeof item.selectedParameters === 'object' ? item.selectedParameters : null) ||
+                  (item.selectedOptions && typeof item.selectedOptions === 'object' ? item.selectedOptions : {});
+                const paramEntries = getParameterEntries(selectedParams);
+
+                return (
+                  <div key={item.cartKey || `${item.id}-${idx}`} className="checkoutReviewItem">
+                    <img
+                      src={item.img || '/assets/thushi.jpg'}
+                      alt={item.name}
+                      className="checkoutReviewItemImg"
+                    />
+                    <div className="checkoutReviewItemDetails">
+                      <div className="checkoutReviewItemNameRow">
+                        <span className="checkoutReviewItemName">{item.name}</span>
+                        <b className="checkoutReviewItemPrice">{money((item.price || 0) * (item.qty || 1))}</b>
+                      </div>
+
+                      {/* Display Custom Text Parameters & Standard Parameters */}
+                      {paramEntries.length > 0 && (
+                        <div className="checkoutItemParamsWrap">
+                          {paramEntries.map((param) => (
+                            <span
+                              key={param.name}
+                              className={param.isCustom ? "checkoutCustomNameBadge" : "checkoutStandardParamBadge"}
+                            >
+                              <span className="paramBadgeLabel">{param.isCustom ? '✍️ ' : ''}{param.name}:</span>
+                              <b className="paramBadgeValue">{param.value}</b>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="checkoutReviewItemQtyRow">
+                        <small>Qty: {item.qty} · {money(item.price)} each</small>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Apply Coupon / Promo Code Section */}
           <div className="checkoutCouponBox">
             <div className="couponBoxHeader">
@@ -1436,6 +1489,41 @@ export default function Checkout() {
                 </span>
               </div>
             </div>
+
+            {/* Ordered Items Breakdown inside Confirmation Modal */}
+            {orderPlacedModal.items && orderPlacedModal.items.length > 0 && (
+              <div className="successOrderItemsBox">
+                <span className="successItemsTitle">Purchased Jewellery ({orderPlacedModal.items.length}):</span>
+                <div className="successItemsList">
+                  {orderPlacedModal.items.map((item, idx) => {
+                    const params =
+                      (item.selectedParameters && typeof item.selectedParameters === 'object' ? item.selectedParameters : null) ||
+                      (item.selectedOptions && typeof item.selectedOptions === 'object' ? item.selectedOptions : {});
+                    const paramEntries = getParameterEntries(params);
+
+                    return (
+                      <div key={idx} className="successItemRow">
+                        <img src={item.img || '/assets/thushi.jpg'} alt={item.name} className="successItemThumb" />
+                        <div className="successItemMeta">
+                          <b>{item.name}</b>
+                          {paramEntries.length > 0 && (
+                            <div className="successItemParams">
+                              {paramEntries.map((p) => (
+                                <span key={p.name} className={p.isCustom ? 'successCustomParamBadge' : 'successStandardParamBadge'}>
+                                  {p.isCustom ? '✍️ ' : ''}{p.name}: <b>{p.value}</b>
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          <small>Qty: {item.qty} · {money(item.price)}</small>
+                        </div>
+                        <b className="successItemTotal">{money(item.price * item.qty)}</b>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {orderPlacedModal.shipment_group_code && (
               <div className="combinedShipmentSuccessBox">

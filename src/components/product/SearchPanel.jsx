@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { Check, Plus, Search, X, Sparkles } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Check, Plus, Search, X, Sparkles, SlidersHorizontal } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { money } from '../../utils/formatters';
@@ -9,6 +9,7 @@ import './SearchPanel.css';
 const POPULAR_SEARCHES = ['Nath', 'Thushi', 'Moti', 'Kolhapuri Saaj', 'Tanmani', 'Mangalsutra'];
 
 export default function SearchPanel({ query, setQuery, results, onClose }) {
+  const navigate = useNavigate();
   const { addToCart } = useCart();
   const { t } = useLanguage();
   const [addedIds, setAddedIds] = useState({});
@@ -35,6 +36,18 @@ export default function SearchPanel({ query, setQuery, results, onClose }) {
   const handleAdd = (e, p) => {
     e.preventDefault();
     e.stopPropagation();
+
+    const hasOptions =
+      (Array.isArray(p.productParameters) && p.productParameters.length > 0) ||
+      (Array.isArray(p.parameters) && p.parameters.length > 0) ||
+      (Array.isArray(p.options) && p.options.length > 0);
+
+    if (hasOptions) {
+      if (onClose) onClose();
+      navigate(`/product/${p.id || p._id}`);
+      return;
+    }
+
     addToCart(p, 1);
 
     setAddedIds((prev) => ({ ...prev, [p.id]: true }));

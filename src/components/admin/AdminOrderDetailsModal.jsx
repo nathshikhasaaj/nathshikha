@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { money, formatOrderStatus } from '../../utils/formatters';
+import { getParameterEntries } from '../../utils/parameterHelpers';
 import './AdminOrderDetailsModal.css';
 
 export default function AdminOrderDetailsModal({
@@ -746,27 +747,46 @@ export default function AdminOrderDetailsModal({
                               (item.selectedOptions && typeof item.selectedOptions === 'object'
                                 ? item.selectedOptions
                                 : {});
-                            const hasParams = Object.keys(itemParams).length > 0;
+                            const paramEntries = getParameterEntries(itemParams);
 
-                            if (!hasParams) return null;
+                            if (paramEntries.length === 0) return null;
 
                             return (
-                              <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                                {Object.entries(itemParams).map(([optName, optVal]) => (
+                              <div style={{ marginTop: 5, display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                                {paramEntries.map((param) => (
                                   <span
-                                    key={optName}
-                                    style={{
-                                      fontSize: 10.5,
-                                      fontWeight: 600,
-                                      color: '#78350f',
-                                      background: '#fef3c7',
-                                      border: '1px solid #fde68a',
-                                      padding: '2px 6px',
-                                      borderRadius: 4,
-                                      display: 'inline-block'
-                                    }}
+                                    key={param.name}
+                                    style={
+                                      param.isCustom
+                                        ? {
+                                            fontSize: 11.5,
+                                            fontWeight: 700,
+                                            color: '#78350f',
+                                            background: '#fef3c7',
+                                            border: '1.5px solid #f59e0b',
+                                            padding: '2px 8px',
+                                            borderRadius: 4,
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: 4,
+                                            boxShadow: '0 1px 3px rgba(245, 158, 11, 0.15)'
+                                          }
+                                        : {
+                                            fontSize: 11,
+                                            fontWeight: 600,
+                                            color: '#334155',
+                                            background: '#f1f5f9',
+                                            border: '1px solid #cbd5e1',
+                                            padding: '2px 6px',
+                                            borderRadius: 4,
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: 3
+                                          }
+                                    }
                                   >
-                                    {optName}: {optVal}
+                                    {param.isCustom ? '✍️ ' : ''}<strong>{param.name}:</strong>{' '}
+                                    <span style={param.isCustom ? { color: '#92400e', fontWeight: 800, textDecoration: 'underline' } : {}}>{param.value}</span>
                                   </span>
                                 ))}
                               </div>

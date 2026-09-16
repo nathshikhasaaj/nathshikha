@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { money } from '../../utils/formatters';
+import { getParameterEntries } from '../../utils/parameterHelpers';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -682,7 +683,7 @@ export default function Orders() {
                 const itemParams =
                   (item.selectedParameters && typeof item.selectedParameters === 'object' ? item.selectedParameters : null) ||
                   (item.selectedOptions && typeof item.selectedOptions === 'object' ? item.selectedOptions : {});
-                const hasParams = Object.keys(itemParams).length > 0;
+                const paramEntries = getParameterEntries(itemParams);
 
                 return (
                   <div key={idx} className="trackItemRow">
@@ -693,22 +694,25 @@ export default function Orders() {
                     />
                     <div className="trackItemMeta">
                       <b>{item.name}</b>
-                      {hasParams && (
-                        <div className="orderItemParamsList" style={{ display: 'flex', gap: 4, flexWrap: 'wrap', margin: '2px 0' }}>
-                          {Object.entries(itemParams).map(([pName, pVal]) => (
+                      {paramEntries.length > 0 && (
+                        <div className="orderItemParamsList" style={{ display: 'flex', gap: 4, flexWrap: 'wrap', margin: '3px 0' }}>
+                          {paramEntries.map((p) => (
                             <span
-                              key={pName}
+                              key={p.name}
                               style={{
                                 fontSize: '11px',
-                                background: '#fdf5e2',
-                                border: '1px solid #dfc793',
+                                background: p.isCustom ? '#fef3c7' : '#fdf5e2',
+                                border: p.isCustom ? '1.5px solid #f59e0b' : '1px solid #dfc793',
                                 color: '#78350f',
-                                padding: '1px 6px',
-                                borderRadius: '3px',
-                                fontWeight: 600
+                                padding: '2px 7px',
+                                borderRadius: '4px',
+                                fontWeight: p.isCustom ? 700 : 600,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 3
                               }}
                             >
-                              {pName}: {pVal}
+                              {p.isCustom ? '✍️ ' : ''}{p.name}: <b>{p.value}</b>
                             </span>
                           ))}
                         </div>
@@ -1007,15 +1011,37 @@ export default function Orders() {
                             />
                             <div className="orderReviewItemDetails">
                               <span className="orderReviewItemName">{item.name}</span>
-                              {item.selectedOptions && typeof item.selectedOptions === 'object' && Object.keys(item.selectedOptions).length > 0 && (
-                                <div className="orderItemOptionsRow" style={{ marginTop: 3, marginBottom: 3 }}>
-                                  {Object.entries(item.selectedOptions).map(([optName, optVal]) => (
-                                    <span key={optName} className="orderItemOptionPill" style={{ fontSize: 11, background: '#fdf5e2', border: '1px solid #dfc793', color: '#78350f', padding: '1px 6px', borderRadius: 4, marginRight: 4, display: 'inline-block' }}>
-                                      <b>{optName}:</b> {optVal}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
+                              {(() => {
+                                const itemParams =
+                                  (item.selectedParameters && typeof item.selectedParameters === 'object' ? item.selectedParameters : null) ||
+                                  (item.selectedOptions && typeof item.selectedOptions === 'object' ? item.selectedOptions : {});
+                                const paramEntries = getParameterEntries(itemParams);
+                                if (paramEntries.length === 0) return null;
+                                return (
+                                  <div className="orderItemOptionsRow" style={{ marginTop: 3, marginBottom: 3, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                                    {paramEntries.map((p) => (
+                                      <span
+                                        key={p.name}
+                                        className="orderItemOptionPill"
+                                        style={{
+                                          fontSize: 11,
+                                          background: p.isCustom ? '#fef3c7' : '#fdf5e2',
+                                          border: p.isCustom ? '1.5px solid #f59e0b' : '1px solid #dfc793',
+                                          color: '#78350f',
+                                          padding: '2px 7px',
+                                          borderRadius: 4,
+                                          fontWeight: p.isCustom ? 700 : 600,
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          gap: 3
+                                        }}
+                                      >
+                                        {p.isCustom ? '✍️ ' : ''}<b>{p.name}:</b> {p.value}
+                                      </span>
+                                    ))}
+                                  </div>
+                                );
+                              })()}
                               <small className="orderReviewItemMeta">
                                 Qty: {item.qty} · {money(item.price)}
                               </small>

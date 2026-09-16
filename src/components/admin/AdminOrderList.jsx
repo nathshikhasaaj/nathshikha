@@ -21,6 +21,7 @@ import {
   formatOrderAge,
   formatOrderDate
 } from '../../utils/formatters';
+import { getParameterEntries } from '../../utils/parameterHelpers';
 import './AdminOrderList.css';
 
 export default function AdminOrderList({
@@ -462,6 +463,36 @@ export default function AdminOrderList({
                           <span className="productNameText" title={firstItem.name}>
                             {firstItem.name}
                           </span>
+                          {(() => {
+                            const customParams = (o.items || []).flatMap((item) =>
+                              getParameterEntries(item.selectedParameters || item.selectedOptions).filter((p) => p.isCustom)
+                            );
+                            if (customParams.length === 0) return null;
+                            return (
+                              <div style={{ marginTop: 3, display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                                {customParams.map((p, pIdx) => (
+                                  <span
+                                    key={pIdx}
+                                    style={{
+                                      fontSize: 10,
+                                      fontWeight: 700,
+                                      background: '#fef3c7',
+                                      border: '1px solid #f59e0b',
+                                      color: '#78350f',
+                                      padding: '1px 5px',
+                                      borderRadius: 3,
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: 2
+                                    }}
+                                    title={`Customized: ${p.name}: ${p.value}`}
+                                  >
+                                    ✍️ {p.name}: <b>{p.value}</b>
+                                  </span>
+                                ))}
+                              </div>
+                            );
+                          })()}
                           {itemsCount > 1 && (
                             <small className="totalItemsCount">
                               Total {o.items.reduce((a, i) => a + (i.qty || 1), 0)} items
@@ -706,6 +737,35 @@ export default function AdminOrderList({
                     <div className="mobileCardProductRow">
                       <div className="mobileProductTitle">
                         <span className="mobilePieceName">{firstItem.name}</span>
+                        {(() => {
+                          const customParams = (o.items || []).flatMap((item) =>
+                            getParameterEntries(item.selectedParameters || item.selectedOptions).filter((p) => p.isCustom)
+                          );
+                          if (customParams.length === 0) return null;
+                          return (
+                            <div style={{ marginTop: 3, display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                              {customParams.map((p, pIdx) => (
+                                <span
+                                  key={pIdx}
+                                  style={{
+                                    fontSize: 10,
+                                    fontWeight: 700,
+                                    background: '#fef3c7',
+                                    border: '1px solid #f59e0b',
+                                    color: '#78350f',
+                                    padding: '1px 5px',
+                                    borderRadius: 3,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 2
+                                  }}
+                                >
+                                  ✍️ {p.name}: <b>{p.value}</b>
+                                </span>
+                              ))}
+                            </div>
+                          );
+                        })()}
                         {itemsCount > 1 && (
                           <span className="mobileMoreItemsBadge">
                             +{itemsCount - 1} more ({totalQty} total items)

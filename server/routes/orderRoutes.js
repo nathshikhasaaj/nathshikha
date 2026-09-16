@@ -309,25 +309,31 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
       if (Array.isArray(p.productParameters) && p.productParameters.length > 0) {
         for (const param of p.productParameters) {
           const selectedVal = effectiveSelectedParams[param.name];
+          const isTextParam = param.displayType === 'text' || param.displayType === 'textbox';
+
           if (param.required && (!selectedVal || String(selectedVal).trim() === '')) {
             return res.status(400).json({
-              error: `Please select an option for "${param.name}" on "${p.name}".`
+              error: isTextParam
+                ? `Please enter your customized "${param.name}" for "${p.name}".`
+                : `Please select an option for "${param.name}" on "${p.name}".`
             });
           }
 
-          if (selectedVal) {
+          if (selectedVal && !isTextParam) {
             const paramVals = Array.isArray(param.selectedValues) && param.selectedValues.length > 0
               ? param.selectedValues
               : (Array.isArray(param.values) ? param.values : []);
 
-            const matchingVal = paramVals.find(
-              (v) => String(v.value || v.label).trim().toLowerCase() === String(selectedVal).trim().toLowerCase()
-            );
+            if (paramVals.length > 0) {
+              const matchingVal = paramVals.find(
+                (v) => String(v.value || v.label).trim().toLowerCase() === String(selectedVal).trim().toLowerCase()
+              );
 
-            if (matchingVal && matchingVal.inStock === false) {
-              return res.status(400).json({
-                error: `Sorry, the selected option "${selectedVal}" for "${p.name}" is currently out of stock.`
-              });
+              if (matchingVal && matchingVal.inStock === false) {
+                return res.status(400).json({
+                  error: `Sorry, the selected option "${selectedVal}" for "${p.name}" is currently out of stock.`
+                });
+              }
             }
           }
         }

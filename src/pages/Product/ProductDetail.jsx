@@ -27,7 +27,8 @@ import {
   Loader2,
   Zap,
   Languages,
-  Globe
+  Globe,
+  Type
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { useCart } from '../../context/CartContext';
@@ -617,7 +618,7 @@ export default function ProductDetail() {
         setActiveIndex(0);
         setQty(1);
 
-        // Pre-select first choice for each assigned parameter
+        // Pre-select first choice for each assigned parameter (or empty string for custom text inputs)
         const params = Array.isArray(data?.productParameters) && data.productParameters.length > 0
           ? data.productParameters
           : Array.isArray(data?.parameters) && data.parameters.length > 0
@@ -627,11 +628,16 @@ export default function ProductDetail() {
         if (params.length > 0) {
           const initialParams = {};
           params.forEach((p) => {
-            const vals = Array.isArray(p.selectedValues) && p.selectedValues.length > 0
-              ? p.selectedValues
-              : Array.isArray(p.values) ? p.values : [];
-            if (vals.length > 0) {
-              initialParams[p.name] = vals[0].value || vals[0].label;
+            const isText = p.displayType === 'text' || p.displayType === 'textbox';
+            if (isText) {
+              initialParams[p.name] = '';
+            } else {
+              const vals = Array.isArray(p.selectedValues) && p.selectedValues.length > 0
+                ? p.selectedValues
+                : Array.isArray(p.values) ? p.values : [];
+              if (vals.length > 0) {
+                initialParams[p.name] = vals[0].value || vals[0].label;
+              }
             }
           });
           setSelectedParameters(initialParams);
@@ -686,26 +692,35 @@ export default function ProductDetail() {
     }
     const errors = {};
     for (const param of productParameters) {
+      const isText = param.displayType === 'text' || param.displayType === 'textbox';
       const vals = Array.isArray(param.selectedValues) && param.selectedValues.length > 0
         ? param.selectedValues
         : Array.isArray(param.values) ? param.values : [];
-      if (vals.length === 0) continue;
+      if (!isText && vals.length === 0) continue;
 
       if (param.required && (!selectedParameters[param.name] || !String(selectedParameters[param.name]).trim())) {
-        errors[param.name] = `Please select ${param.name}`;
+        errors[param.name] = isText
+          ? `Please enter ${param.name}`
+          : `Please select ${param.name}`;
       }
     }
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
       const firstErrorKey = Object.keys(errors)[0];
+      const targetParam = productParameters.find((p) => p.name === firstErrorKey);
+      const isText = targetParam?.displayType === 'text' || targetParam?.displayType === 'textbox';
       setToast({
         type: 'warning',
-        message: `Please select ${firstErrorKey} before adding to bag`,
+        message: isText
+          ? `Please enter your ${firstErrorKey} before adding to bag`
+          : `Please select ${firstErrorKey} before adding to bag`,
         duration: 3500
       });
       const elem = document.getElementById(`product-parameter-${encodeURIComponent(firstErrorKey)}`);
       if (elem) {
         elem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const textInput = document.getElementById(`input-param-${encodeURIComponent(firstErrorKey)}`);
+        if (textInput) textInput.focus();
       }
       return false;
     }
@@ -1015,7 +1030,61 @@ export default function ProductDetail() {
                       )}
                     </div>
 
-                    {param.displayType === 'dropdown' ? (
+                    {param.displayType === 'text' || param.displayType === 'textbox' ? (
+                      <div
+                        className="productOptionCustomTextContainer"
+                        onClick={() => {
+                          const el = document.getElementById(`input-param-${encodeURIComponent(param.name)}`);
+                          if (el && document.activeElement !== el) el.focus();
+                        }}
+                      >
+                        <div className={`customTextInputWrapper ${isError ? 'customTextInputWrapper--error' : ''}`}>
+                          <Type size={16} className="customTextInputIcon" />
+                          <input
+                            type="text"
+                            id={`input-param-${encodeURIComponent(param.name)}`}
+                            className={`productOptionTextInput ${isError ? 'productOptionTextInput--error' : ''}`}
+                            placeholder={
+                              paramValues[0]?.label && paramValues[0].label !== 'custom_text'
+                                ? paramValues[0].label
+                                : `Enter ${param.name} (e.g. Ananya, Priya)`
+                            }
+                            value={currentSelected || ''}
+                            onChange={(e) => handleSelectParameter(param.name, e.target.value)}
+                            maxLength={45}
+                            disabled={isOutOfStock}
+                            autoComplete="off"
+                            autoCapitalize="words"
+                            autoCorrect="off"
+                            spellCheck="false"
+                            enterKeyHint="done"
+                            aria-label={param.name}
+                          />
+                          {currentSelected ? (
+                            <button
+                              type="button"
+                              className="customTextClearBtn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSelectParameter(param.name, '');
+                              }}
+                              title="Clear text"
+                              aria-label="Clear custom text"
+                            >
+                              ✕
+                            </button>
+                          ) : null}
+                        </div>
+                        <div className="customTextFooterRow">
+                          <span className="customTextHelpHint">
+                            ✨ Custom name / inscription will be handcrafted on this piece
+                          </span>
+                          <span className="customTextCharLimit">
+                            {(currentSelected || '').length}/45
+                          </span>
+                        </div>
+                      </div>
+                    ) : param.displayType === 'dropdown' ? (
                       <select
                         className="productOptionSelect"
                         value={currentSelected || ''}

@@ -55,6 +55,40 @@ export function formatSelectedParametersText(selectedParameters) {
 }
 
 /**
+ * Check if a parameter name corresponds to a custom name / text parameter
+ * e.g. "Name on Product", "Custom Name", "Engraved Name", "Your Name"
+ */
+export function isCustomTextParameter(paramName = '') {
+  if (!paramName) return false;
+  const lower = String(paramName).toLowerCase().trim();
+  return (
+    lower.includes('name') ||
+    lower.includes('custom') ||
+    lower.includes('engrav') ||
+    lower.includes('text') ||
+    lower.includes('letter') ||
+    lower.includes('initial') ||
+    lower.includes('message')
+  );
+}
+
+/**
+ * Extract non-empty parameter entries with custom text classification
+ * @param {Object} selectedParams 
+ * @returns {Array<{ name: string, value: string, isCustom: boolean }>}
+ */
+export function getParameterEntries(selectedParams = {}) {
+  if (!selectedParams || typeof selectedParams !== 'object') return [];
+  return Object.entries(selectedParams)
+    .filter(([_, v]) => v !== undefined && v !== null && String(v).trim() !== '')
+    .map(([name, val]) => ({
+      name: String(name).trim(),
+      value: String(val).trim(),
+      isCustom: isCustomTextParameter(name)
+    }));
+}
+
+/**
  * Check if two parameter selection objects are identical
  */
 export function areParametersEqual(paramA = {}, paramB = {}) {
@@ -73,5 +107,8 @@ export default {
   ALL_CATEGORIES,
   getCartParameterKey,
   formatSelectedParametersText,
+  isCustomTextParameter,
+  getParameterEntries,
   areParametersEqual
 };
+

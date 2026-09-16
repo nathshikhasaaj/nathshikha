@@ -44,7 +44,7 @@ const productParameterAssignmentSchema = new mongoose.Schema(
     },
     displayType: {
       type: String,
-      enum: ['buttons', 'dropdown', 'color'],
+      enum: ['buttons', 'dropdown', 'color', 'text', 'textbox'],
       default: 'buttons'
     },
     selectionMode: {

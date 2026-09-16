@@ -59,6 +59,47 @@ export default function OrderSuccess() {
           )}
         </div>
 
+        {/* Ordered Items Breakdown */}
+        {order?.items && order.items.length > 0 && (
+          <div className="successPageItemsCard">
+            <h3 className="successPageItemsTitle">Ordered Jewellery ({order.items.length})</h3>
+            <div className="successPageItemsList">
+              {order.items.map((item, idx) => {
+                const params =
+                  (item.selectedParameters && typeof item.selectedParameters === 'object' ? item.selectedParameters : null) ||
+                  (item.selectedOptions && typeof item.selectedOptions === 'object' ? item.selectedOptions : {});
+                const entries = Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && String(v).trim() !== '');
+
+                return (
+                  <div key={idx} className="successPageItemRow">
+                    <img src={item.img || '/assets/thushi.jpg'} alt={item.name} className="successPageItemImg" />
+                    <div className="successPageItemDetails">
+                      <b>{item.name}</b>
+                      {entries.length > 0 && (
+                        <div className="successPageItemParams">
+                          {entries.map(([pName, pVal]) => {
+                            const isCustom = String(pName).toLowerCase().includes('name') ||
+                              String(pName).toLowerCase().includes('custom') ||
+                              String(pName).toLowerCase().includes('text') ||
+                              String(pName).toLowerCase().includes('engrav');
+                            return (
+                              <span key={pName} className={isCustom ? 'successCustomPill' : 'successStandardPill'}>
+                                {isCustom ? '✍️ ' : ''}{pName}: <b>{pVal}</b>
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+                      <small>Qty: {item.qty} · {money(item.price)} each</small>
+                    </div>
+                    <b className="successPageItemTotal">{money((item.price || 0) * (item.qty || 1))}</b>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <div className="successStatusNotice">
           {isVerified ? (
             <div className="statusNoticeVerified">

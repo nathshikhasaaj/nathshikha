@@ -88,6 +88,15 @@ const INITIAL_MASTER_PARAMETERS = [
       { label: 'Green Silk Thread', value: 'Green Silk', colorCode: null, isActive: true, order: 2 },
       { label: 'Gold Plated Chain', value: 'Gold Chain', colorCode: null, isActive: true, order: 3 }
     ]
+  },
+  {
+    name: 'Name on Product',
+    displayType: 'text',
+    selectionMode: 'single',
+    required: true,
+    values: [
+      { label: 'Custom Name / Inscription', value: 'custom_text', colorCode: null, isActive: true, order: 0 }
+    ]
   }
 ];
 
@@ -146,7 +155,11 @@ router.post('/admin', async (req, res) => {
       return res.status(400).json({ error: `Parameter with name "${name}" already exists.` });
     }
 
-    const cleanValues = Array.isArray(values)
+    const normalizedDisplayType = ['buttons', 'dropdown', 'color', 'text', 'textbox'].includes(displayType)
+      ? displayType
+      : 'buttons';
+
+    let cleanValues = Array.isArray(values)
       ? values
           .filter((v) => v && (v.label || v.value))
           .map((v, idx) => ({
@@ -158,9 +171,15 @@ router.post('/admin', async (req, res) => {
           }))
       : [];
 
+    if ((normalizedDisplayType === 'text' || normalizedDisplayType === 'textbox') && cleanValues.length === 0) {
+      cleanValues = [
+        { label: 'Custom Name / Text', value: 'custom_text', colorCode: null, isActive: true, order: 0 }
+      ];
+    }
+
     const parameter = await Parameter.create({
       name: name.trim(),
-      displayType: ['buttons', 'dropdown', 'color'].includes(displayType) ? displayType : 'buttons',
+      displayType: normalizedDisplayType,
       selectionMode: ['single', 'multiple'].includes(selectionMode) ? selectionMode : 'single',
       required: required !== undefined ? Boolean(required) : true,
       values: cleanValues,
@@ -194,6 +213,12 @@ router.patch('/admin/:id', async (req, res) => {
       }
     }
 
+    if (updateData.displayType) {
+      updateData.displayType = ['buttons', 'dropdown', 'color', 'text', 'textbox'].includes(updateData.displayType)
+        ? updateData.displayType
+        : 'buttons';
+    }
+
     if (Array.isArray(updateData.values)) {
       updateData.values = updateData.values
         .filter((v) => v && (v.label || v.value))
@@ -205,6 +230,15 @@ router.patch('/admin/:id', async (req, res) => {
           isActive: v.isActive !== undefined ? Boolean(v.isActive) : true,
           order: v.order !== undefined ? Number(v.order) : idx
         }));
+    }
+
+    if (
+      (updateData.displayType === 'text' || updateData.displayType === 'textbox') &&
+      (!Array.isArray(updateData.values) || updateData.values.length === 0)
+    ) {
+      updateData.values = [
+        { label: 'Custom Name / Text', value: 'custom_text', colorCode: null, isActive: true, order: 0 }
+      ];
     }
 
     const updated = await Parameter.findByIdAndUpdate(id, updateData, { new: true });

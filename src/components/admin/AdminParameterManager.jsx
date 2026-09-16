@@ -13,7 +13,8 @@ import {
   Power,
   Layers,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Type
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
@@ -152,7 +153,7 @@ export default function AdminParameterManager({ onParametersUpdated }) {
       return setToast('Please enter a parameter name.');
     }
 
-    const cleanValues = formValues
+    let cleanValues = formValues
       .filter((v) => v && (v.label || v.value))
       .map((v, idx) => ({
         label: String(v.label || v.value).trim(),
@@ -162,7 +163,19 @@ export default function AdminParameterManager({ onParametersUpdated }) {
         order: idx
       }));
 
-    if (cleanValues.length === 0) {
+    if (formDisplayType === 'text') {
+      if (cleanValues.length === 0) {
+        cleanValues = [
+          {
+            label: formValues[0]?.label?.trim() || 'Custom Name / Inscription',
+            value: 'custom_text',
+            colorCode: null,
+            isActive: true,
+            order: 0
+          }
+        ];
+      }
+    } else if (cleanValues.length === 0) {
       return setToast('Please add at least 1 value choice to this parameter.');
     }
 
@@ -303,12 +316,22 @@ export default function AdminParameterManager({ onParametersUpdated }) {
                 <label>Display Type</label>
                 <select
                   value={formDisplayType}
-                  onChange={(e) => setFormDisplayType(e.target.value)}
+                  onChange={(e) => {
+                    const newType = e.target.value;
+                    setFormDisplayType(newType);
+                    if (newType === 'text') {
+                      setFormSelectionMode('single');
+                      if (formValues.length === 0 || !formValues[0]?.label) {
+                        setFormValues([{ label: 'Enter custom name / text', value: 'custom_text', colorCode: null, isActive: true, order: 0 }]);
+                      }
+                    }
+                  }}
                   className="paramSelect"
                 >
                   <option value="buttons">Pill Buttons (Default)</option>
                   <option value="dropdown">Dropdown Select Menu</option>
                   <option value="color">Color Swatches (with Color Codes)</option>
+                  <option value="text">✍️ Custom Textbox (Customer Types In Name/Text)</option>
                 </select>
               </div>
 
@@ -319,9 +342,10 @@ export default function AdminParameterManager({ onParametersUpdated }) {
                   value={formSelectionMode}
                   onChange={(e) => setFormSelectionMode(e.target.value)}
                   className="paramSelect"
+                  disabled={formDisplayType === 'text'}
                 >
-                  <option value="single">Single Choice (Customer picks 1)</option>
-                  <option value="multiple">Multiple Choices</option>
+                  <option value="single">Single Choice {formDisplayType === 'text' ? '(Customer types text)' : '(Customer picks 1)'}</option>
+                  {formDisplayType !== 'text' && <option value="multiple">Multiple Choices</option>}
                 </select>
               </div>
 
@@ -333,7 +357,7 @@ export default function AdminParameterManager({ onParametersUpdated }) {
                     checked={formRequired}
                     onChange={(e) => setFormRequired(e.target.checked)}
                   />
-                  <span>Required (Customer must choose)</span>
+                  <span>Required (Customer must {formDisplayType === 'text' ? 'enter text' : 'choose'})</span>
                 </label>
 
                 <label className="paramToggleLabel">
@@ -347,141 +371,199 @@ export default function AdminParameterManager({ onParametersUpdated }) {
               </div>
             </div>
 
-            {/* Parameter Values Manager */}
-            <div className="paramValuesSection">
-              <div className="valuesSectionHeader">
-                <h5>Master Values for "{formName || 'this parameter'}"</h5>
-                <span className="valuesSectionNote">
-                  Add all possible choices. When adding products, you can select only the applicable subset.
-                </span>
-              </div>
-
-              {/* Quick Add Bar */}
-              <div className="addValueBar">
-                {formDisplayType === 'color' && (
-                  <div className="colorPickerWrap">
-                    <input
-                      type="color"
-                      className="colorPickerMain"
-                      value={newColorHex}
-                      onChange={(e) => setNewColorHex(e.target.value)}
-                      title="Pick swatch color"
-                    />
+            {/* Parameter Values / Textbox Configuration Section */}
+            {formDisplayType === 'text' ? (
+              <div className="textParamSettingsSection">
+                <div className="textParamInfoBanner">
+                  <div className="textParamIconWrap">
+                    <Type size={20} />
                   </div>
-                )}
-                <input
-                  type="text"
-                  placeholder={
-                    formDisplayType === 'color'
-                      ? 'e.g. Ruby Red, Emerald Green'
-                      : 'e.g. 22", 24", Small, Medium, 2.6'
-                  }
-                  value={newValueInput}
-                  onChange={(e) => setNewValueInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddValueToForm();
-                    }
-                  }}
-                  className="newValueInput"
-                />
-                <button
-                  type="button"
-                  className="outlineBtn addValueBtn"
-                  onClick={() => handleAddValueToForm()}
-                  disabled={!newValueInput.trim()}
-                >
-                  <Plus size={14} /> Add Value
-                </button>
-              </div>
-
-              {/* Color Presets Palette for Color Display Type */}
-              {formDisplayType === 'color' && (
-                <div className="colorPresetsPalette">
-                  <span className="paletteLabel">Quick Color Presets:</span>
-                  <div className="paletteList">
-                    {DEFAULT_COLOR_PALETTE.map((pal) => (
-                      <button
-                        key={pal.label}
-                        type="button"
-                        className="paletteChip"
-                        onClick={() => handleAddValueToForm(pal.label, pal.hex)}
-                        title={`Add ${pal.label} (${pal.hex})`}
-                      >
-                        <span className="paletteDot" style={{ backgroundColor: pal.hex }} />
-                        <span>{pal.label}</span>
-                      </button>
-                    ))}
+                  <div>
+                    <h5>Custom Name / Textbox Input Mode</h5>
+                    <p>
+                      Customers will be prompted to type their customized name, initials, or custom inscription directly on the product detail page when ordering.
+                    </p>
                   </div>
                 </div>
-              )}
 
-              {/* Values List */}
-              <div className="formValuesTable">
-                {formValues.map((v, idx) => (
-                  <div key={idx} className="formValueRow">
-                    <span className="valIndex">#{idx + 1}</span>
+                <div className="textParamPlaceholderRow">
+                  <label>Input Box Placeholder / Hint for Customer</label>
+                  <input
+                    type="text"
+                    className="paramTextInput"
+                    placeholder="e.g. Enter name to be engraved (e.g. Ananya, Priya)"
+                    value={formValues[0]?.label || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormValues([{ label: val, value: 'custom_text', colorCode: null, isActive: true, order: 0 }]);
+                    }}
+                  />
+                  <small className="textParamFieldHint">
+                    This guidance hint will be displayed inside the empty textbox on the storefront.
+                  </small>
+                </div>
 
-                    {formDisplayType === 'color' ? (
-                      <div className="colorInputGroup">
-                        <input
-                          type="color"
-                          className="colorPickerMini"
-                          value={v.colorCode || '#dc2626'}
-                          onChange={(e) => handleUpdateValue(idx, 'colorCode', e.target.value)}
-                          title="Pick swatch color"
-                        />
+                <div className="textboxLivePreview">
+                  <span className="previewSectionHeading">Live Storefront Customer View Preview:</span>
+                  <div className="previewBoxMockup">
+                    <div className="previewMockupHeader">
+                      <label className="previewMockupLabel">
+                        {formName.trim() || 'Name on Product'}
+                        {formRequired && <span className="previewMockupReq">*</span>}:
+                      </label>
+                    </div>
+                    <div className="previewMockupInputWrapper">
+                      <Type size={14} className="previewInputIcon" />
+                      <input
+                        type="text"
+                        readOnly
+                        className="previewMockupInput"
+                        placeholder={formValues[0]?.label?.trim() || `Enter ${formName.trim() || 'name'} (e.g. Ananya, Priya)`}
+                      />
+                      <span className="previewMockupCharCounter">0/50</span>
+                    </div>
+                    <span className="previewMockupNote">
+                      ✨ Customer types their custom name before clicking &ldquo;Add to Bag&rdquo;. This custom name will be saved in their order.
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="paramValuesSection">
+                <div className="valuesSectionHeader">
+                  <h5>Master Values for &ldquo;{formName || 'this parameter'}&rdquo;</h5>
+                  <span className="valuesSectionNote">
+                    Add all possible choices. When adding products, you can select only the applicable subset.
+                  </span>
+                </div>
+
+                {/* Quick Add Bar */}
+                <div className="addValueBar">
+                  {formDisplayType === 'color' && (
+                    <div className="colorPickerWrap">
+                      <input
+                        type="color"
+                        className="colorPickerMain"
+                        value={newColorHex}
+                        onChange={(e) => setNewColorHex(e.target.value)}
+                        title="Pick swatch color"
+                      />
+                    </div>
+                  )}
+                  <input
+                    type="text"
+                    placeholder={
+                      formDisplayType === 'color'
+                        ? 'e.g. Ruby Red, Emerald Green'
+                        : 'e.g. 22", 24", Small, Medium, 2.6'
+                    }
+                    value={newValueInput}
+                    onChange={(e) => setNewValueInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddValueToForm();
+                      }
+                    }}
+                    className="newValueInput"
+                  />
+                  <button
+                    type="button"
+                    className="outlineBtn addValueBtn"
+                    onClick={() => handleAddValueToForm()}
+                    disabled={!newValueInput.trim()}
+                  >
+                    <Plus size={14} /> Add Value
+                  </button>
+                </div>
+
+                {/* Color Presets Palette for Color Display Type */}
+                {formDisplayType === 'color' && (
+                  <div className="colorPresetsPalette">
+                    <span className="paletteLabel">Quick Color Presets:</span>
+                    <div className="paletteList">
+                      {DEFAULT_COLOR_PALETTE.map((pal) => (
+                        <button
+                          key={pal.label}
+                          type="button"
+                          className="paletteChip"
+                          onClick={() => handleAddValueToForm(pal.label, pal.hex)}
+                          title={`Add ${pal.label} (${pal.hex})`}
+                        >
+                          <span className="paletteDot" style={{ backgroundColor: pal.hex }} />
+                          <span>{pal.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Values List */}
+                <div className="formValuesTable">
+                  {formValues.map((v, idx) => (
+                    <div key={idx} className="formValueRow">
+                      <span className="valIndex">#{idx + 1}</span>
+
+                      {formDisplayType === 'color' ? (
+                        <div className="colorInputGroup">
+                          <input
+                            type="color"
+                            className="colorPickerMini"
+                            value={v.colorCode || '#dc2626'}
+                            onChange={(e) => handleUpdateValue(idx, 'colorCode', e.target.value)}
+                            title="Pick swatch color"
+                          />
+                          <input
+                            type="text"
+                            className="valLabelInput"
+                            placeholder="Color label (e.g. Ruby Red)"
+                            value={v.label || ''}
+                            onChange={(e) => handleUpdateValue(idx, 'label', e.target.value)}
+                          />
+                        </div>
+                      ) : (
                         <input
                           type="text"
                           className="valLabelInput"
-                          placeholder="Color label (e.g. Ruby Red)"
+                          placeholder="Value label (e.g. 24 inch, Medium)"
                           value={v.label || ''}
                           onChange={(e) => handleUpdateValue(idx, 'label', e.target.value)}
                         />
-                      </div>
-                    ) : (
-                      <input
-                        type="text"
-                        className="valLabelInput"
-                        placeholder="Value label (e.g. 24 inch, Medium)"
-                        value={v.label || ''}
-                        onChange={(e) => handleUpdateValue(idx, 'label', e.target.value)}
-                      />
-                    )}
+                      )}
 
-                    <div className="valRowActions">
-                      <button
-                        type="button"
-                        className="valMoveBtn"
-                        onClick={() => handleMoveValue(idx, -1)}
-                        disabled={idx === 0}
-                        title="Move Up"
-                      >
-                        <ArrowUp size={12} />
-                      </button>
-                      <button
-                        type="button"
-                        className="valMoveBtn"
-                        onClick={() => handleMoveValue(idx, 1)}
-                        disabled={idx === formValues.length - 1}
-                        title="Move Down"
-                      >
-                        <ArrowDown size={12} />
-                      </button>
-                      <button
-                        type="button"
-                        className="valDeleteBtn"
-                        onClick={() => handleRemoveValue(idx)}
-                        title="Delete value"
-                      >
-                        <Trash2 size={13} />
-                      </button>
+                      <div className="valRowActions">
+                        <button
+                          type="button"
+                          className="valMoveBtn"
+                          onClick={() => handleMoveValue(idx, -1)}
+                          disabled={idx === 0}
+                          title="Move Up"
+                        >
+                          <ArrowUp size={12} />
+                        </button>
+                        <button
+                          type="button"
+                          className="valMoveBtn"
+                          onClick={() => handleMoveValue(idx, 1)}
+                          disabled={idx === formValues.length - 1}
+                          title="Move Down"
+                        >
+                          <ArrowDown size={12} />
+                        </button>
+                        <button
+                          type="button"
+                          className="valDeleteBtn"
+                          onClick={() => handleRemoveValue(idx)}
+                          title="Delete value"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Form Submit Bar */}
             <div className="editorSubmitBar">
@@ -527,10 +609,16 @@ export default function AdminParameterManager({ onParametersUpdated }) {
                         ? '🎨 Color Swatches'
                         : param.displayType === 'dropdown'
                         ? '▾ Dropdown'
+                        : param.displayType === 'text' || param.displayType === 'textbox'
+                        ? '✍️ Custom Textbox'
                         : '🔘 Pill Buttons'}
                     </span>
                     <span className="paramModeBadge">
-                      {param.selectionMode === 'multiple' ? 'Multi-select' : 'Single-select'}
+                      {param.displayType === 'text' || param.displayType === 'textbox'
+                        ? 'Custom Text'
+                        : param.selectionMode === 'multiple'
+                        ? 'Multi-select'
+                        : 'Single-select'}
                     </span>
                     {param.required && <span className="paramReqBadge">Required</span>}
                     {!param.isActive && <span className="paramInactiveBadge">Inactive</span>}
@@ -559,22 +647,38 @@ export default function AdminParameterManager({ onParametersUpdated }) {
 
               {/* Parameter Values Preview */}
               <div className="paramCardValues">
-                <span className="valuesCountLabel">
-                  {(param.values || []).length} Available Master Choices:
-                </span>
-                <div className="paramValuesChipList">
-                  {(param.values || []).map((val, vIdx) => (
-                    <span key={vIdx} className="paramValueChip">
-                      {param.displayType === 'color' && val.colorCode && (
-                        <span
-                          className="chipColorDot"
-                          style={{ backgroundColor: val.colorCode }}
-                        />
-                      )}
-                      <span>{val.label}</span>
+                {param.displayType === 'text' || param.displayType === 'textbox' ? (
+                  <div className="paramTextSummary">
+                    <div className="paramTextInputBadge">
+                      <Type size={13} />
+                      <span>Custom text input (Customer types name / inscription)</span>
+                    </div>
+                    {param.values?.[0]?.label && param.values[0].label !== 'custom_text' && (
+                      <span className="paramTextHintBadge">
+                        Placeholder hint: &ldquo;{param.values[0].label}&rdquo;
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <span className="valuesCountLabel">
+                      {(param.values || []).length} Available Master Choices:
                     </span>
-                  ))}
-                </div>
+                    <div className="paramValuesChipList">
+                      {(param.values || []).map((val, vIdx) => (
+                        <span key={vIdx} className="paramValueChip">
+                          {param.displayType === 'color' && val.colorCode && (
+                            <span
+                              className="chipColorDot"
+                              style={{ backgroundColor: val.colorCode }}
+                            />
+                          )}
+                          <span>{val.label}</span>
+                        </span>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           ))

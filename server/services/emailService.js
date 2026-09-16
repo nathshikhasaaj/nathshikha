@@ -423,17 +423,28 @@ function renderOrderItemsTable(order) {
         (item.selectedParameters && typeof item.selectedParameters === 'object' ? item.selectedParameters : null) ||
         (item.selectedOptions && typeof item.selectedOptions === 'object' ? item.selectedOptions : {});
 
-      const optionsText = Object.entries(paramsMap)
-        .filter(([_, v]) => v)
-        .map(([k, v]) => `${k}: ${v}`)
-        .join(' · ');
+      const entries = Object.entries(paramsMap).filter(([_, v]) => v !== undefined && v !== null && String(v).trim() !== '');
+
+      const badgesHtml = entries
+        .map(([k, v]) => {
+          const isCustom = String(k).toLowerCase().includes('name') ||
+            String(k).toLowerCase().includes('custom') ||
+            String(k).toLowerCase().includes('text') ||
+            String(k).toLowerCase().includes('engrav');
+
+          if (isCustom) {
+            return `<span style="font-size:11.5px; font-weight:700; color:#78350f; background:#fef3c7; border:1px solid #f59e0b; padding:2px 7px; border-radius:4px; display:inline-block; margin-top:3px; margin-right:4px;">✍️ ${k}: <u>${v}</u></span>`;
+          }
+          return `<span style="font-size:11px; color:#475569; background:#f1f5f9; border:1px solid #cbd5e1; padding:2px 6px; border-radius:3px; display:inline-block; margin-top:3px; margin-right:4px;">${k}: ${v}</span>`;
+        })
+        .join('');
 
       return `
     <tr>
       <td>
         <strong>${item.name}</strong>
         ${item.tag ? `<br><small style="color:#c69a59; font-weight:600;">${item.tag}</small>` : ''}
-        ${optionsText ? `<br><span style="font-size:11.5px; color:#78350f; background:#fef3c7; padding:2px 6px; border-radius:3px; display:inline-block; margin-top:3px;">${optionsText}</span>` : ''}
+        ${badgesHtml ? `<br>${badgesHtml}` : ''}
       </td>
       <td style="text-align:center;">${item.qty || 1}</td>
       <td style="text-align:right;">₹${Number(item.price || 0).toLocaleString('en-IN')}</td>

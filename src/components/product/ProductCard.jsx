@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Images, Heart, ShoppingBag, Check, Loader2 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Images, Heart, ShoppingBag, Check, Loader2, SlidersHorizontal } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { money } from '../../utils/formatters';
 import './ProductCard.css';
 
 export default function ProductCard({ p }) {
+  const navigate = useNavigate();
   const { addToCart, toggleWishlist, isInWishlist } = useCart();
   const { t } = useLanguage();
   const [isAdding, setIsAdding] = useState(false);
@@ -23,10 +24,20 @@ export default function ProductCard({ p }) {
 
   const isOutOfStock = p.stock !== undefined && p.stock <= 0;
 
+  const hasOptions =
+    (Array.isArray(p.productParameters) && p.productParameters.length > 0) ||
+    (Array.isArray(p.parameters) && p.parameters.length > 0) ||
+    (Array.isArray(p.options) && p.options.length > 0);
+
   const handleAdd = (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (isAdding || isOutOfStock) return;
+
+    if (hasOptions) {
+      navigate(`/product/${p.id || p._id}`);
+      return;
+    }
 
     setIsAdding(true);
     addToCart(p, 1);
@@ -87,11 +98,11 @@ export default function ProductCard({ p }) {
         </Link>
         <strong>{money(p.price)}</strong>
         <button
-          className={`bagBtn ${isOutOfStock ? 'bagBtn--outOfStock' : ''} ${justAdded ? 'bagBtn--added' : ''} ${isAdding ? 'bagBtn--loading' : ''}`}
+          className={`bagBtn ${isOutOfStock ? 'bagBtn--outOfStock' : ''} ${justAdded ? 'bagBtn--added' : ''} ${isAdding ? 'bagBtn--loading' : ''} ${hasOptions ? 'bagBtn--options' : ''}`}
           type="button"
           onClick={handleAdd}
           disabled={isAdding || isOutOfStock}
-          aria-label={isOutOfStock ? `${p.name} is out of stock` : `Add ${p.name} to bag`}
+          aria-label={isOutOfStock ? `${p.name} is out of stock` : hasOptions ? `Customize options for ${p.name}` : `Add ${p.name} to bag`}
         >
           {isOutOfStock ? (
             <span>{t('out_of_stock', 'OUT OF STOCK')}</span>
@@ -104,6 +115,11 @@ export default function ProductCard({ p }) {
             <>
               <Check size={14} className="btnCheckIcon" />
               <span>{t('added_exclamation', 'ADDED ✓')}</span>
+            </>
+          ) : hasOptions ? (
+            <>
+              <SlidersHorizontal size={13} className="btnBagIcon" />
+              <span>{t('select_options', 'CUSTOMIZE')}</span>
             </>
           ) : (
             <>

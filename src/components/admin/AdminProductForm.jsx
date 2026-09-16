@@ -17,7 +17,8 @@ import {
   SlidersHorizontal,
   Palette,
   Check,
-  ChevronDown
+  ChevronDown,
+  Type
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { ALL_CATEGORIES } from '../../utils/parameterHelpers';
@@ -161,9 +162,14 @@ export default function AdminProductForm({
     if (isAlreadyAssigned) return;
 
     // By default, select all active values of this parameter
-    const activeValues = Array.isArray(masterParam.values)
+    const isTextType = masterParam.displayType === 'text' || masterParam.displayType === 'textbox';
+    const activeValues = Array.isArray(masterParam.values) && masterParam.values.length > 0
       ? masterParam.values.filter((v) => v.isActive !== false)
-      : [];
+      : (isTextType ? [{ label: 'Custom Name / Text', value: 'custom_text', colorCode: null, inStock: true }] : []);
+
+    const effectiveValues = activeValues.length > 0
+      ? activeValues
+      : (isTextType ? [{ label: 'Custom Name / Text', value: 'custom_text', colorCode: null, inStock: true }] : []);
 
     const newAssignment = {
       parameterId: masterParam.id || masterParam._id,
@@ -171,11 +177,13 @@ export default function AdminProductForm({
       displayType: masterParam.displayType || 'buttons',
       selectionMode: masterParam.selectionMode || 'single',
       required: masterParam.required !== undefined ? masterParam.required : true,
-      selectedValueIds: activeValues.map((v) => String(v.id || v._id || v.value || v.label)),
-      selectedValues: activeValues.map((v) => ({
-        valueId: String(v.id || v._id || v.value || v.label),
-        label: v.label,
-        value: v.value || v.label,
+      selectedValueIds: isTextType
+        ? ['custom_text']
+        : effectiveValues.map((v) => String(v.id || v._id || v.value || v.label)),
+      selectedValues: effectiveValues.map((v) => ({
+        valueId: String(v.id || v._id || v.value || v.label || 'custom_text'),
+        label: v.label || 'Custom Text',
+        value: v.value || v.label || 'custom_text',
         colorCode: v.colorCode || null,
         inStock: true
       }))
@@ -667,6 +675,7 @@ export default function AdminProductForm({
                 const masterParam = masterParameters.find(
                   (mp) => String(mp.id || mp._id) === String(ap.parameterId)
                 );
+                const isTextParam = ap.displayType === 'text' || ap.displayType === 'textbox';
                 const masterValues = masterParam ? masterParam.values || [] : ap.selectedValues || [];
                 const selectedCount = (ap.selectedValueIds || []).length;
 
@@ -678,18 +687,22 @@ export default function AdminProductForm({
                         <h5>{ap.name}</h5>
                         <span className="paramTypePill">
                           {ap.displayType === 'color'
-                            ? 'Color Swatches'
+                            ? '🎨 Color Swatches'
                             : ap.displayType === 'dropdown'
-                            ? 'Dropdown'
-                            : 'Buttons'}
+                            ? '▾ Dropdown'
+                            : isTextParam
+                            ? '✍️ Custom Textbox'
+                            : '🔘 Buttons'}
                         </span>
-                        <span className="selectedCountPill">
-                          {selectedCount} of {masterValues.length} choices selected
+                        <span className={`selectedCountPill ${isTextParam ? 'customTextParamPill' : ''}`}>
+                          {isTextParam
+                            ? '✍️ Textbox Active'
+                            : `${selectedCount} of ${masterValues.length} choices selected`}
                         </span>
                       </div>
 
                       <div className="paramCardHeaderActions">
-                        {masterParam && (
+                        {!isTextParam && masterParam && (
                           <>
                             <button
                               type="button"
@@ -718,47 +731,78 @@ export default function AdminProductForm({
                       </div>
                     </div>
 
-                    {/* Multiselect Value Chips */}
-                    <div className="multiselectValuesContainer">
-                      <span className="multiselectLabel">
-                        Select which choices are available for this piece:
-                      </span>
-
-                      <div className="multiselectChipsGrid">
-                        {masterValues.map((mv, vIdx) => {
-                          const valKey = String(mv.id || mv._id || mv.value || mv.label);
-                          const isChecked = (ap.selectedValueIds || []).includes(valKey);
-
-                          return (
-                            <label
-                              key={vIdx}
-                              className={`multiselectValChip ${isChecked ? 'isChecked' : ''}`}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={isChecked}
-                                onChange={() => handleToggleValueSelection(apIdx, mv)}
-                              />
-                              {ap.displayType === 'color' && mv.colorCode && (
-                                <span
-                                  className="chipColorDot"
-                                  style={{ backgroundColor: mv.colorCode }}
-                                />
-                              )}
-                              <span className="chipText">{mv.label}</span>
-                              {isChecked && <Check size={12} className="checkIconSmall" />}
-                            </label>
-                          );
-                        })}
-                      </div>
-
-                      {selectedCount === 0 && (
-                        <div className="noValuesSelectedWarning">
-                          <AlertCircle size={13} />
-                          <span>No choices selected. Please check at least one value above for this parameter to appear to customers.</span>
+                    {/* Content Section: Textbox Info or Multiselect Choices */}
+                    {isTextParam ? (
+                      <div className="assignedCustomTextInputInfo">
+                        <div className="customTextInputBanner">
+                          <Type size={16} className="customTextTypeIcon" />
+                          <div>
+                            <h6>Custom Name / Text Input Enabled</h6>
+                            <p>
+                              Customers will see a dedicated text box on the product page where they can enter their custom name or inscription before ordering.
+                            </p>
+                          </div>
                         </div>
-                      )}
-                    </div>
+                        <div className="assignedCustomTextPreview">
+                          <label className="assignedPreviewLabel">Storefront Textbox Preview:</label>
+                          <div className="assignedPreviewInputWrap">
+                            <Type size={13} className="assignedPreviewIcon" />
+                            <input
+                              type="text"
+                              readOnly
+                              className="assignedPreviewInput"
+                              placeholder={
+                                masterParam?.values?.[0]?.label && masterParam.values[0].label !== 'custom_text'
+                                  ? masterParam.values[0].label
+                                  : `Enter ${ap.name} (e.g. Ananya, Rohan)`
+                              }
+                            />
+                            <span className="assignedPreviewCount">0/50</span>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="multiselectValuesContainer">
+                        <span className="multiselectLabel">
+                          Select which choices are available for this piece:
+                        </span>
+
+                        <div className="multiselectChipsGrid">
+                          {masterValues.map((mv, vIdx) => {
+                            const valKey = String(mv.id || mv._id || mv.value || mv.label);
+                            const isChecked = (ap.selectedValueIds || []).includes(valKey);
+
+                            return (
+                              <label
+                                key={vIdx}
+                                className={`multiselectValChip ${isChecked ? 'isChecked' : ''}`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={() => handleToggleValueSelection(apIdx, mv)}
+                                />
+                                {ap.displayType === 'color' && mv.colorCode && (
+                                  <span
+                                    className="chipColorDot"
+                                    style={{ backgroundColor: mv.colorCode }}
+                                  />
+                                )}
+                                <span className="chipText">{mv.label}</span>
+                                {isChecked && <Check size={12} className="checkIconSmall" />}
+                              </label>
+                            );
+                          })}
+                        </div>
+
+                        {selectedCount === 0 && (
+                          <div className="noValuesSelectedWarning">
+                            <AlertCircle size={13} />
+                            <span>No choices selected. Please check at least one value above for this parameter to appear to customers.</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })}

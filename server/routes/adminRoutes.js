@@ -170,20 +170,31 @@ function sanitizeProductParameters(rawParams) {
         ? param.selectedValueIds.map((id) => String(id).trim())
         : selectedValues.map((v) => v.valueId);
 
+      const isTextType = param.displayType === 'text' || param.displayType === 'textbox';
+      const effectiveSelectedValues = selectedValues.length > 0
+        ? selectedValues
+        : (isTextType
+            ? [{ valueId: 'custom_text', label: 'Custom Name / Text', value: 'custom_text', inStock: true }]
+            : []);
+
+      const effectiveSelectedValueIds = selectedValueIds.length > 0
+        ? selectedValueIds
+        : (isTextType ? ['custom_text'] : effectiveSelectedValues.map((v) => v.valueId));
+
       return {
         parameterId: param.parameterId && mongoose.Types.ObjectId.isValid(param.parameterId)
           ? param.parameterId
           : new mongoose.Types.ObjectId(),
         name: String(param.name || '').trim(),
-        displayType: ['buttons', 'dropdown', 'color'].includes(param.displayType)
+        displayType: ['buttons', 'dropdown', 'color', 'text', 'textbox'].includes(param.displayType)
           ? param.displayType
           : 'buttons',
         selectionMode: ['single', 'multiple'].includes(param.selectionMode)
           ? param.selectionMode
           : 'single',
         required: param.required !== undefined ? Boolean(param.required) : true,
-        selectedValueIds,
-        selectedValues
+        selectedValueIds: effectiveSelectedValueIds,
+        selectedValues: effectiveSelectedValues
       };
     });
 }
