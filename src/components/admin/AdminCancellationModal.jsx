@@ -9,7 +9,7 @@ import {
   Loader2,
   Info
 } from 'lucide-react';
-import { money, formatOrderStatus } from '../../utils/formatters';
+import { money, formatOrderStatus, formatWhatsAppPhone } from '../../utils/formatters';
 import './AdminCancellationModal.css';
 
 export default function AdminCancellationModal({
@@ -33,7 +33,7 @@ export default function AdminCancellationModal({
   const numCharge = refundType === 'with_charge' ? Math.max(0, Number(cancellationCharge) || 0) : 0;
   const calculatedRefund = Math.max(0, paidAmount - numCharge);
 
-  const cleanPhone = (order.phone || '').replace(/\D/g, '');
+  const cleanPhone = formatWhatsAppPhone(order.phone);
   const isApproved =
     order.cancellation_status === 'cancellation_approved' ||
     order.cancellationStatus === 'cancellation_approved';

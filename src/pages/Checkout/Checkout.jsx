@@ -1421,6 +1421,13 @@ export default function Checkout() {
             </div>
           </div>
 
+          {/* Prominent Payment Warning & Instruction */}
+          <div className="paymentWarningNotice">
+            <p>
+              ⚠️ <strong>IMPORTANT:</strong> Please complete the payment <strong>FIRST</strong> using the QR code / UPI ID above. After your payment is successful, click '<strong>I HAVE PAID</strong>'.
+            </p>
+          </div>
+
           {/* I Have Paid Submit Button */}
           <button
             className="goldBtn iHavePaidBtn"
@@ -1437,6 +1444,11 @@ export default function Checkout() {
               <span>✓ {t('i_have_paid', 'I HAVE PAID')} · {money(grandTotal)}</span>
             )}
           </button>
+
+          {/* Short Instruction near I HAVE PAID button */}
+          <p className="paymentButtonSubtext">
+            Please click 'I HAVE PAID' only AFTER completing the payment.
+          </p>
         </div>
       </div>
 

@@ -25,7 +25,7 @@ import {
   Boxes
 } from 'lucide-react';
 import { api } from '../../services/api';
-import { money, formatOrderStatus } from '../../utils/formatters';
+import { money, formatOrderStatus, formatWhatsAppPhone } from '../../utils/formatters';
 import { getParameterEntries } from '../../utils/parameterHelpers';
 import './AdminOrderDetailsModal.css';
 
@@ -52,7 +52,8 @@ export default function AdminOrderDetailsModal({
     order.order_status === 'shipped' ||
     order.orderStatus === 'shipped' ||
     Boolean(order.shipment_partner || order.tracking_id);
-  const cleanPhone = (order.phone || '').replace(/\D/g, '');
+  const cleanPhone = formatWhatsAppPhone(order.phone);
+  const cleanRecipientPhone = formatWhatsAppPhone(order.recipient_phone || order.recipientPhone || order.phone);
 
   const isCancelRequested =
     order.cancellation_status === 'cancellation_requested' ||
@@ -387,9 +388,9 @@ export default function AdminOrderDetailsModal({
                       <span className="infoVal phoneVal">
                         <Phone size={13} />
                         <span>{order.recipient_phone || order.recipientPhone || order.phone}</span>
-                        {cleanPhone && (
+                        {cleanRecipientPhone && (
                           <a
-                            href={`https://wa.me/${(order.recipient_phone || order.recipientPhone || order.phone).replace(/\D/g, '')}?text=Hi%20${encodeURIComponent(
+                            href={`https://wa.me/${cleanRecipientPhone}?text=Hi%20${encodeURIComponent(
                               order.recipient_name || order.name
                             )}%2C%20regarding%20your%20Nathshikha%20gift%20delivery%20%23${order.order_no}`}
                             target="_blank"

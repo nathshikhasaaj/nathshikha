@@ -26,6 +26,7 @@ import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { compressImage, compressMultipleImages } from '../../utils/imageCompressor';
+import { formatWhatsAppPhone } from '../../utils/formatters';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import AdminHeader from '../../components/admin/AdminHeader';
 import AdminStats from '../../components/admin/AdminStats';
@@ -828,16 +829,18 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
                           <h4 className="suggestionTitle">{s.title}</h4>
                           <div className="suggestionAuthor">
                             By <b>{s.name}</b> · {s.email} ·{' '}
-                            <a
-                              href={`https://wa.me/${s.phone.replace(/\D/g, '')}?text=Hi%20${encodeURIComponent(
-                                s.name
-                              )}%2C%20regarding%20your%20Nathshikha%20design%20suggestion`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="suggestionWaLink"
-                            >
-                              <MessageSquare size={13} /> {s.phone}
-                            </a>
+                            {s.phone && (
+                              <a
+                                href={`https://wa.me/${formatWhatsAppPhone(s.phone)}?text=Hi%20${encodeURIComponent(
+                                  s.name
+                                )}%2C%20regarding%20your%20Nathshikha%20design%20suggestion`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="suggestionWaLink"
+                              >
+                                <MessageSquare size={13} /> {s.phone}
+                              </a>
+                            )}
                           </div>
                         </div>
 

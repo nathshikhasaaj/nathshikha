@@ -142,3 +142,45 @@ export async function copyToClipboard(text) {
     return false;
   }
 }
+
+/**
+ * Normalize phone number specifically for generating international WhatsApp URLs (wa.me)
+ * - Removes non-digits (spaces, hyphens, parentheses, plus signs)
+ * - Converts Indian local 10-digit / 11-digit (with leading 0) numbers to international 91XXXXXXXXXX format
+ * - Prevents duplicate country codes (e.g. 9191XXXXXXXXXX or +91 91XXXXXXXXXX)
+ * - Preserves international format without modifying stored or displayed DB values
+ * @param {string|number} phone
+ * @returns {string}
+ */
+export function formatWhatsAppPhone(phone) {
+  if (!phone) return '';
+  let digits = String(phone).replace(/\D/g, '');
+  if (!digits) return '';
+
+  // Handle international dialing prefix '00' (e.g., 00919876543210 -> 919876543210)
+  if (digits.startsWith('00')) {
+    digits = digits.replace(/^00+/, '');
+  }
+
+  // Handle single trunk zero (e.g., 09876543210 -> 9876543210)
+  if (digits.startsWith('0') && digits.length === 11) {
+    digits = digits.slice(1);
+  }
+
+  // Handle +91 followed by trunk zero (e.g., 9109876543210 -> 919876543210)
+  if (digits.startsWith('910') && digits.length === 13) {
+    digits = '91' + digits.slice(3);
+  }
+
+  // Prevent duplicate Indian country code (e.g., 91919876543210 -> 919876543210)
+  while (digits.startsWith('9191') && digits.length >= 14) {
+    digits = digits.slice(2);
+  }
+
+  // If 10-digit Indian local number, prepend India country code 91
+  if (digits.length === 10) {
+    return `91${digits}`;
+  }
+
+  return digits;
+}

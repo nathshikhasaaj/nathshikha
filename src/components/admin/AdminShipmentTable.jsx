@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Truck, Edit3, Eye, MessageSquare, Package, Clock, ExternalLink, Boxes } from 'lucide-react';
-import { formatOrderDate } from '../../utils/formatters';
+import { formatOrderDate, formatWhatsAppPhone } from '../../utils/formatters';
 import './AdminShipmentTable.css';
 
 export default function AdminShipmentTable({
@@ -100,7 +100,7 @@ export default function AdminShipmentTable({
                 <tbody>
                   {shipmentItems.map((item) => {
                     const o = item.primaryOrder;
-                    const cleanPhone = (o.phone || '').replace(/\D/g, '');
+                    const cleanPhone = formatWhatsAppPhone(o.phone);
                     const partner = o.shipment_partner || o.shipmentPartner || 'Speed Post';
                     const tracking = o.tracking_id || o.trackingId || '—';
                     const shippedTimestamp = o.shipped_at || o.shippedAt || o.updatedAt || o.created_at;
@@ -222,7 +222,7 @@ export default function AdminShipmentTable({
             <div className="mobileShipmentsList">
               {shipmentItems.map((item) => {
                 const o = item.primaryOrder;
-                const cleanPhone = (o.phone || '').replace(/\D/g, '');
+                const cleanPhone = formatWhatsAppPhone(o.phone);
                 const partner = o.shipment_partner || o.shipmentPartner || 'Speed Post';
                 const tracking = o.tracking_id || o.trackingId || '—';
                 const shippedTimestamp = o.shipped_at || o.shippedAt || o.updatedAt || o.created_at;

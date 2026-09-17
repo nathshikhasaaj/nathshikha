@@ -19,7 +19,8 @@ import {
   money,
   getOrderAgeInDays,
   formatOrderAge,
-  formatOrderDate
+  formatOrderDate,
+  formatWhatsAppPhone
 } from '../../utils/formatters';
 import { getParameterEntries } from '../../utils/parameterHelpers';
 import './AdminOrderList.css';
@@ -382,7 +383,7 @@ export default function AdminOrderList({
                       o.payment_status === 'verified' ||
                       o.paymentStatus === 'verified' ||
                       o.payment_status === 'paid';
-                    const cleanPhone = (o.phone || '').replace(/\D/g, '');
+                    const cleanPhone = formatWhatsAppPhone(o.phone);
                     const itemsCount = (o.items || []).length;
                     const firstItem = o.items?.[0] || { name: 'Handcrafted Piece' };
 
@@ -676,7 +677,7 @@ export default function AdminOrderList({
                   o.payment_status === 'verified' ||
                   o.paymentStatus === 'verified' ||
                   o.payment_status === 'paid';
-                const cleanPhone = (o.phone || '').replace(/\D/g, '');
+                const cleanPhone = formatWhatsAppPhone(o.phone);
                 const itemsCount = (o.items || []).length;
                 const firstItem = o.items?.[0] || { name: 'Handcrafted Piece' };
                 const totalQty = (o.items || []).reduce((a, i) => a + (i.qty || 1), 0);
