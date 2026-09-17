@@ -40,6 +40,7 @@ import SectionTitle from '../../components/common/SectionTitle';
 import Breadcrumbs from '../../components/common/Breadcrumbs';
 import ReviewModal from '../../components/review/ReviewModal';
 import CancelOrderModal from '../../components/common/CancelOrderModal';
+import CustomizationEditModal from '../../components/common/CustomizationEditModal';
 import OrderStatusVisualBanner, { ORDER_STAGE_CONFIG } from '../../components/common/OrderStatusVisualBanner';
 import './Orders.css';
 
@@ -110,6 +111,12 @@ export default function Orders() {
 
   // Cancel Order Modal State
   const [cancelModalState, setCancelModalState] = useState({
+    isOpen: false,
+    order: null
+  });
+
+  // Customization Edit Modal State
+  const [customizationModalState, setCustomizationModalState] = useState({
     isOpen: false,
     order: null
   });
@@ -286,6 +293,30 @@ export default function Orders() {
         ...updatedOrder,
         cancellation_status: 'cancellation_requested',
         cancellationStatus: 'cancellation_requested'
+      }));
+    }
+  };
+
+  const openCustomizationModal = (order) => {
+    setCustomizationModalState({ isOpen: true, order });
+  };
+
+  const closeCustomizationModal = () => {
+    setCustomizationModalState({ isOpen: false, order: null });
+  };
+
+  const handleCustomizationSuccess = (updatedOrder) => {
+    setOrders((prev) =>
+      prev.map((o) =>
+        (o.id === updatedOrder.id || o.order_no === updatedOrder.order_no || o._id === updatedOrder._id)
+          ? { ...o, ...updatedOrder }
+          : o
+      )
+    );
+    if (trackResult && (trackResult.id === updatedOrder.id || trackResult.order_no === updatedOrder.order_no || trackResult._id === updatedOrder._id)) {
+      setTrackResult((prev) => ({
+        ...prev,
+        ...updatedOrder
       }));
     }
   };
@@ -676,6 +707,102 @@ export default function Orders() {
               </div>
             </div>
 
+            {/* Customization Details Block (Live Tracker) */}
+            {(() => {
+              const custom = trackResult.customization;
+              const hasCustom = custom && (custom.requested || custom.details || custom.referenceImage || custom.reference_image);
+              const customImg = custom?.referenceImage || custom?.reference_image;
+              const isEditable = ['placed', 'payment_pending', 'verification_pending', 'confirmed'].includes(trackResult.order_status);
+
+              if (hasCustom) {
+                return (
+                  <div className="orderCustomizationCard">
+                    <div className="orderCustomHeader">
+                      <div className="orderCustomTitle">
+                        <Sparkles size={16} color="var(--maroon, #5b1420)" />
+                        <strong>🎨 Customization Request</strong>
+                      </div>
+                      {isEditable ? (
+                        <button
+                          type="button"
+                          className="editCustomReqBtn"
+                          onClick={() => openCustomizationModal(trackResult)}
+                          title="Edit your customization requirement"
+                        >
+                          <Edit3 size={12} />
+                          <span>Edit Requirement</span>
+                        </button>
+                      ) : (
+                        <span className="customLockedBadge" title="Jewellery has entered production">
+                          🔒 In Production
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="orderCustomNotice">
+                      <CheckCircle2 size={13} color="#15803d" />
+                      <span>Customization request received. Our team will review your requirement.</span>
+                    </div>
+
+                    {custom.details && (
+                      <div className="orderCustomTextWrap">
+                        <span className="customFieldLabel">Your Requirement / Instructions:</span>
+                        <blockquote className="orderCustomQuote">
+                          "{custom.details}"
+                        </blockquote>
+                      </div>
+                    )}
+
+                    {customImg && (
+                      <div className="orderCustomImageWrap">
+                        <span className="customFieldLabel">Reference Design:</span>
+                        <div className="orderCustomImageRow">
+                          <img
+                            src={customImg}
+                            alt="Customization Reference"
+                            className="orderCustomThumb"
+                            onClick={() => window.open(customImg, '_blank', 'noopener,noreferrer')}
+                          />
+                          <a
+                            href={customImg}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="viewFullImageBtn"
+                          >
+                            <ExternalLink size={12} />
+                            <span>View Full Image</span>
+                          </a>
+                        </div>
+                      </div>
+                    )}
+
+                    {!isEditable && (
+                      <small className="customLockedFootnote">
+                        * Customization is locked as your jewellery is now in crafting or dispatch stage.
+                      </small>
+                    )}
+                  </div>
+                );
+              }
+
+              if (isEditable) {
+                return (
+                  <div className="addCustomPromptRow">
+                    <button
+                      type="button"
+                      className="addCustomTriggerBtn"
+                      onClick={() => openCustomizationModal(trackResult)}
+                    >
+                      <Sparkles size={13} />
+                      <span>Need customization in this order? Click to add requirement</span>
+                    </button>
+                  </div>
+                );
+              }
+
+              return null;
+            })()}
+
             {/* Tracked Items Breakdown */}
             <div className="trackResultItemsList">
               <span className="itemsListTitle">Ordered Items ({trackResult.items?.length || 0}):</span>
@@ -989,6 +1116,102 @@ export default function Orders() {
                   </div>
                 )}
 
+                {/* Customization Details Block (Order History Card) */}
+                {(() => {
+                  const custom = o.customization;
+                  const hasCustom = custom && (custom.requested || custom.details || custom.referenceImage || custom.reference_image);
+                  const customImg = custom?.referenceImage || custom?.reference_image;
+                  const isEditable = ['placed', 'payment_pending', 'verification_pending', 'confirmed'].includes(o.order_status);
+
+                  if (hasCustom) {
+                    return (
+                      <div className="orderCustomizationCard">
+                        <div className="orderCustomHeader">
+                          <div className="orderCustomTitle">
+                            <Sparkles size={16} color="var(--maroon, #5b1420)" />
+                            <strong>🎨 Customization Request</strong>
+                          </div>
+                          {isEditable ? (
+                            <button
+                              type="button"
+                              className="editCustomReqBtn"
+                              onClick={() => openCustomizationModal(o)}
+                              title="Edit your customization requirement"
+                            >
+                              <Edit3 size={12} />
+                              <span>Edit Requirement</span>
+                            </button>
+                          ) : (
+                            <span className="customLockedBadge" title="Jewellery has entered production">
+                              🔒 In Production
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="orderCustomNotice">
+                          <CheckCircle2 size={13} color="#15803d" />
+                          <span>Customization request received. Our team will review your requirement.</span>
+                        </div>
+
+                        {custom.details && (
+                          <div className="orderCustomTextWrap">
+                            <span className="customFieldLabel">Your Requirement / Instructions:</span>
+                            <blockquote className="orderCustomQuote">
+                              "{custom.details}"
+                            </blockquote>
+                          </div>
+                        )}
+
+                        {customImg && (
+                          <div className="orderCustomImageWrap">
+                            <span className="customFieldLabel">Reference Design:</span>
+                            <div className="orderCustomImageRow">
+                              <img
+                                src={customImg}
+                                alt="Customization Reference"
+                                className="orderCustomThumb"
+                                onClick={() => window.open(customImg, '_blank', 'noopener,noreferrer')}
+                              />
+                              <a
+                                href={customImg}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="viewFullImageBtn"
+                              >
+                                <ExternalLink size={12} />
+                                <span>View Full Image</span>
+                              </a>
+                            </div>
+                          </div>
+                        )}
+
+                        {!isEditable && (
+                          <small className="customLockedFootnote">
+                            * Customization is locked as your jewellery is now in crafting or dispatch stage.
+                          </small>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  if (isEditable) {
+                    return (
+                      <div className="addCustomPromptRow">
+                        <button
+                          type="button"
+                          className="addCustomTriggerBtn"
+                          onClick={() => openCustomizationModal(o)}
+                        >
+                          <Sparkles size={13} />
+                          <span>Need customization in this order? Click to add requirement</span>
+                        </button>
+                      </div>
+                    );
+                  }
+
+                  return null;
+                })()}
+
                 {/* Delivered Order Product Reviews Section */}
                 {isDelivered && o.items && o.items.length > 0 && (
                   <div className="orderItemsReviewSection">
@@ -1144,6 +1367,15 @@ export default function Orders() {
         onClose={closeCancelModal}
         order={cancelModalState.order}
         onSuccess={handleCancelSuccess}
+        setToast={setToast}
+      />
+
+      {/* Customization Edit Modal */}
+      <CustomizationEditModal
+        isOpen={customizationModalState.isOpen}
+        onClose={closeCustomizationModal}
+        order={customizationModalState.order}
+        onSuccess={handleCustomizationSuccess}
         setToast={setToast}
       />
     </main>

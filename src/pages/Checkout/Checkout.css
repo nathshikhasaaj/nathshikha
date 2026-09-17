@@ -1938,6 +1938,275 @@
 }
 
 /* ============================================================ */
+/* CUSTOMIZATION REQUEST SECTION (OPTIONAL)                     */
+/* ============================================================ */
+.customizationRequestSection {
+  background: #fdfaf4;
+  border: 1.5px solid #ebdcc5;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.customizationSectionHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-bottom: 1px dashed #ebdcc5;
+  padding-bottom: 10px;
+}
+
+.customizationHeaderTitleRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.customizationBadgeIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #f5ede1;
+  color: var(--maroon, #6d1b29);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.customizationHeaderTitleRow h4 {
+  font-family: var(--font-serif, 'Cinzel', serif);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--maroon, #6d1b29);
+  margin: 0 0 3px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.optionalPill {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  background: #f0ebe1;
+  color: #7d6e64;
+  padding: 2px 7px;
+  border-radius: 10px;
+  border: 1px solid #dcd1c2;
+}
+
+.customizationHeaderTitleRow p {
+  margin: 0;
+  font-size: 11.5px;
+  color: #6a5a54;
+  line-height: 1.4;
+}
+
+.customizationCardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.customizationFieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.customizationLabelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #4a3b34;
+}
+
+.charCount {
+  font-size: 10px;
+  color: #8c7d74;
+  font-weight: 500;
+}
+
+.customizationTextarea {
+  width: 100%;
+  border: 1.5px solid #dcd1c4 !important;
+  border-radius: 6px !important;
+  padding: 10px 12px !important;
+  font-size: 12px !important;
+  font-family: inherit;
+  color: #2b1f1d;
+  background: #ffffff !important;
+  resize: vertical;
+  min-height: 70px;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+}
+
+.customizationTextarea:focus {
+  border-color: var(--maroon, #6d1b29) !important;
+  box-shadow: 0 0 0 2px rgba(109, 27, 41, 0.1) !important;
+  outline: none;
+}
+
+.customizationImageUploadWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.customizationUploadLabel {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #4a3b34;
+}
+
+.customizationDropzone {
+  display: block;
+  border: 1.5px dashed #c9baa6;
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.customizationDropzone:hover {
+  border-color: var(--maroon, #6d1b29);
+  background: #fdfaf6;
+}
+
+.dropzoneContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.dropzoneIcon {
+  color: var(--gold, #d4af37);
+  flex-shrink: 0;
+}
+
+.dropzoneText {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  gap: 2px;
+}
+
+.dropzoneText b {
+  font-size: 11.5px;
+  color: #2b1f1d;
+}
+
+.dropzoneText small {
+  font-size: 10.5px;
+  color: #7a6b65;
+}
+
+.customizationPreviewBox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  border: 1.5px solid #ebdcc5;
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.customizationThumb {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #dcd1c4;
+  flex-shrink: 0;
+}
+
+.customizationMeta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.previewFileName {
+  font-size: 12px;
+  font-weight: 700;
+  color: #2b1f1d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.previewFileSize {
+  font-size: 10.5px;
+  color: #7a6b65;
+}
+
+.uploadingStatusText {
+  font-size: 10.5px;
+  color: #b45309;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.uploadedStatusSuccess {
+  font-size: 10.5px;
+  color: #166534;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.removeCustomizationFileBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  border: 1px solid #ebdcc5;
+  background: #fff;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.removeCustomizationFileBtn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.customizationErrorNotice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #dc2626;
+  background: #fef2f2;
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid #fecaca;
+}
+
+/* ============================================================ */
 /* RESPONSIVE MEDIA QUERIES                                     */
 /* ============================================================ */
 

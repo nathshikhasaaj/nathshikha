@@ -1,0 +1,257 @@
+.customizationEditModal {
+  background: #ffffff;
+  border-radius: 12px;
+  max-width: 520px;
+  width: 92%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  animation: modalFadeIn 0.2s ease-out;
+  border: 1px solid #e7d8c5;
+}
+
+.customizationEditHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0e6d8;
+  background: #fffdf9;
+}
+
+.customizationEditTitle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.customIconCircle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fdf5e2;
+  border: 1px solid #ebd09c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.customizationEditTitle h3 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--maroon, #5b1420);
+}
+
+.customizationEditTitle p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #7d6e64;
+  font-weight: 600;
+}
+
+.customizationEditBody {
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.customizationModalNotice {
+  background: #fcf8f0;
+  border-left: 3.5px solid #d4af37;
+  padding: 10px 14px;
+  border-radius: 0 6px 6px 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: #5d483e;
+}
+
+.customizationModalNotice p {
+  margin: 0;
+}
+
+.customLabelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.customLabelRow label,
+.fieldLabel {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #3b2b25;
+}
+
+.charCount {
+  font-size: 11px;
+  color: #8c7d75;
+}
+
+.customTextareaInput {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1.5px solid #d8c8b0;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #2b1f1a;
+  background: #ffffff;
+  resize: vertical;
+  min-height: 90px;
+  transition: border-color 0.15s ease;
+  font-family: inherit;
+}
+
+.customTextareaInput:focus {
+  outline: none;
+  border-color: var(--maroon, #5b1420);
+  box-shadow: 0 0 0 2px rgba(91, 20, 32, 0.1);
+}
+
+.customUploadDropzone {
+  display: block;
+  border: 1.5px dashed #cfbe9f;
+  border-radius: 8px;
+  background: #fdfaf4;
+  padding: 16px 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-top: 6px;
+}
+
+.customUploadDropzone:hover {
+  background: #faf3e5;
+  border-color: #b89858;
+}
+
+.dropzoneInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.dropzoneCamIcon {
+  color: #b89858;
+}
+
+.dropzoneText b {
+  display: block;
+  font-size: 12.5px;
+  color: #4b3930;
+}
+
+.dropzoneText small {
+  display: block;
+  font-size: 11px;
+  color: #8c7d75;
+  margin-top: 2px;
+}
+
+.modalImagePreviewBox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #fdfbf7;
+  border: 1px solid #ebd8bf;
+  border-radius: 8px;
+  margin-top: 6px;
+}
+
+.modalCustomThumb {
+  width: 54px;
+  height: 54px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #d4af37;
+  flex-shrink: 0;
+}
+
+.modalCustomMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.imageStatusTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: #3b2b25;
+}
+
+.uploadedPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #15803d;
+}
+
+.uploadingPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #b45309;
+}
+
+.removeImgBtn {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.removeImgBtn:hover {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.customErrorNotice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 500;
+  background: #fef2f2;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #fecaca;
+}
+
+.customModalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+  border-top: 1px solid #f0e6d8;
+  padding-top: 16px;
+}
+
+.submitCustomBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}

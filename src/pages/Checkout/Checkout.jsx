@@ -23,7 +23,9 @@ import {
   Copy,
   Download,
   Smartphone,
-  QrCode
+  QrCode,
+  Camera,
+  X
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -102,6 +104,14 @@ export default function Checkout() {
   const [createAccount, setCreateAccount] = useState(false);
   const [accountPassword, setAccountPassword] = useState('');
   const [saveDetails, setSaveDetails] = useState(false);
+
+  // Optional Customization Request State
+  const [customizationDetails, setCustomizationDetails] = useState('');
+  const [customizationFile, setCustomizationFile] = useState(null);
+  const [customizationPreviewUrl, setCustomizationPreviewUrl] = useState('');
+  const [customizationUploadedUrl, setCustomizationUploadedUrl] = useState('');
+  const [customizationUploading, setCustomizationUploading] = useState(false);
+  const [customizationFileError, setCustomizationFileError] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [orderPlacedModal, setOrderPlacedModal] = useState(null);
@@ -366,6 +376,67 @@ export default function Checkout() {
     setToast('Coupon removed.');
   };
 
+  const handleCustomizationImageChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setCustomizationFileError('');
+
+    const validMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const validExts = /\.(jpe?g|png|webp)$/i;
+
+    if (!validMimes.includes(file.type.toLowerCase()) && !validExts.test(file.name.toLowerCase())) {
+      setCustomizationFileError('Please select a valid image file (JPG, PNG, or WebP).');
+      return;
+    }
+
+    const maxSize = 10 * 1024 * 1024; // 10 MB
+    if (file.size > maxSize) {
+      setCustomizationFileError('Image size exceeds 10MB. Please choose a smaller image.');
+      return;
+    }
+
+    const preview = URL.createObjectURL(file);
+    setCustomizationFile(file);
+    setCustomizationPreviewUrl(preview);
+    setCustomizationUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const token = localStorage.getItem('nw-auth-token');
+      const res = await fetch('/api/orders/upload-customization', {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to upload reference image.');
+      }
+
+      setCustomizationUploadedUrl(data.url);
+      setToast('Reference image attached successfully! ✨');
+    } catch (err) {
+      console.error('Customization image upload error:', err);
+      setCustomizationFileError(err.message || 'Failed to upload image. Please try again.');
+    } finally {
+      setCustomizationUploading(false);
+    }
+  };
+
+  const handleRemoveCustomizationImage = () => {
+    if (customizationPreviewUrl) {
+      URL.revokeObjectURL(customizationPreviewUrl);
+    }
+    setCustomizationFile(null);
+    setCustomizationPreviewUrl('');
+    setCustomizationUploadedUrl('');
+    setCustomizationFileError('');
+  };
+
   const configuredUpiId = (liveUpiId || import.meta.env.VITE_UPI_ID || DEFAULT_UPI_ID).trim();
   const payeeName = 'Miss Shweta Satish Darekar';
   const formattedAmount = Number(grandTotal || 0).toFixed(2);
@@ -511,6 +582,8 @@ export default function Checkout() {
         state: locationData.state,
         agreeTerms: true,
         acceptedTerms: true,
+        customizationDetails: customizationDetails.trim().slice(0, 1000),
+        customizationImage: customizationUploadedUrl || null,
         items: cart.map((x) => {
           const selectedParams =
             (x.selectedParameters && typeof x.selectedParameters === 'object' ? x.selectedParameters : null) ||
@@ -845,6 +918,112 @@ export default function Checkout() {
               />
             </>
           )}
+
+          {/* Optional Customization Request Section */}
+          <div className="customizationRequestSection">
+            <div className="customizationSectionHeader">
+              <div className="customizationHeaderTitleRow">
+                <div className="customizationBadgeIcon">
+                  <Sparkles size={16} />
+                </div>
+                <div>
+                  <h4>✨ Need Customization? <span className="optionalPill">OPTIONAL</span></h4>
+                  <p>
+                    Need any customization in your jewellery? Tell us your requirement before placing the order.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="customizationCardBody">
+              {/* Customization Details Textarea */}
+              <div className="customizationFieldGroup">
+                <div className="customizationLabelRow">
+                  <label htmlFor="customizationTextarea">Customization Requirement:</label>
+                  <span className="charCount">
+                    {customizationDetails.length}/1000 characters
+                  </span>
+                </div>
+                <textarea
+                  id="customizationTextarea"
+                  rows={3}
+                  maxLength={1000}
+                  placeholder="Example: I want green stones instead of red stones."
+                  value={customizationDetails}
+                  onChange={(e) => setCustomizationDetails(e.target.value)}
+                  className="customizationTextarea"
+                />
+              </div>
+
+              {/* Reference Image Upload */}
+              <div className="customizationImageUploadWrap">
+                <label className="customizationUploadLabel">
+                  Reference Image (Optional):
+                </label>
+
+                {!customizationPreviewUrl ? (
+                  <label className="customizationDropzone" htmlFor="customizationFileInput">
+                    <input
+                      type="file"
+                      id="customizationFileInput"
+                      accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                      onChange={handleCustomizationImageChange}
+                      style={{ display: 'none' }}
+                      disabled={customizationUploading}
+                    />
+                    <div className="dropzoneContent">
+                      <Camera size={20} className="dropzoneIcon" />
+                      <div className="dropzoneText">
+                        <b>Click to upload reference image or design sketch</b>
+                        <small>Supported formats: JPG, JPEG, PNG, WebP (Max 10MB)</small>
+                      </div>
+                    </div>
+                  </label>
+                ) : (
+                  <div className="customizationPreviewBox">
+                    <img
+                      src={customizationPreviewUrl}
+                      alt="Customization Reference Preview"
+                      className="customizationThumb"
+                    />
+                    <div className="customizationMeta">
+                      <span className="previewFileName" title={customizationFile?.name}>
+                        {customizationFile?.name || 'reference-image.jpg'}
+                      </span>
+                      <small className="previewFileSize">
+                        {customizationFile?.size ? (customizationFile.size / (1024 * 1024)).toFixed(2) + ' MB' : ''}
+                      </small>
+                      {customizationUploading ? (
+                        <span className="uploadingStatusText">
+                          <Loader2 size={12} className="spinIcon" /> Uploading image…
+                        </span>
+                      ) : (
+                        <span className="uploadedStatusSuccess">
+                          <CheckCircle2 size={12} /> Image attached to order
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      className="removeCustomizationFileBtn"
+                      onClick={handleRemoveCustomizationImage}
+                      title="Remove image"
+                      disabled={customizationUploading}
+                    >
+                      <X size={15} />
+                    </button>
+                  </div>
+                )}
+
+                {customizationFileError && (
+                  <div className="customizationErrorNotice">
+                    <AlertCircle size={13} />
+                    <span>{customizationFileError}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
 
           {/* Shipping Method Section */}
           <div className="shippingMethodSection">

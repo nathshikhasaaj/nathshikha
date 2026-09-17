@@ -383,6 +383,14 @@ router.get('/orders', async (req, res) => {
           refund_processed_at: o.refundProcessedAt || null,
           refund_processed_by: o.refundProcessedBy || null,
           cancellation_admin_notes: o.cancellationAdminNotes || null,
+          customization: o.customization || {
+            requested: false,
+            details: null,
+            reference_image: null,
+            referenceImage: null,
+            requested_at: null,
+            requestedAt: null
+          },
           shipment_partner: o.shipmentPartner,
           tracking_id: o.trackingId,
           shipped_at: o.shippedAt,

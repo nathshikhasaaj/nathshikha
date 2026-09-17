@@ -414,6 +414,19 @@ export default function AdminOrderList({
                         {/* 1. Order No */}
                         <td className="orderNoCell">
                           <b>#{o.order_no}</b>
+                          {Boolean(
+                            o.customization?.requested ||
+                            (o.customization?.details && o.customization.details.trim()) ||
+                            o.customization?.referenceImage ||
+                            o.customization?.reference_image
+                          ) && (
+                            <span
+                              className="adminCustomizationBadge"
+                              title={`Customization Request: ${o.customization?.details || 'Reference image attached'}`}
+                            >
+                              🎨 Customization
+                            </span>
+                          )}
                         </td>
 
                         {/* 2. Customer */}
@@ -713,6 +726,19 @@ export default function AdminOrderList({
                         )}
                       </div>
                       <div className="mobileCardHeaderBadges">
+                        {Boolean(
+                          o.customization?.requested ||
+                          (o.customization?.details && o.customization.details.trim()) ||
+                          o.customization?.referenceImage ||
+                          o.customization?.reference_image
+                        ) && (
+                          <span
+                            className="mobileCustomizationBadge"
+                            title={`Customization Request: ${o.customization?.details || 'Reference image attached'}`}
+                          >
+                            🎨 Customization
+                          </span>
+                        )}
                         <span className={`statusChip statusChip_${o.order_status}`}>
                           {getStatusLabel(o.order_status)}
                         </span>

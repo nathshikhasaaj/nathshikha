@@ -1,5 +1,8 @@
 import express from 'express';
 import crypto from 'node:crypto';
+import path from 'node:path';
+import fs from 'node:fs';
+import sharp from 'sharp';
 import mongoose from 'mongoose';
 import { Order } from '../models/Order.js';
 import { Product } from '../models/Product.js';
@@ -21,9 +24,44 @@ import {
   orderLimiter,
   lookupLimiter
 } from '../middleware/securityMiddleware.js';
+import { uploadSingle, uploadsDir } from '../middleware/uploadMiddleware.js';
 import { sendOrderPlacedEmail } from '../services/emailService.js';
 
 const router = express.Router();
+
+// Customer: Upload reference image for jewellery customization request
+router.post('/upload-customization', orderLimiter, uploadSingle(['image', 'photo', 'file', 'referenceImage']), async (req, res) => {
+  if (!req.file) {
+    return res
+      .status(400)
+      .json({ error: 'Please select a valid image file (JPG, PNG, WEBP, GIF, HEIC, AVIF).' });
+  }
+
+  const filename = `customization-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.jpg`;
+  const target = path.join(uploadsDir, filename);
+
+  try {
+    // Validate image format and strip any dangerous EXIF/executable metadata using Sharp
+    const optimizedBuffer = await sharp(req.file.path)
+      .rotate() // Auto-orient based on EXIF
+      .jpeg({ quality: 90, mozjpeg: true })
+      .toBuffer();
+
+    await fs.promises.writeFile(target, optimizedBuffer);
+
+    if (fs.existsSync(req.file.path) && req.file.path !== target) {
+      await fs.promises.unlink(req.file.path).catch(() => {});
+    }
+
+    res.json({ url: `/uploads/${filename}` });
+  } catch (err) {
+    console.error('Failed to validate customization image:', err.message);
+    if (fs.existsSync(req.file.path)) {
+      await fs.promises.unlink(req.file.path).catch(() => {});
+    }
+    res.status(400).json({ error: 'Invalid or unsupported image file. Please upload a valid JPG, PNG, or WebP image.' });
+  }
+});
 
 /**
  * Calculate dynamic order age in complete elapsed days from creation timestamp.
@@ -214,7 +252,12 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
     customerEmail,
     agreeTerms,
     acceptedTerms,
-    termsAccepted
+    termsAccepted,
+    customizationDetails,
+    customization_details,
+    customizationImage,
+    customization_image,
+    customization
   } = req.body;
 
   // Strict Input Validation - Require Terms & Conditions Acceptance
@@ -531,6 +574,58 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
     const orderNo = 'NW' + Date.now().toString().slice(-8);
     const guestToken = crypto.randomBytes(24).toString('hex'); // 48-char high-entropy token
 
+    const rawCustomDetails =
+      customizationDetails !== undefined
+        ? customizationDetails
+        : customization_details !== undefined
+        ? customization_details
+        : (typeof customization === 'object' && customization !== null ? customization.details : null);
+
+    const rawCustomImage =
+      customizationImage !== undefined
+        ? customizationImage
+        : customization_image !== undefined
+        ? customization_image
+        : (typeof customization === 'object' && customization !== null
+          ? (customization.referenceImage || customization.reference_image)
+          : null);
+
+    const cleanCustomDetails =
+      typeof rawCustomDetails === 'string' && rawCustomDetails.trim()
+        ? rawCustomDetails.trim().slice(0, 2000)
+        : null;
+
+    let cleanCustomImage = null;
+    if (typeof rawCustomImage === 'string' && rawCustomImage.trim()) {
+      const trimmed = rawCustomImage.trim();
+      const match = trimmed.match(/(\/?uploads\/[a-zA-Z0-9_\-\.]+)/);
+      if (match && !trimmed.includes('..')) {
+        cleanCustomImage = match[1].startsWith('/') ? match[1] : `/${match[1]}`;
+      } else if (trimmed.startsWith('data:image/') || trimmed.startsWith('http')) {
+        cleanCustomImage = trimmed;
+      }
+    }
+
+    const hasCustomization = Boolean(
+      cleanCustomDetails ||
+      cleanCustomImage ||
+      (typeof customization === 'object' && customization !== null && Boolean(customization.requested))
+    );
+
+    const customizationObj = hasCustomization
+      ? {
+          requested: true,
+          details: cleanCustomDetails || null,
+          referenceImage: cleanCustomImage || null,
+          requestedAt: new Date()
+        }
+      : {
+          requested: false,
+          details: null,
+          referenceImage: null,
+          requestedAt: null
+        };
+
     const order = await Order.create({
       orderNo,
       userId: user?.id && isValidObjectId(user.id) ? user.id : null,
@@ -560,6 +655,7 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
       orderStatus: 'placed',
       acceptedTerms: true,
       guestToken,
+      customization: customizationObj,
       items: normalizedItems
     });
 
@@ -680,6 +776,14 @@ router.get('/', auth, async (req, res) => {
           refund_processed_at: o.refundProcessedAt || null,
           refund_processed_by: o.refundProcessedBy || null,
           cancellation_admin_notes: o.cancellationAdminNotes || null,
+          customization: o.customization || {
+            requested: false,
+            details: null,
+            reference_image: null,
+            referenceImage: null,
+            requested_at: null,
+            requestedAt: null
+          },
           shipment_partner: o.shipmentPartner,
           tracking_id: o.trackingId,
           shipped_at: o.shippedAt,
@@ -784,6 +888,119 @@ router.post('/:id/cancel-request', optionalAuth, async (req, res) => {
   }
 });
 
+// Customer: Add or Modify Customization Request (Allowed BEFORE 'making' stage)
+router.post('/:id/customization', optionalAuth, async (req, res) => {
+  const { id } = req.params;
+  const {
+    details,
+    customizationDetails,
+    customization_details,
+    referenceImage,
+    reference_image,
+    guestToken,
+    phone,
+    email
+  } = req.body;
+
+  const rawDetails =
+    details !== undefined
+      ? details
+      : customizationDetails !== undefined
+      ? customizationDetails
+      : customization_details;
+  const rawImage = referenceImage !== undefined ? referenceImage : reference_image;
+
+  try {
+    let order = null;
+    if (isValidObjectId(id)) {
+      order = await Order.findById(id);
+    }
+    if (!order) {
+      order = await Order.findOne({
+        orderNo: new RegExp(`^${escapeRegex(String(id).trim().replace(/^#/, ''))}$`, 'i')
+      });
+    }
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found.' });
+    }
+
+    // Ownership Verification (IDOR Protection)
+    const user = req.user;
+    const reqEmail = (email || user?.email || '').trim().toLowerCase();
+    const reqPhone = (phone || user?.phone || '').replace(/\D/g, '');
+    const orderEmail = (order.email || '').trim().toLowerCase();
+    const orderPhone = (order.phone || '').replace(/\D/g, '');
+    const reqToken = guestToken || (req.headers['x-guest-token'] ? String(req.headers['x-guest-token']) : null);
+
+    const isOwner =
+      (user?.id && order.userId && order.userId.toString() === user.id) ||
+      (user?.role === 'admin') ||
+      (reqEmail && orderEmail && reqEmail === orderEmail) ||
+      (reqPhone && orderPhone && (orderPhone.endsWith(reqPhone) || reqPhone.endsWith(orderPhone))) ||
+      (reqToken && order.guestToken && order.guestToken === reqToken) ||
+      (!order.userId &&
+        (reqEmail === orderEmail || reqPhone === orderPhone || !order.guestToken || reqToken === order.guestToken));
+
+    if (!isOwner) {
+      return res.status(403).json({ error: 'You are not authorized to update customization for this order.' });
+    }
+
+    // Order status rule: Customer may modify/add customization only while order has NOT entered "Making"
+    const lockedStatuses = ['making', 'packing', 'processing', 'shipped', 'delivered', 'cancelled'];
+    if (lockedStatuses.includes(order.orderStatus)) {
+      return res.status(400).json({
+        error:
+          'Customization cannot be modified because your order has already entered production (Making stage) or dispatch.'
+      });
+    }
+
+    const cleanDetails =
+      typeof rawDetails === 'string' && rawDetails.trim()
+        ? rawDetails.trim().slice(0, 2000)
+        : rawDetails === ''
+        ? null
+        : order.customization?.details || null;
+
+    let cleanImage = null;
+    if (typeof rawImage === 'string' && rawImage.trim()) {
+      const trimmed = rawImage.trim();
+      const match = trimmed.match(/(\/?uploads\/[a-zA-Z0-9_\-\.]+)/);
+      if (match && !trimmed.includes('..')) {
+        cleanImage = match[1].startsWith('/') ? match[1] : `/${match[1]}`;
+      } else if (trimmed.startsWith('data:image/') || trimmed.startsWith('http')) {
+        cleanImage = trimmed;
+      }
+    } else if (rawImage === null || rawImage === '') {
+      cleanImage = null;
+    } else {
+      cleanImage = order.customization?.referenceImage || null;
+    }
+
+    const isRequested = Boolean(cleanDetails || cleanImage);
+
+    order.customization = {
+      requested: isRequested,
+      details: isRequested ? cleanDetails || null : null,
+      referenceImage: isRequested ? cleanImage : null,
+      requestedAt: order.customization?.requestedAt || (isRequested ? new Date() : null)
+    };
+
+    await order.save();
+
+    res.json({
+      ok: true,
+      message: isRequested
+        ? 'Customization request received. Our team will review your requirement.'
+        : 'Customization request updated.',
+      order: order.toJSON()
+    });
+  } catch (err) {
+    console.error('Error updating customization request:', err);
+    res.status(500).json({ error: 'Failed to update customization request.' });
+  }
+});
+
 // Public Order Tracking by Order Number
 router.post('/track', lookupLimiter, async (req, res) => {
   try {
@@ -880,6 +1097,14 @@ router.post('/track', lookupLimiter, async (req, res) => {
         refund_processed_at: order.refundProcessedAt || null,
         refund_processed_by: order.refundProcessedBy || null,
         cancellation_admin_notes: order.cancellationAdminNotes || null,
+        customization: order.customization || {
+          requested: false,
+          details: null,
+          reference_image: null,
+          referenceImage: null,
+          requested_at: null,
+          requestedAt: null
+        },
         shipment_partner: order.shipmentPartner,
         tracking_id: order.trackingId,
         courier_portal_url: courierPortalUrl,
@@ -984,6 +1209,14 @@ router.post('/lookup-orders', lookupLimiter, async (req, res) => {
           refund_processed_at: o.refundProcessedAt || null,
           refund_processed_by: o.refundProcessedBy || null,
           cancellation_admin_notes: o.cancellationAdminNotes || null,
+          customization: o.customization || {
+            requested: false,
+            details: null,
+            reference_image: null,
+            referenceImage: null,
+            requested_at: null,
+            requestedAt: null
+          },
           shipment_partner: o.shipmentPartner,
           tracking_id: o.trackingId,
           shipped_at: o.shippedAt,

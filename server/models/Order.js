@@ -287,6 +287,27 @@ const orderSchema = new mongoose.Schema(
       type: String,
       default: null
     },
+    customization: {
+      requested: {
+        type: Boolean,
+        default: false
+      },
+      details: {
+        type: String,
+        default: null,
+        trim: true,
+        maxlength: 2000
+      },
+      referenceImage: {
+        type: String,
+        default: null,
+        trim: true
+      },
+      requestedAt: {
+        type: Date,
+        default: null
+      }
+    },
     items: [orderItemSchema]
   },
   {
@@ -326,6 +347,14 @@ const orderSchema = new mongoose.Schema(
         ret.refund_processed_at = ret.refundProcessedAt || null;
         ret.refund_processed_by = ret.refundProcessedBy || null;
         ret.cancellation_admin_notes = ret.cancellationAdminNotes || null;
+        ret.customization = {
+          requested: Boolean(ret.customization?.requested),
+          details: ret.customization?.details || null,
+          reference_image: ret.customization?.referenceImage || ret.customization?.reference_image || null,
+          referenceImage: ret.customization?.referenceImage || ret.customization?.reference_image || null,
+          requested_at: ret.customization?.requestedAt || null,
+          requestedAt: ret.customization?.requestedAt || null
+        };
         ret.upi_utr = ret.upiUtr;
         ret.upi_paid_at = ret.upiPaidAt;
         ret.payment_transaction_id = ret.paymentTransactionId || ret.upiUtr;
@@ -353,6 +382,14 @@ orderSchema.pre('validate', function () {
   if (this.customer_name && !this.customerName) this.customerName = this.customer_name;
   if (this.customer_phone && !this.customerPhone) this.customerPhone = this.customer_phone;
   if (this.customer_email && !this.customerEmail) this.customerEmail = this.customer_email;
+  if (this.customization) {
+    if (this.customization.reference_image && !this.customization.referenceImage) {
+      this.customization.referenceImage = this.customization.reference_image;
+    }
+    if (this.customization.requested_at && !this.customization.requestedAt) {
+      this.customization.requestedAt = this.customization.requested_at;
+    }
+  }
 });
 
 export const Order = mongoose.model('Order', orderSchema);

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Clock, CheckCircle2, ShoppingBag, Package, Instagram, Facebook } from 'lucide-react';
+import { Clock, CheckCircle2, ShoppingBag, Package, Instagram, Facebook, Sparkles } from 'lucide-react';
 import { money } from '../../utils/formatters';
 import Breadcrumbs from '../../components/common/Breadcrumbs';
 import CheckoutSteps from '../../components/common/CheckoutSteps';
@@ -12,6 +12,8 @@ export default function OrderSuccess() {
   const order = saved?.order?.order_no === orderNo ? saved.order : null;
 
   const isVerified = order?.payment_status === 'verified' || order?.payment_status === 'paid';
+  const custom = order?.customization;
+  const hasCustomization = Boolean(custom?.requested || custom?.details || custom?.referenceImage || custom?.reference_image);
 
   return (
     <main className="page successPage">
@@ -58,6 +60,48 @@ export default function OrderSuccess() {
             </>
           )}
         </div>
+
+        {/* Customization Request Summary Banner if Present */}
+        {hasCustomization && (
+          <div
+            style={{
+              background: 'linear-gradient(135deg, #fffdf8 0%, #fffbf2 100%)',
+              border: '1.5px solid #d4af37',
+              borderRadius: 8,
+              padding: '12px 16px',
+              margin: '14px 0',
+              textAlign: 'left',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 6,
+              boxShadow: '0 2px 6px rgba(212, 175, 55, 0.08)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--maroon, #5b1420)', fontWeight: 700, fontSize: 13 }}>
+              <Sparkles size={15} color="#d4af37" />
+              <span>🎨 Jewellery Customization Request Received</span>
+            </div>
+            <p style={{ margin: 0, fontSize: 12.5, color: '#4a3d36', lineHeight: 1.45 }}>
+              Your customization instructions have been received. Our team will review your requirement during crafting.
+            </p>
+            {custom.details && (
+              <blockquote
+                style={{
+                  margin: '4px 0 0',
+                  padding: '6px 10px',
+                  background: '#ffffff',
+                  borderLeft: '3px solid #d4af37',
+                  borderRadius: '0 4px 4px 0',
+                  fontSize: 12,
+                  color: '#2b1f1a',
+                  fontStyle: 'italic'
+                }}
+              >
+                "{custom.details}"
+              </blockquote>
+            )}
+          </div>
+        )}
 
         {/* Ordered Items Breakdown */}
         {order?.items && order.items.length > 0 && (

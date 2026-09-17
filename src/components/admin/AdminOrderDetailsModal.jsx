@@ -22,11 +22,15 @@ import {
   Loader2,
   AlertTriangle,
   RotateCcw,
-  Boxes
+  Boxes,
+  FileText,
+  Sparkles,
+  ExternalLink
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { money, formatOrderStatus, formatWhatsAppPhone } from '../../utils/formatters';
 import { getParameterEntries } from '../../utils/parameterHelpers';
+import AdminOrderBillModal from './AdminOrderBillModal';
 import './AdminOrderDetailsModal.css';
 
 export default function AdminOrderDetailsModal({
@@ -41,6 +45,7 @@ export default function AdminOrderDetailsModal({
   const [copiedItemIndex, setCopiedItemIndex] = useState(null);
   const [generatingItemIndex, setGeneratingItemIndex] = useState(null);
   const [copyNotice, setCopyNotice] = useState('');
+  const [isBillModalOpen, setIsBillModalOpen] = useState(false);
 
   if (!isOpen || !order) return null;
 
@@ -67,6 +72,15 @@ export default function AdminOrderDetailsModal({
     order.refund_status === 'refund' ||
     order.refundStatus === 'refund';
   const hasCancellation = isCancelRequested || isCancelApproved || isRefundCompleted;
+
+  const hasCustomization = Boolean(
+    order.customization?.requested ||
+    (order.customization?.details && String(order.customization.details).trim()) ||
+    order.customization?.referenceImage ||
+    order.customization?.reference_image
+  );
+  const customizationImgUrl =
+    order.customization?.referenceImage || order.customization?.reference_image || null;
 
   const getProductCode = (item, index) => {
     if (item.productId) {
@@ -165,6 +179,15 @@ export default function AdminOrderDetailsModal({
           </div>
 
           <div className="modalHeaderRight">
+            <button
+              type="button"
+              className="goldBtn compact generateBillHeaderBtn"
+              onClick={() => setIsBillModalOpen(true)}
+              title="Generate and send official order bill"
+            >
+              <FileText size={14} />
+              <span>Generate & Send Bill</span>
+            </button>
             <button
               type="button"
               className="outlineBtn printBtn"
@@ -366,6 +389,77 @@ export default function AdminOrderDetailsModal({
               </div>
             </div>
           )}
+
+          {/* Dedicated Customization Request Section */}
+          <div className={`detailsSectionCard customizationAdminCard ${hasCustomization ? 'hasCustomizationCard' : 'noCustomizationCard'}`}>
+            <div className="customizationCardHeader">
+              <div className="customizationHeaderLeft">
+                <Sparkles size={16} color="var(--gold, #d4af37)" />
+                <h3 className="customizationHeaderTitle">
+                  🎨 CUSTOMIZATION REQUEST
+                </h3>
+              </div>
+              <span className={`customizationStatusTag ${hasCustomization ? 'tagCustomRequired' : 'tagCustomNone'}`}>
+                {hasCustomization ? 'Customization Required: Yes' : 'Customization Required: No'}
+              </span>
+            </div>
+
+            {hasCustomization ? (
+              <div className="customizationAdminContent">
+                <div className="customizationDetailsTextWrap">
+                  <span className="customLabel">Customer Request:</span>
+                  <blockquote className="customDetailsBlockquote">
+                    "{order.customization?.details || (customizationImgUrl ? 'Reference design image provided (no additional text note).' : 'Customization requested')}"
+                  </blockquote>
+                </div>
+
+                {customizationImgUrl && (
+                  <div className="customizationImagePreviewWrap">
+                    <span className="customLabel">Reference Image:</span>
+                    <div className="customImageActionCard">
+                      <img
+                        src={customizationImgUrl}
+                        alt="Customer Reference Design"
+                        className="customAdminThumbnail"
+                        onClick={() => window.open(customizationImgUrl, '_blank', 'noopener,noreferrer')}
+                      />
+                      <div className="customImageMeta">
+                        <span className="imageName">Reference Design Sketch / Photo</span>
+                        <a
+                          href={customizationImgUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="viewImageActionBtn"
+                        >
+                          <ExternalLink size={13} />
+                          <span>View Full Image</span>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="customizationDateMeta">
+                  <span className="customDateLabel">Requested At:</span>
+                  <span className="customDateVal">
+                    {order.customization?.requested_at || order.customization?.requestedAt
+                      ? new Date(order.customization.requested_at || order.customization.requestedAt).toLocaleString('en-IN', {
+                          dateStyle: 'medium',
+                          timeStyle: 'short'
+                        })
+                      : new Date(order.created_at || order.createdAt).toLocaleString('en-IN', {
+                          dateStyle: 'medium',
+                          timeStyle: 'short'
+                        })}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="noCustomizationState">
+                <span className="mutedText">No customization requested</span>
+              </div>
+            )}
+          </div>
 
           {/* 3-Column Info Grid */}
           <div className="detailsGrid">
@@ -955,6 +1049,15 @@ export default function AdminOrderDetailsModal({
           </div>
 
           <div className="modalFooterActions">
+            <button
+              type="button"
+              className="goldBtn compact modalBillBtn"
+              onClick={() => setIsBillModalOpen(true)}
+              title="Generate and send official order bill"
+            >
+              <FileText size={13} />
+              <span>Generate & Send Bill</span>
+            </button>
             {cleanPhone && (
               <a
                 href={`https://wa.me/${cleanPhone}?text=Hi%20${encodeURIComponent(
@@ -979,6 +1082,15 @@ export default function AdminOrderDetailsModal({
           </div>
         </div>
       </div>
+
+      {/* Generate & Send Order Bill Modal */}
+      {isBillModalOpen && (
+        <AdminOrderBillModal
+          order={order}
+          isOpen={isBillModalOpen}
+          onClose={() => setIsBillModalOpen(false)}
+        />
+      )}
     </div>
   );
 }
