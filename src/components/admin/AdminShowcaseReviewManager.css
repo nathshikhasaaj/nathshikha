@@ -57,14 +57,19 @@
   min-width: 280px;
   flex: 1;
   max-width: 450px;
+  box-sizing: border-box;
 }
 
 .showcaseSearchBox input {
-  border: none;
-  outline: none;
-  background: transparent;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
   width: 100%;
+  min-width: 0;
   font-size: 13px;
+  color: #1e293b;
 }
 
 .clearSearchBtn {

@@ -38,6 +38,7 @@ export default function AdminOrderDetailsModal({
   isOpen,
   onClose,
   onVerifyPaymentClick,
+  onEditPaymentClick,
   onEditShipmentClick,
   onStatusChange,
   onReviewCancellationClick
@@ -635,9 +636,39 @@ export default function AdminOrderDetailsModal({
 
             {/* 3. Payment Details Box */}
             <div className="detailsSectionCard">
-              <div className="sectionHeader">
-                <CreditCard size={16} />
-                <h3>Payment Details</h3>
+              <div className="sectionHeader" style={{ justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <CreditCard size={16} />
+                  <h3>Payment Details</h3>
+                </div>
+                {isVerified && onEditPaymentClick && (
+                  <button
+                    type="button"
+                    className="outlineBtn compact"
+                    style={{ padding: '3px 8px', fontSize: 10, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                    onClick={() => {
+                      onClose();
+                      onEditPaymentClick(order);
+                    }}
+                    title="Edit transaction ID & payment details"
+                  >
+                    <Edit3 size={11} /> Edit
+                  </button>
+                )}
+                {!isVerified && onVerifyPaymentClick && (
+                  <button
+                    type="button"
+                    className="goldBtn compact"
+                    style={{ padding: '3px 8px', fontSize: 10, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                    onClick={() => {
+                      onClose();
+                      onVerifyPaymentClick(order);
+                    }}
+                    title="Verify payment for this order"
+                  >
+                    <ShieldCheck size={11} /> Verify
+                  </button>
+                )}
               </div>
               <div className="infoList">
                 <div className="infoItem">
@@ -649,13 +680,26 @@ export default function AdminOrderDetailsModal({
 
                 <div className="infoItem">
                   <span className="infoLabel">Transaction ID</span>
-                  <span className="infoVal">
+                  <span className="infoVal txIdValWrap">
                     {order.payment_transaction_id ? (
                       <code className="utrHighlight">
                         {order.payment_transaction_id}
                       </code>
                     ) : (
                       <span className="mutedText">Not available</span>
+                    )}
+                    {isVerified && onEditPaymentClick && (
+                      <button
+                        type="button"
+                        className="inlineEditTxBtn"
+                        onClick={() => {
+                          onClose();
+                          onEditPaymentClick(order);
+                        }}
+                        title="Edit Transaction ID"
+                      >
+                        <Edit3 size={10} /> Edit
+                      </button>
                     )}
                   </span>
                 </div>

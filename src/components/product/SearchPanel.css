@@ -87,19 +87,21 @@
 
 .searchInputWrap input {
   flex: 1;
-  border: none;
-  background: transparent;
-  padding: 12px 0;
+  border: none !important;
+  background: transparent !important;
+  padding: 12px 0 !important;
   font-size: 13.5px;
-  outline: none;
+  outline: none !important;
   color: #1e293b;
   font-family: inherit;
   min-width: 0;
+  box-shadow: none !important;
 }
 
 .searchInputWrap input::placeholder {
   color: #94a3b8;
   font-size: 13px;
+  opacity: 1;
 }
 
 .searchActionBtn {

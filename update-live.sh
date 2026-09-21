@@ -33,14 +33,20 @@ echo "Active NPM Version  : $(npm -v)"
 echo "Active Node Binary  : $(which node)"
 
 # 3. Locate & Update Application Directory
-APP_DIR="/var/www/nathshikha"
-if [ ! -d "$APP_DIR" ]; then
-    if [ -d "$(pwd)/server" ] && [ -d "$(pwd)/src" ]; then
-        APP_DIR="$(pwd)"
-    else
-        mkdir -p "$APP_DIR"
-        git clone https://github.com/nathshikhasaaj/nathshikha.git "$APP_DIR"
-    fi
+if [ -d "/nathshikha/.git" ]; then
+    APP_DIR="/nathshikha"
+elif [ -d "/var/www/nathshikha/.git" ]; then
+    APP_DIR="/var/www/nathshikha"
+elif [ -d "$(pwd)/server" ] && [ -d "$(pwd)/src" ]; then
+    APP_DIR="$(pwd)"
+elif [ -d "/nathshikha" ]; then
+    APP_DIR="/nathshikha"
+elif [ -d "/var/www/nathshikha" ]; then
+    APP_DIR="/var/www/nathshikha"
+else
+    APP_DIR="/nathshikha"
+    mkdir -p "$APP_DIR"
+    git clone https://github.com/nathshikhasaaj/nathshikha.git "$APP_DIR"
 fi
 
 cd "$APP_DIR"

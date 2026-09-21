@@ -28,7 +28,7 @@ if ! command -v pm2 &> /dev/null; then
 fi
 
 # 4. Configure Application Directory
-APP_DIR="/var/www/nathshikha"
+APP_DIR="/nathshikha"
 echo "--> Setting up application in $APP_DIR..."
 mkdir -p "$APP_DIR"
 mkdir -p "$APP_DIR/public/uploads"
@@ -92,18 +92,18 @@ server {
     gzip_proxied expired no-cache no-store private auth;
     gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml application/javascript application/json image/svg+xml;
 
-    root /var/www/nathshikha/dist;
+    root /nathshikha/dist;
     index index.html;
 
     location /uploads/ {
-        alias /var/www/nathshikha/public/uploads/;
+        alias /nathshikha/public/uploads/;
         expires 30d;
         add_header Cache-Control "public, no-transform";
         try_files $uri =404;
     }
 
     location /assets/ {
-        alias /var/www/nathshikha/dist/assets/;
+        alias /nathshikha/dist/assets/;
         expires 1y;
         add_header Cache-Control "public, immutable";
         try_files $uri =404;

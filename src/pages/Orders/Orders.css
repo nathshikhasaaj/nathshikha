@@ -140,11 +140,14 @@
 }
 
 .inputFieldWrap input {
-  border: none;
-  background: transparent;
-  outline: none;
-  font-size: 13px;
+  border: none !important;
+  background: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  font-size: 13.5px;
   width: 100%;
+  min-width: 0;
   color: var(--char, #1c1815);
   font-family: inherit;
 }

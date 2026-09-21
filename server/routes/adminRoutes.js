@@ -810,6 +810,52 @@ router.post('/orders/:id/verify-payment', async (req, res) => {
   }
 });
 
+// Edit existing payment details (Transaction ID, Payment App/Mode)
+router.patch(['/orders/:id/payment', '/orders/:id/edit-payment'], async (req, res) => {
+  const { id } = req.params;
+  const { transactionId, paymentApp } = req.body;
+
+  if (!transactionId || typeof transactionId !== 'string' || !transactionId.trim()) {
+    return res.status(400).json({ error: 'Transaction ID is required and cannot be empty.' });
+  }
+
+  const cleanTxId = transactionId.trim().slice(0, 100);
+  const cleanApp = typeof paymentApp === 'string' ? paymentApp.trim().slice(0, 100) : null;
+
+  try {
+    const order = await findOrderByIdOrNo(id);
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    // Explicit allowlist update - only modify payment transaction details
+    order.paymentTransactionId = cleanTxId;
+    order.upiUtr = cleanTxId;
+    if (cleanApp) {
+      order.paymentApp = cleanApp;
+    }
+
+    // Ensure verified status & timestamps are preserved
+    if (order.paymentStatus !== 'verified' && order.paymentStatus !== 'paid') {
+      order.paymentStatus = 'verified';
+    }
+    if (!order.verifiedAt) {
+      order.verifiedAt = new Date();
+    }
+    order.verifiedBy = req.user?.name || req.user?.email || order.verifiedBy || 'Admin';
+
+    await order.save();
+
+    res.json({
+      ok: true,
+      message: 'Payment details updated successfully.',
+      order: order.toJSON()
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Failed to update payment details' });
+  }
+});
+
 // Review Customer Cancellation Request (Approve or Reject)
 router.post('/orders/:id/cancellation/review', async (req, res) => {
   const { id } = req.params;

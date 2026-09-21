@@ -98,14 +98,18 @@
   flex: 1;
   min-width: 260px;
   max-width: 440px;
+  box-sizing: border-box;
 }
 
 .adminReviewSearchBox input {
-  border: none;
-  background: transparent;
-  outline: none;
-  font-size: 12.5px;
+  border: none !important;
+  background: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  font-size: 13px;
   width: 100%;
+  min-width: 0;
   color: var(--char, #1c1815);
   font-family: inherit;
 }

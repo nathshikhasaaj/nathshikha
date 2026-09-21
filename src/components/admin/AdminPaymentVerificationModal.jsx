@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, X, AlertCircle, CheckCircle, Smartphone } from 'lucide-react';
+import { ShieldCheck, X, AlertCircle, CheckCircle, Smartphone, Edit3 } from 'lucide-react';
 import { money } from '../../utils/formatters';
 import './AdminPaymentVerificationModal.css';
 
@@ -16,7 +16,9 @@ export default function AdminPaymentVerificationModal({
   order,
   isOpen,
   onClose,
-  onVerify
+  onVerify,
+  isEdit = false,
+  onSaveEdit
 }) {
   const [transactionId, setTransactionId] = useState('');
   const [paymentApp, setPaymentApp] = useState('Google Pay');
@@ -24,14 +26,25 @@ export default function AdminPaymentVerificationModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const isEditMode = Boolean(isEdit);
+
   useEffect(() => {
     if (order) {
       setTransactionId(order.payment_transaction_id || order.upi_utr || '');
-      setPaymentApp(order.payment_app || 'Google Pay');
-      setCustomApp('');
+      const currentApp = order.payment_app || order.paymentApp || 'Google Pay';
+      if (PAYMENT_APP_OPTIONS.includes(currentApp)) {
+        setPaymentApp(currentApp);
+        setCustomApp('');
+      } else if (currentApp) {
+        setPaymentApp('Other');
+        setCustomApp(currentApp);
+      } else {
+        setPaymentApp('Google Pay');
+        setCustomApp('');
+      }
       setError('');
     }
-  }, [order, isOpen]);
+  }, [order, isOpen, isEdit]);
 
   if (!isOpen || !order) return null;
 
@@ -53,13 +66,20 @@ export default function AdminPaymentVerificationModal({
 
     setLoading(true);
     try {
-      await onVerify(order.id, {
-        transactionId: cleanTxId,
-        paymentApp: cleanApp
-      });
+      if (isEditMode && onSaveEdit) {
+        await onSaveEdit(order.id || order._id, {
+          transactionId: cleanTxId,
+          paymentApp: cleanApp
+        });
+      } else if (onVerify) {
+        await onVerify(order.id || order._id, {
+          transactionId: cleanTxId,
+          paymentApp: cleanApp
+        });
+      }
       onClose();
     } catch (err) {
-      setError(err.message || 'Failed to verify payment. Please try again.');
+      setError(err.message || (isEditMode ? 'Failed to update payment details.' : 'Failed to verify payment. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -76,11 +96,11 @@ export default function AdminPaymentVerificationModal({
         {/* Modal Header */}
         <div className="modalHeader">
           <div className="modalHeaderTitle">
-            <div className="modalBadge">
-              <ShieldCheck size={18} />
+            <div className={`modalBadge ${isEditMode ? 'editBadge' : ''}`}>
+              {isEditMode ? <Edit3 size={18} /> : <ShieldCheck size={18} />}
             </div>
             <div>
-              <h3>Verify Payment</h3>
+              <h3>{isEditMode ? 'Edit Payment Details' : 'Verify Payment'}</h3>
               <p>Order ID: #{order.order_no}</p>
             </div>
           </div>
@@ -108,9 +128,15 @@ export default function AdminPaymentVerificationModal({
             <span>Amount:</span>
             <strong className="snapshotAmount">{money(order.total)}</strong>
           </div>
+          <div className="snapshotRow">
+            <span>Current Status:</span>
+            <strong style={{ color: order.payment_status === 'verified' ? '#15803d' : '#b45309' }}>
+              {order.payment_status === 'verified' ? 'Verified' : 'Pending Verification'}
+            </strong>
+          </div>
         </div>
 
-        {/* Verification Form */}
+        {/* Verification / Edit Form */}
         <form onSubmit={handleSubmit} className="verifyForm">
           {error && (
             <div className="modalAlert">
@@ -128,13 +154,16 @@ export default function AdminPaymentVerificationModal({
               id="txIdInput"
               type="text"
               required
-              placeholder="Enter customer's transaction ID"
+              placeholder="Enter payment transaction ID"
               value={transactionId}
               onChange={(e) => setTransactionId(e.target.value)}
               className="modalInput"
+              autoFocus
             />
             <small className="fieldHint">
-              Enter the verified transaction ID from your receiving account.
+              {isEditMode
+                ? 'Correct or update the recorded transaction / reference ID.'
+                : 'Enter the verified transaction ID from your receiving account.'}
             </small>
           </div>
 
@@ -179,11 +208,15 @@ export default function AdminPaymentVerificationModal({
             </div>
           )}
 
-          {/* Auto confirmation note */}
+          {/* Notice Banner */}
           <div className="autoConfirmNotice">
             <CheckCircle size={15} />
             <span>
-              On verification, payment status will become <b>Verified</b> and order status will automatically change to <b>Confirmed</b>.
+              {isEditMode ? (
+                <>Editing will update the recorded Transaction ID and payment mode. Verified status and existing order stage will be <b>preserved</b>.</>
+              ) : (
+                <>On verification, payment status will become <b>Verified</b> and order status will automatically change to <b>Confirmed</b>.</>
+              )}
             </span>
           </div>
 
@@ -202,7 +235,13 @@ export default function AdminPaymentVerificationModal({
               className="goldBtn modalSubmitBtn"
               disabled={loading}
             >
-              {loading ? 'VERIFYING…' : 'Verify Payment'}
+              {loading
+                ? isEditMode
+                  ? 'SAVING…'
+                  : 'VERIFYING…'
+                : isEditMode
+                ? 'Save Changes'
+                : 'Verify Payment'}
             </button>
           </div>
         </form>
@@ -210,3 +249,4 @@ export default function AdminPaymentVerificationModal({
     </div>
   );
 }
+

@@ -57,6 +57,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+}
+
+.modalBadge.editBadge {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #dbeafe;
 }
 
 .modalHeaderTitle h3 {
@@ -191,18 +198,23 @@
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
 }
 
 .selectIcon {
   position: absolute;
   left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
   color: #927e74;
   pointer-events: none;
+  z-index: 2;
 }
 
 .modalSelect {
   width: 100%;
-  padding: 11px 12px 11px 36px;
+  height: 42px;
+  padding: 0 12px 0 38px !important;
   border: 1px solid #dcd1be;
   background: #fffdfa;
   border-radius: 5px;
@@ -211,6 +223,7 @@
   outline: none;
   cursor: pointer;
   appearance: auto;
+  box-sizing: border-box;
 }
 
 .modalSelect:focus {

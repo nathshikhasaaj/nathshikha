@@ -60,16 +60,22 @@ select {
   justify-content: center;
   gap: 8px;
   background: var(--gold);
-  color: #fff;
+  color: #ffffff;
   border: 0;
-  padding: 13px 25px;
-  font-size: 11px;
-  letter-spacing: 0.12em;
+  min-height: 42px;
+  padding: 10px 22px;
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
   font-weight: 700;
+  text-transform: uppercase;
   cursor: pointer;
-  border-radius: 3px;
+  border-radius: 4px;
   box-shadow: var(--shadow-gold);
   transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
+  box-sizing: border-box;
+  text-decoration: none;
+  flex-shrink: 0;
 }
 
 .goldBtn:hover:not(:disabled) {
@@ -91,26 +97,34 @@ select {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  border: 1px solid var(--gold);
+  gap: 8px;
+  border: 1.5px solid var(--gold);
   background: transparent;
   color: #86672d;
-  padding: 12px 22px;
-  font-size: 10px;
-  letter-spacing: 0.1em;
+  min-height: 42px;
+  padding: 10px 20px;
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
   font-weight: 600;
+  text-transform: uppercase;
   cursor: pointer;
-  border-radius: 3px;
+  border-radius: 4px;
   transition: all 0.2s ease;
+  white-space: nowrap;
+  box-sizing: border-box;
+  text-decoration: none;
+  flex-shrink: 0;
 }
 
 .outlineBtn:hover:not(:disabled) {
   background: #fdf5e6;
   border-color: var(--gold2);
+  color: var(--maroon);
 }
 
 .outlineBtn.selected {
   background: #f3e4c6;
+  color: var(--maroon);
 }
 
 .outlineBtn.center {
@@ -119,16 +133,30 @@ select {
   margin: 30px auto 0;
 }
 
+/* Small Button Modifier */
+.btnSmall {
+  min-height: 32px !important;
+  padding: 6px 14px !important;
+  font-size: 11px !important;
+  letter-spacing: 0.04em !important;
+}
+
 /* Text Button */
 .textBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   border: 0;
   background: none;
   color: #9a7734;
   cursor: pointer;
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 600;
-  padding: 4px 8px;
+  padding: 6px 10px;
   transition: color 0.2s ease;
+  white-space: nowrap;
+  box-sizing: border-box;
 }
 
 .textBtn:hover {
@@ -165,48 +193,54 @@ select {
   }
 }
 
-/* Empty State */
-.empty {
-  min-height: 220px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 14px;
-  color: #8d7c74;
-  text-align: center;
-  padding: 24px 16px;
+/* Responsive Table Scroll Container Helper */
+.tableResponsiveWrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   box-sizing: border-box;
 }
 
-.empty > svg {
-  width: 36px;
-  height: 36px;
-  color: var(--gold);
+/* Empty State */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  padding: 28px 16px;
+  background: #fdfaf4;
+  border: 1px dashed var(--line);
+  border-radius: 4px;
+  text-align: center;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .empty.small {
   min-height: 120px;
-  padding: 16px 12px;
+  padding: 16px 10px;
   gap: 8px;
+}
+
+.empty svg {
+  color: var(--gold);
+  flex-shrink: 0;
 }
 
 .empty p {
   margin: 0;
   font-size: 13px;
+  color: #8c7d76;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 480px) {
   .empty {
     min-height: 160px;
     padding: 16px 12px;
     gap: 10px;
-  }
-
-  .empty.small {
-    min-height: 100px;
-    padding: 12px 8px;
-    gap: 6px;
   }
 }
 
@@ -229,19 +263,27 @@ select {
   width: 15px;
 }
 
-/* Form Styles */
-input:not([type='checkbox']):not([type='radio']),
-textarea,
-select {
+/* Form Styles - Zero Specificity Default Rules */
+:where(input:not([type='checkbox']):not([type='radio']), textarea, select) {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  padding: 12px;
+  padding: 11px 14px;
   border: 1px solid var(--line);
   background: var(--white);
   outline: none;
-  font-size: 12px;
-  transition: border-color 0.2s ease;
+  font-size: 13px;
+  font-family: inherit;
+  border-radius: 4px;
+  line-height: 1.4;
+  color: var(--char);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+:where(input:not([type='checkbox']):not([type='radio'])::placeholder, textarea::placeholder) {
+  color: #9c8e84;
+  font-size: inherit;
+  opacity: 1;
 }
 
 input[type='checkbox'],
@@ -257,17 +299,14 @@ input[type='radio'] {
   accent-color: var(--maroon, #5b1420);
 }
 
-input:not([type='checkbox']):not([type='radio']):focus,
-textarea:focus,
-select:focus {
+:where(input:not([type='checkbox']):not([type='radio']):focus, textarea:focus, select:focus) {
   border-color: var(--gold);
+  box-shadow: 0 0 0 2px rgba(201, 166, 89, 0.18);
 }
 
 @media (max-width: 768px) {
-  input:not([type='checkbox']):not([type='radio']),
-  textarea,
-  select {
-    font-size: 16px;
+  :where(input:not([type='checkbox']):not([type='radio']), textarea, select) {
+    font-size: 14.5px;
   }
 }
 

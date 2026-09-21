@@ -89,6 +89,7 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
 
   // Modals state
   const [verifyModalOrder, setVerifyModalOrder] = useState(null);
+  const [isEditingPayment, setIsEditingPayment] = useState(false);
   const [detailsModalOrder, setDetailsModalOrder] = useState(null);
   const [showCreateOrderModal, setShowCreateOrderModal] = useState(false);
   const [shipmentModalOrder, setShipmentModalOrder] = useState(null);
@@ -360,6 +361,60 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
     }
 
     setToast('✓ Payment verified! Order automatically updated to Confirmed.');
+  };
+
+  // Handle Editing Existing Payment Details (Transaction ID, Payment Mode)
+  const handleSavePaymentEdit = async (orderId, { transactionId, paymentApp }) => {
+    try {
+      const result = await api(`/admin/orders/${orderId}/payment`, {
+        method: 'PATCH',
+        body: JSON.stringify({ transactionId, paymentApp })
+      });
+
+      const updatedOrder = result.order || result;
+
+      // Immediately update local orders list
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === orderId || o._id === orderId || o.order_no === updatedOrder.order_no
+            ? {
+                ...o,
+                ...updatedOrder,
+                payment_transaction_id: transactionId,
+                paymentTransactionId: transactionId,
+                upi_utr: transactionId,
+                upiUtr: transactionId,
+                payment_app: paymentApp,
+                paymentApp: paymentApp
+              }
+            : o
+        )
+      );
+
+      // Immediately update active details modal state if open
+      if (
+        detailsModalOrder &&
+        (detailsModalOrder.id === orderId ||
+          detailsModalOrder._id === orderId ||
+          detailsModalOrder.order_no === updatedOrder.order_no)
+      ) {
+        setDetailsModalOrder((prev) => ({
+          ...prev,
+          ...updatedOrder,
+          payment_transaction_id: transactionId,
+          paymentTransactionId: transactionId,
+          upi_utr: transactionId,
+          upiUtr: transactionId,
+          payment_app: paymentApp,
+          paymentApp: paymentApp
+        }));
+      }
+
+      setToast('✓ Payment details updated successfully.');
+    } catch (err) {
+      setToast(err.message || 'Failed to update payment details');
+      throw err;
+    }
   };
 
   // Product Operations
@@ -705,7 +760,10 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
                   searchQuery={searchQuery}
                   setSearchQuery={setSearchQuery}
                   updateOrderStatus={handleUpdateOrderStatus}
-                  onVerifyPaymentClick={(order) => setVerifyModalOrder(order)}
+                  onVerifyPaymentClick={(order) => {
+                    setIsEditingPayment(false);
+                    setVerifyModalOrder(order);
+                  }}
                   onViewOrderClick={(order) => setDetailsModalOrder(order)}
                   onOpenShipmentModal={(order, isEdit) => {
                     setShipmentModalOrder(order);
@@ -752,7 +810,10 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
                 updateOrderStatus={handleUpdateOrderStatus}
-                onVerifyPaymentClick={(order) => setVerifyModalOrder(order)}
+                onVerifyPaymentClick={(order) => {
+                  setIsEditingPayment(false);
+                  setVerifyModalOrder(order);
+                }}
                 onViewOrderClick={(order) => setDetailsModalOrder(order)}
                 onOpenShipmentModal={(order, isEdit) => {
                   setShipmentModalOrder(order);
@@ -941,12 +1002,17 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
         </main>
       </div>
 
-      {/* Payment Verification Modal */}
+      {/* Payment Verification / Edit Modal */}
       <AdminPaymentVerificationModal
         order={verifyModalOrder}
         isOpen={Boolean(verifyModalOrder)}
-        onClose={() => setVerifyModalOrder(null)}
+        onClose={() => {
+          setVerifyModalOrder(null);
+          setIsEditingPayment(false);
+        }}
         onVerify={handleVerifyPayment}
+        isEdit={isEditingPayment}
+        onSaveEdit={handleSavePaymentEdit}
       />
 
       {/* Full Order Details Modal */}
@@ -954,7 +1020,14 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
         order={detailsModalOrder}
         isOpen={Boolean(detailsModalOrder)}
         onClose={() => setDetailsModalOrder(null)}
-        onVerifyPaymentClick={(order) => setVerifyModalOrder(order)}
+        onVerifyPaymentClick={(order) => {
+          setIsEditingPayment(false);
+          setVerifyModalOrder(order);
+        }}
+        onEditPaymentClick={(order) => {
+          setIsEditingPayment(true);
+          setVerifyModalOrder(order);
+        }}
         onEditShipmentClick={(order, isEdit) => {
           setShipmentModalOrder(order);
           setIsEditingShipment(isEdit);
