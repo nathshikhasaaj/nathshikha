@@ -13,7 +13,9 @@ import {
   Box,
   Truck,
   Boxes,
-  Calendar
+  Calendar,
+  Trash2,
+  Loader2
 } from 'lucide-react';
 import {
   money,
@@ -35,9 +37,12 @@ export default function AdminOrderList({
   onVerifyPaymentClick,
   onViewOrderClick,
   onOpenShipmentModal,
-  onReviewCancellationClick
+  onReviewCancellationClick,
+  onDeleteOrder
 }) {
   const [sortBy, setSortBy] = useState('newest');
+  const [deleteModalOrder, setDeleteModalOrder] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleStatusChange = (order, newStatus) => {
     if (newStatus === 'shipped') {
@@ -674,6 +679,18 @@ export default function AdminOrderList({
                               <Eye size={13} />
                               <span>View</span>
                             </button>
+
+                            {onDeleteOrder && (
+                              <button
+                                type="button"
+                                className="outlineBtn compact deleteOrderBtn"
+                                onClick={() => setDeleteModalOrder(o)}
+                                title={`Delete order #${o.order_no} permanently`}
+                              >
+                                <Trash2 size={13} color="#dc2626" />
+                                <span>Delete</span>
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -844,7 +861,7 @@ export default function AdminOrderList({
                       </button>
                     )}
 
-                    {/* Card Actions Row: Status Select + WhatsApp + View Order */}
+                    {/* Card Actions Row: Status Select + WhatsApp + View Order + Delete */}
                     <div className="mobileCardActionsRow">
                       <div className="mobileStatusSelectWrap">
                         <select
@@ -885,6 +902,18 @@ export default function AdminOrderList({
                           <Eye size={13} />
                           <span>View Order</span>
                         </button>
+
+                        {onDeleteOrder && (
+                          <button
+                            type="button"
+                            className="outlineBtn compact mobileCardDeleteBtn"
+                            onClick={() => setDeleteModalOrder(o)}
+                            title={`Delete order #${o.order_no}`}
+                            aria-label={`Delete order #${o.order_no}`}
+                          >
+                            <Trash2 size={14} color="#dc2626" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -939,6 +968,82 @@ export default function AdminOrderList({
           </div>
         )}
       </div>
+
+      {/* Delete Order Confirmation Modal */}
+      {deleteModalOrder && (
+        <div
+          className="adminDeleteModalOverlay"
+          onClick={() => !isDeleting && setDeleteModalOrder(null)}
+        >
+          <div
+            className="adminDeleteModalContainer"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="deleteModalIcon">
+              <Trash2 size={24} color="#dc2626" />
+            </div>
+            <h3>Delete this order?</h3>
+            <p>
+              This will permanently remove order <b>#{deleteModalOrder.order_no}</b> from the database. This action cannot be undone.
+            </p>
+            <div className="deleteOrderSummaryPreview">
+              <div className="deletePreviewRow">
+                <span>Customer:</span>
+                <b>{deleteModalOrder.name}</b>
+              </div>
+              <div className="deletePreviewRow">
+                <span>Amount:</span>
+                <b>{money(deleteModalOrder.total)}</b>
+              </div>
+              <div className="deletePreviewRow">
+                <span>Status:</span>
+                <b>{getStatusLabel(deleteModalOrder.order_status)}</b>
+              </div>
+            </div>
+            <div className="adminDeleteModalActions">
+              <button
+                type="button"
+                className="outlineBtn cancelDeleteBtn"
+                onClick={() => setDeleteModalOrder(null)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="dangerDeleteBtn"
+                onClick={async () => {
+                  if (!onDeleteOrder) return;
+                  setIsDeleting(true);
+                  try {
+                    await onDeleteOrder(deleteModalOrder.id || deleteModalOrder._id || deleteModalOrder.order_no);
+                    setDeleteModalOrder(null);
+                  } catch {
+                    // Handled by dashboard
+                  } finally {
+                    setIsDeleting(false);
+                  }
+                }}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 size={14} className="spinIcon" />
+                    <span>Deleting…</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={14} />
+                    <span>Delete Order</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

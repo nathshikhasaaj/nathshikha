@@ -116,7 +116,15 @@ export default function OrderSuccess() {
 
                 return (
                   <div key={idx} className="successPageItemRow">
-                    <img src={item.img || '/assets/thushi.jpg'} alt={item.name} className="successPageItemImg" />
+                    <img
+                      src={item.img || '/assets/thushi.jpg'}
+                      alt={item.name}
+                      className="successPageItemImg"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = '/assets/thushi.jpg';
+                      }}
+                    />
                     <div className="successPageItemDetails">
                       <b>{item.name}</b>
                       {entries.length > 0 && (
@@ -157,10 +165,13 @@ export default function OrderSuccess() {
             <div className="statusNoticePending">
               <Clock size={18} />
               <div>
-                <b>Payment Verification Pending</b>
+                <b>IMPORTANT: Payment Verification Pending</b>
                 <p>
-                  Payment verification is pending from our side. Once we verify your payment, your order will be confirmed.
+                  Your order is currently awaiting payment verification. Our team will verify your payment from our side. Your order will be confirmed only after successful payment verification.
                 </p>
+                <small style={{ display: 'block', marginTop: 4, color: '#78350f', fontSize: '11.5px' }}>
+                  Please keep your payment proof/transaction details available if our team contacts you.
+                </small>
               </div>
             </div>
           )}

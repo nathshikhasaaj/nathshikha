@@ -849,7 +849,8 @@ export default function AdminOrderDetailsModal({
               </div>
             )}
 
-            <div className="productsTableWrap">
+            {/* Desktop Products Table */}
+            <div className="productsTableWrap desktopOnlyTable">
               <table className="productsTable">
                 <thead>
                   <tr>
@@ -871,6 +872,10 @@ export default function AdminOrderDetailsModal({
                             src={item.img || '/assets/thushi.jpg'}
                             alt={item.name}
                             className="itemThumb"
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = '/assets/thushi.jpg';
+                            }}
                           />
                         </td>
                         <td className="codeCell">
@@ -981,6 +986,92 @@ export default function AdminOrderDetailsModal({
                   )}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Products Cards List */}
+            <div className="productsMobileList mobileOnlyProducts">
+              {order.items && order.items.length > 0 ? (
+                <div className="adminOrderItemsList">
+                  {order.items.map((item, idx) => {
+                    const itemParams =
+                      (item.selectedParameters && typeof item.selectedParameters === 'object'
+                        ? item.selectedParameters
+                        : null) ||
+                      (item.selectedOptions && typeof item.selectedOptions === 'object'
+                        ? item.selectedOptions
+                        : {});
+                    const paramEntries = getParameterEntries(itemParams);
+
+                    return (
+                      <div key={idx} className="adminOrderItemRow">
+                        <div className="adminOrderItemMain">
+                          <img
+                            src={item.img || '/assets/thushi.jpg'}
+                            alt={item.name}
+                            className="adminOrderItemThumb"
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = '/assets/thushi.jpg';
+                            }}
+                          />
+                          <div className="adminOrderItemDetails">
+                            <div className="adminOrderItemHeader">
+                              <span className="adminOrderItemName">{item.name}</span>
+                              <b className="adminOrderItemTotal">{money(item.price * item.qty)}</b>
+                            </div>
+
+                            <div className="adminOrderItemMetaRow">
+                              <code className="adminItemCodeBadge">{getProductCode(item, idx)}</code>
+                              <span className="adminItemQtyPrice">
+                                Qty: <b>{item.qty}</b> · {money(item.price)} each
+                              </span>
+                            </div>
+
+                            {paramEntries.length > 0 && (
+                              <div className="adminItemParamsContainer">
+                                {paramEntries.map((param) => (
+                                  <span
+                                    key={param.name}
+                                    className={param.isCustom ? 'adminCustomParamBadge' : 'adminStandardParamBadge'}
+                                  >
+                                    {param.isCustom ? '✍️ ' : ''}<strong>{param.name}:</strong>{' '}
+                                    <span>{param.value}</span>
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {isDelivered && (
+                          <div className="adminItemReviewRow">
+                            <button
+                              type="button"
+                              className="outlineBtn compact adminCopyReviewBtn"
+                              onClick={() => handleCopyReviewLink(item, idx)}
+                              disabled={generatingItemIndex === idx}
+                            >
+                              {generatingItemIndex === idx ? (
+                                <Loader2 size={12} className="spinIcon" />
+                              ) : copiedItemIndex === idx ? (
+                                <span style={{ color: '#198754', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                                  <Check size={12} /> Copied Review Link!
+                                </span>
+                              ) : (
+                                <>
+                                  <Link2 size={12} /> Copy Review Link
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="adminEmptyItems">No product breakdown found.</div>
+              )}
             </div>
 
             {/* Financial Summary */}

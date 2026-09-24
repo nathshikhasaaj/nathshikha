@@ -856,6 +856,73 @@ router.patch(['/orders/:id/payment', '/orders/:id/edit-payment'], async (req, re
   }
 });
 
+// Admin: Delete order permanently from database
+router.delete('/orders/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const order = await findOrderByIdOrNo(id);
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const orderId = order._id;
+    const orderNo = order.orderNo;
+
+    // 1. If part of a shipment group, clean up association safely
+    if (order.shipmentGroupId) {
+      try {
+        const group = await ShipmentGroup.findById(order.shipmentGroupId);
+        if (group) {
+          group.orders = (group.orders || []).filter(
+            (oId) => oId.toString() !== orderId.toString()
+          );
+          if (group.orders.length === 0) {
+            await ShipmentGroup.findByIdAndDelete(group._id);
+          } else {
+            await group.save();
+          }
+        }
+      } catch (groupErr) {
+        console.warn('Failed to clean up shipment group association:', groupErr.message);
+      }
+    }
+
+    // 2. Clean up any unused review tokens created for this order
+    try {
+      await ReviewToken.deleteMany({ orderId });
+    } catch (tokenErr) {
+      console.warn('Failed to clean up review tokens:', tokenErr.message);
+    }
+
+    // 3. Clean up uploaded customization reference image file if stored locally
+    const customImg = order.customization?.referenceImage || order.customization?.reference_image;
+    if (customImg && typeof customImg === 'string' && customImg.startsWith('/uploads/customization-')) {
+      try {
+        const filePath = path.join(uploadsDir, path.basename(customImg));
+        if (fs.existsSync(filePath)) {
+          await fs.promises.unlink(filePath).catch(() => {});
+        }
+      } catch (fileErr) {
+        console.warn('Failed to delete customization reference file:', fileErr.message);
+      }
+    }
+
+    // 4. Delete the order document permanently from database
+    await Order.findByIdAndDelete(orderId);
+
+    res.json({
+      ok: true,
+      message: `Order #${orderNo} deleted permanently from database.`,
+      deletedOrderNo: orderNo,
+      deletedOrderId: orderId.toString()
+    });
+  } catch (err) {
+    console.error('Failed to delete order:', err);
+    res.status(500).json({ error: err.message || 'Failed to delete order from database.' });
+  }
+});
+
 // Review Customer Cancellation Request (Approve or Reject)
 router.post('/orders/:id/cancellation/review', async (req, res) => {
   const { id } = req.params;

@@ -818,6 +818,10 @@ export default function Orders() {
                       src={item.img || '/assets/thushi.jpg'}
                       alt={item.name}
                       className="trackItemThumb"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = '/assets/thushi.jpg';
+                      }}
                     />
                     <div className="trackItemMeta">
                       <b>{item.name}</b>
@@ -1231,6 +1235,10 @@ export default function Orders() {
                               src={item.img || '/assets/thushi.jpg'}
                               alt={item.name}
                               className="orderReviewItemThumb"
+                              onError={(e) => {
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = '/assets/thushi.jpg';
+                              }}
                             />
                             <div className="orderReviewItemDetails">
                               <span className="orderReviewItemName">{item.name}</span>

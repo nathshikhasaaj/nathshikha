@@ -311,6 +311,43 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
     }
   };
 
+  // Handle Permanent Order Deletion (Admin only)
+  const handleDeleteOrder = async (orderId) => {
+    try {
+      const res = await api(`/admin/orders/${orderId}`, {
+        method: 'DELETE'
+      });
+
+      // Update local state immediately
+      setOrders((prev) =>
+        prev.filter(
+          (o) =>
+            o.id !== orderId &&
+            o._id !== orderId &&
+            o.order_no !== orderId &&
+            o.orderNo !== orderId
+        )
+      );
+
+      // Close details modal if the currently open order was deleted
+      if (
+        detailsModalOrder &&
+        (detailsModalOrder.id === orderId ||
+          detailsModalOrder._id === orderId ||
+          detailsModalOrder.order_no === orderId ||
+          detailsModalOrder.orderNo === orderId)
+      ) {
+        setDetailsModalOrder(null);
+      }
+
+      setToast(res.message || 'Order deleted permanently.');
+    } catch (err) {
+      console.error('Failed to delete order:', err);
+      setToast(err.message || 'Failed to delete order');
+      throw err;
+    }
+  };
+
   // Handle Payment Verification Submission
   const handleVerifyPayment = async (orderId, { transactionId, paymentApp }) => {
     const result = await api(`/admin/orders/${orderId}/verify-payment`, {
@@ -820,6 +857,7 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
                   setIsEditingShipment(isEdit);
                 }}
                 onReviewCancellationClick={(order) => setCancellationModalOrder(order)}
+                onDeleteOrder={handleDeleteOrder}
               />
             </div>
           )}

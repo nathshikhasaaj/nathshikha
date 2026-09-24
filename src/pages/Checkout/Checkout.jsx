@@ -52,6 +52,7 @@ export default function Checkout() {
   const [addressMode, setAddressMode] = useState('my_address');
   const [qrViewMode, setQrViewMode] = useState('dynamic'); // 'dynamic' | 'card'
   const [copiedKey, setCopiedKey] = useState(null); // 'upi' | 'amount' | null
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [liveUpiId, setLiveUpiId] = useState(() => (import.meta.env.VITE_UPI_ID || DEFAULT_UPI_ID).trim());
 
   const [form, setForm] = useState({
@@ -1511,105 +1512,43 @@ export default function Checkout() {
             </div>
           </div>
 
-          {/* UPI QR Code Container */}
-          <div className="checkoutQrWrap">
-            <QRCodeSVG value={upiLink} size={185} includeMargin />
-            <small className="qrScanHint">
-              Scan with GPay, PhonePe, Paytm, BHIM or any UPI app
-            </small>
-          </div>
-
-          {/* Payee, UPI ID & Amount details box with 1-click copy */}
-          <div className="studioUpiBox">
-            <div className="studioUpiHeader">
-              <span>Payee: Miss Shweta Satish Darekar</span>
-            </div>
-            <div className="studioUpiRow">
-              <span className="studioUpiLabel">UPI ID:</span>
-              <b className="studioUpiVal">{configuredUpiId}</b>
-              <button
-                type="button"
-                className={`copyUpiMiniBtn ${copiedKey === 'upi' ? 'copied' : ''}`}
-                onClick={async () => {
-                  const success = await copyToClipboard(configuredUpiId);
-                  if (success) {
-                    setCopiedKey('upi');
-                    setToast('UPI ID copied: ' + configuredUpiId);
-                    setTimeout(() => setCopiedKey(null), 2500);
-                  } else {
-                    setToast('UPI ID: ' + configuredUpiId);
-                  }
-                }}
-                title="Copy UPI ID"
-              >
-                {copiedKey === 'upi' ? (
-                  <>
-                    <Check size={12} color="#16a34a" /> COPIED!
-                  </>
-                ) : (
-                  <>
-                    <Copy size={12} /> COPY
-                  </>
-                )}
-              </button>
-            </div>
-            <div className="studioUpiRow">
-              <span className="studioUpiLabel">Amount:</span>
-              <b className="studioUpiVal studioUpiAmount">{money(grandTotal)}</b>
-              <button
-                type="button"
-                className={`copyUpiMiniBtn ${copiedKey === 'amount' ? 'copied' : ''}`}
-                onClick={async () => {
-                  const success = await copyToClipboard(String(grandTotal));
-                  if (success) {
-                    setCopiedKey('amount');
-                    setToast(`Amount ₹${grandTotal} copied to clipboard!`);
-                    setTimeout(() => setCopiedKey(null), 2500);
-                  } else {
-                    setToast(`Amount: ₹${grandTotal}`);
-                  }
-                }}
-                title="Copy Amount"
-              >
-                {copiedKey === 'amount' ? (
-                  <>
-                    <Check size={12} color="#16a34a" /> COPIED!
-                  </>
-                ) : (
-                  <>
-                    <Copy size={12} /> COPY
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Quick 3-Step Mobile Guide */}
-          <div className="mobilePaymentGuide">
-            <div className="guideStep">
-              <span className="guideStepNum">1</span>
-              <span>Click <b>COPY</b> above to copy UPI ID & Amount.</span>
-            </div>
-            <div className="guideStep">
-              <span className="guideStepNum">2</span>
-              <span>Open <b>GPay, PhonePe, Paytm or BHIM</b> & make payment.</span>
-            </div>
-            <div className="guideStep">
-              <span className="guideStepNum">3</span>
-              <span>Click <b>"I HAVE PAID"</b> below to place your order.</span>
-            </div>
-          </div>
-
-          {/* Prominent Payment Warning & Instruction */}
-          <div className="paymentWarningNotice">
-            <p>
-              ⚠️ <strong>IMPORTANT:</strong> Please complete the payment <strong>FIRST</strong> using the QR code / UPI ID above. After your payment is successful, click '<strong>I HAVE PAID</strong>'.
-            </p>
-          </div>
-
-          {/* I Have Paid Submit Button */}
+          {/* Prominent PAY NOW Action Button */}
           <button
-            className="goldBtn iHavePaidBtn"
+            type="button"
+            className="goldBtn payNowPrimaryBtn"
+            onClick={() => setIsPaymentModalOpen(true)}
+            title="Open UPI Payment Instructions & QR Code"
+          >
+            <QrCode size={18} />
+            <span>PAY NOW · {money(grandTotal)}</span>
+          </button>
+
+          {/* Payment Flow Instructions & Verification Notice */}
+          <div className="paymentFlowNoticeBox">
+            <div className="paymentNoticeTitle">
+              <strong>✦ How to Pay & Complete Your Order:</strong>
+            </div>
+            <div className="paymentNoticeStep">
+              <span className="stepNumBadge">1</span>
+              <span>Click <strong>PAY NOW</strong> above to view QR code or copy UPI ID.</span>
+            </div>
+            <div className="paymentNoticeStep">
+              <span className="stepNumBadge">2</span>
+              <span>Complete the payment in your UPI app (GPay / PhonePe / Paytm / BHIM).</span>
+            </div>
+            <div className="paymentNoticeStep">
+              <span className="stepNumBadge">3</span>
+              <span>Return here and click <strong>PLACE ORDER</strong> below.</span>
+            </div>
+            <div className="paymentPendingNoticePill">
+              <Clock size={13} color="#b45309" />
+              <span>Your order will remain pending payment verification until verified by our admin team.</span>
+            </div>
+          </div>
+
+          {/* PLACE ORDER Action Button */}
+          <button
+            className="goldBtn placeOrderSubmitBtn"
             form="checkoutForm"
             disabled={loading}
             type="submit"
@@ -1617,134 +1556,336 @@ export default function Checkout() {
             {loading ? (
               <>
                 <Loader2 size={16} className="btnSpinner" />
-                <span>{t('processing', 'PROCESSING ORDER…')}</span>
+                <span>{t('processing', 'PLACING YOUR ORDER…')}</span>
               </>
             ) : (
-              <span>✓ {t('i_have_paid', 'I HAVE PAID')} · {money(grandTotal)}</span>
+              <>
+                <CheckCircle2 size={16} />
+                <span>PLACE ORDER · {money(grandTotal)}</span>
+              </>
             )}
           </button>
 
-          {/* Short Instruction near I HAVE PAID button */}
           <p className="paymentButtonSubtext">
-            Please click 'I HAVE PAID' only AFTER completing the payment.
+            Please complete the payment first, then click PLACE ORDER.
           </p>
         </div>
       </div>
 
+      {/* PAY NOW PAYMENT INSTRUCTIONS MODAL */}
+      {isPaymentModalOpen && (
+        <div className="paymentModalOverlay" onClick={() => setIsPaymentModalOpen(false)}>
+          <div
+            className="paymentModalContainer"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            {/* Modal Header */}
+            <div className="paymentModalHeader">
+              <div className="paymentModalHeaderTitle">
+                <div className="paymentModalBadge">
+                  <ShieldCheck size={18} />
+                </div>
+                <div>
+                  <h3>PAYMENT</h3>
+                  <span className="paymentModalStepTag">Step 1 · Complete Payment</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="paymentModalCloseBtn"
+                onClick={() => setIsPaymentModalOpen(false)}
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Scrollable Body */}
+            <div className="paymentModalBody">
+              <div className="paymentModalPrompt">
+                <p>Complete the payment using the QR code or UPI ID below.</p>
+              </div>
+
+              {/* QR Code Card */}
+              <div className="paymentModalQrCard">
+                <div className="paymentModalQrWrapper">
+                  <QRCodeSVG value={upiLink} size={180} includeMargin />
+                </div>
+                <span className="qrAppSupportText">
+                  Scan with Google Pay, PhonePe, Paytm, BHIM or any UPI app
+                </span>
+              </div>
+
+              {/* UPI ID and Payable Amount with 1-Click Copy */}
+              <div className="paymentModalDetailsCard">
+                <div className="paymentModalPayeeRow">
+                  <span className="detailLabel">Payee:</span>
+                  <span className="detailVal">{payeeName}</span>
+                </div>
+
+                <div className="paymentModalCopyRow">
+                  <div className="copyRowInfo">
+                    <span className="detailLabel">UPI ID</span>
+                    <b className="copyRowVal upiIdVal">{configuredUpiId}</b>
+                  </div>
+                  <button
+                    type="button"
+                    className={`paymentCopyBtn ${copiedKey === 'upi' ? 'copied' : ''}`}
+                    onClick={async () => {
+                      const success = await copyToClipboard(configuredUpiId);
+                      if (success) {
+                        setCopiedKey('upi');
+                        setToast('UPI ID copied!');
+                        setTimeout(() => setCopiedKey(null), 2500);
+                      } else {
+                        setToast('UPI ID: ' + configuredUpiId);
+                      }
+                    }}
+                    title="Copy UPI ID"
+                  >
+                    {copiedKey === 'upi' ? (
+                      <>
+                        <Check size={13} color="#16a34a" /> UPI ID copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy size={13} /> COPY UPI ID
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="paymentModalCopyRow">
+                  <div className="copyRowInfo">
+                    <span className="detailLabel">Amount</span>
+                    <b className="copyRowVal amountVal">{money(grandTotal)}</b>
+                  </div>
+                  <button
+                    type="button"
+                    className={`paymentCopyBtn ${copiedKey === 'amount' ? 'copied' : ''}`}
+                    onClick={async () => {
+                      const numericAmount = String(Math.round(grandTotal) === grandTotal ? grandTotal : Number(grandTotal).toFixed(2));
+                      const success = await copyToClipboard(numericAmount);
+                      if (success) {
+                        setCopiedKey('amount');
+                        setToast(`Amount ₹${numericAmount} copied!`);
+                        setTimeout(() => setCopiedKey(null), 2500);
+                      } else {
+                        setToast(`Amount: ₹${numericAmount}`);
+                      }
+                    }}
+                    title="Copy numeric amount"
+                  >
+                    {copiedKey === 'amount' ? (
+                      <>
+                        <Check size={13} color="#16a34a" /> Amount copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy size={13} /> COPY AMOUNT
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Payment Steps */}
+              <div className="paymentModalStepsCard">
+                <h4>Payment Steps:</h4>
+                <ol className="modalStepsList">
+                  <li>
+                    <span>Scan the QR code using <b>GPay / PhonePe / Paytm / BHIM</b> OR copy the UPI ID and pay manually.</span>
+                  </li>
+                  <li>
+                    <span>Make sure the payment amount is exactly the order total (<b>{money(grandTotal)}</b>).</span>
+                  </li>
+                  <li>
+                    <span>Complete the payment successfully.</span>
+                  </li>
+                  <li>
+                    <span>After successful payment, return to this page.</span>
+                  </li>
+                  <li>
+                    <span>Then click <b>PLACE ORDER</b>.</span>
+                  </li>
+                </ol>
+              </div>
+
+              {/* Important Notice */}
+              <div className="paymentModalWarningCard">
+                <div className="warningCardHeader">
+                  <AlertCircle size={16} />
+                  <strong>IMPORTANT:</strong>
+                </div>
+                <p>
+                  Your order will be created after you click <strong>PLACE ORDER</strong>.
+                </p>
+                <p>
+                  However, the order will <strong>NOT</strong> be considered confirmed until our admin verifies your payment.
+                </p>
+                <div className="flowPillSequence">
+                  <span>PAY FIRST</span>
+                  <span>→</span>
+                  <span>PLACE ORDER</span>
+                  <span>→</span>
+                  <span>WAIT FOR PAYMENT VERIFICATION</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="paymentModalFooter">
+              <button
+                type="button"
+                className="goldBtn modalDoneBtn"
+                onClick={() => setIsPaymentModalOpen(false)}
+              >
+                <Check size={14} /> Back to Checkout
+              </button>
+              <button
+                type="button"
+                className="outlineBtn modalCloseBtnAlt"
+                onClick={() => setIsPaymentModalOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Order Placed Successfully Popup Modal */}
       {orderPlacedModal && (
         <div className="orderSuccessModalOverlay">
-          <div className="orderSuccessModal" role="dialog" aria-modal="true">
-            <div className="successModalIcon">
-              🎉
-            </div>
-            <h2>Order Placed Successfully 🎉</h2>
-            <p className="successSubtitle">
-              Your order has been placed successfully.
-            </p>
-
-            <div className="successOrderHighlight">
-              <div className="highlightRow">
-                <span>Order ID:</span>
-                <b className="highlightOrderNo">#{orderPlacedModal.order_no}</b>
+          <div className="orderSuccessModal" role="dialog" aria-modal="true" aria-labelledby="orderSuccessTitle">
+            <div className="orderSuccessModalHeader">
+              <div className="successModalIcon">
+                🎉
               </div>
+              <h2 id="orderSuccessTitle">Order Placed Successfully</h2>
+              <p className="successSubtitle">
+                Thank you for shopping with Nathshikha. Your order has been placed.
+              </p>
+            </div>
+
+            <div className="orderSuccessModalBody">
+              <div className="successOrderHighlight">
+                <div className="highlightRow">
+                  <span>Order ID:</span>
+                  <b className="highlightOrderNo">#{orderPlacedModal.order_no}</b>
+                </div>
+
+                {orderPlacedModal.shipment_group_code && (
+                  <div className="highlightRow combinedGroupRow">
+                    <span>Shipment Group:</span>
+                    <b className="highlightGroupCode">
+                      <Boxes size={13} /> {orderPlacedModal.shipment_group_code}
+                    </b>
+                  </div>
+                )}
+
+                {orderPlacedModal.combined_with_order_no && (
+                  <div className="highlightRow">
+                    <span>Combined With:</span>
+                    <b>#{orderPlacedModal.combined_with_order_no}</b>
+                  </div>
+                )}
+
+                <div className="highlightRow">
+                  <span>Shipping Method:</span>
+                  <b>{orderPlacedModal.shipping_method || 'Standard Delivery'}</b>
+                </div>
+                <div className="highlightRow">
+                  <span>Total Amount:</span>
+                  <b className="highlightTotalVal">{money(orderPlacedModal.total)}</b>
+                </div>
+                <div className="highlightRow">
+                  <span>Payment Status:</span>
+                  <span className="pendingVerificationTag">
+                    <Clock size={12} /> Pending Verification
+                  </span>
+                </div>
+              </div>
+
+              {/* Ordered Items Breakdown inside Confirmation Modal */}
+              {orderPlacedModal.items && orderPlacedModal.items.length > 0 && (
+                <div className="successOrderItemsBox">
+                  <span className="successItemsTitle">Purchased Jewellery ({orderPlacedModal.items.length}):</span>
+                  <div className="successItemsList">
+                    {orderPlacedModal.items.map((item, idx) => {
+                      const params =
+                        (item.selectedParameters && typeof item.selectedParameters === 'object' ? item.selectedParameters : null) ||
+                        (item.selectedOptions && typeof item.selectedOptions === 'object' ? item.selectedOptions : {});
+                      const paramEntries = getParameterEntries(params);
+
+                      return (
+                        <div key={idx} className="successItemRow">
+                          <img
+                            src={item.img || '/assets/thushi.jpg'}
+                            alt={item.name}
+                            className="successItemThumb"
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = '/assets/thushi.jpg';
+                            }}
+                          />
+                          <div className="successItemMeta">
+                            <b>{item.name}</b>
+                            {paramEntries.length > 0 && (
+                              <div className="successItemParams">
+                                {paramEntries.map((p) => (
+                                  <span key={p.name} className={p.isCustom ? 'successCustomParamBadge' : 'successStandardParamBadge'}>
+                                    {p.isCustom ? '✍️ ' : ''}{p.name}: <b>{p.value}</b>
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            <small>Qty: {item.qty} · {money(item.price)}</small>
+                          </div>
+                          <b className="successItemTotal">{money(item.price * item.qty)}</b>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {orderPlacedModal.shipment_group_code && (
-                <div className="highlightRow combinedGroupRow">
-                  <span>Shipment Group:</span>
-                  <b className="highlightGroupCode">
-                    <Boxes size={13} /> {orderPlacedModal.shipment_group_code}
-                  </b>
+                <div className="combinedShipmentSuccessBox">
+                  <Boxes size={16} />
+                  <div>
+                    <strong>Combined Shipment Active</strong>
+                    <p>This order is linked to Shipment Group <b>{orderPlacedModal.shipment_group_code}</b> and will be packaged & dispatched together with your existing order.</p>
+                  </div>
                 </div>
               )}
 
-              {orderPlacedModal.combined_with_order_no && (
-                <div className="highlightRow">
-                  <span>Combined With:</span>
-                  <b>#{orderPlacedModal.combined_with_order_no}</b>
+              <div className="successExplanationBox">
+                <div className="successNoticeHeader">
+                  <Clock size={15} />
+                  <strong>Awaiting Payment Verification</strong>
                 </div>
-              )}
-
-              <div className="highlightRow">
-                <span>Shipping Method:</span>
-                <b>{orderPlacedModal.shipping_method || 'Standard Delivery'}</b>
+                <p>
+                  Our team will verify your payment from our side. Your order will be confirmed only after successful payment verification.
+                </p>
+                <p className="successNoticeSub">
+                  Please keep your payment proof/transaction details available if our team contacts you.
+                </p>
               </div>
-              <div className="highlightRow">
-                <span>Total Amount:</span>
-                <b>{money(orderPlacedModal.total)}</b>
-              </div>
-              <div className="highlightRow">
-                <span>Payment Status:</span>
-                <span className="pendingVerificationTag">
-                  <Clock size={12} /> Pending Verification
-                </span>
-              </div>
-            </div>
-
-            {/* Ordered Items Breakdown inside Confirmation Modal */}
-            {orderPlacedModal.items && orderPlacedModal.items.length > 0 && (
-              <div className="successOrderItemsBox">
-                <span className="successItemsTitle">Purchased Jewellery ({orderPlacedModal.items.length}):</span>
-                <div className="successItemsList">
-                  {orderPlacedModal.items.map((item, idx) => {
-                    const params =
-                      (item.selectedParameters && typeof item.selectedParameters === 'object' ? item.selectedParameters : null) ||
-                      (item.selectedOptions && typeof item.selectedOptions === 'object' ? item.selectedOptions : {});
-                    const paramEntries = getParameterEntries(params);
-
-                    return (
-                      <div key={idx} className="successItemRow">
-                        <img src={item.img || '/assets/thushi.jpg'} alt={item.name} className="successItemThumb" />
-                        <div className="successItemMeta">
-                          <b>{item.name}</b>
-                          {paramEntries.length > 0 && (
-                            <div className="successItemParams">
-                              {paramEntries.map((p) => (
-                                <span key={p.name} className={p.isCustom ? 'successCustomParamBadge' : 'successStandardParamBadge'}>
-                                  {p.isCustom ? '✍️ ' : ''}{p.name}: <b>{p.value}</b>
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                          <small>Qty: {item.qty} · {money(item.price)}</small>
-                        </div>
-                        <b className="successItemTotal">{money(item.price * item.qty)}</b>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {orderPlacedModal.shipment_group_code && (
-              <div className="combinedShipmentSuccessBox">
-                <Boxes size={16} />
-                <div>
-                  <strong>Combined Shipment Active</strong>
-                  <p>This order is linked to Shipment Group <b>{orderPlacedModal.shipment_group_code}</b> and will be packaged & dispatched together with your existing order.</p>
-                </div>
-              </div>
-            )}
-
-            <div className="successExplanationBox">
-              <p>
-                <strong>Payment verification is pending from our side.</strong>
-              </p>
-              <p>
-                Once we verify your payment, your order will be confirmed.
-              </p>
             </div>
 
             <div className="successModalActions">
               <Link
                 to={`/order-success/${orderPlacedModal.order_no}`}
-                className="goldBtn successBtn"
+                className="goldBtn successBtn primarySuccessAction"
               >
-                View Order
+                View Order Details
               </Link>
               <Link
                 to="/shop"
-                className="outlineBtn successBtn"
+                className="outlineBtn successBtn secondarySuccessAction"
               >
                 Continue Shopping
               </Link>
