@@ -1262,8 +1262,8 @@ router.get('/guest/:orderNo', lookupLimiter, async (req, res) => {
   }
 });
 
-// Admin: Delete order permanently from database
-router.delete(['/:id', '/'], auth, admin, async (req, res) => {
+// Reusable Admin Delete Handler for order routes
+async function handleOrderRoutesAdminDelete(req, res) {
   const id = req.params.id || req.query.id || req.body?.id || req.body?.orderId;
   if (!id) {
     return res.status(400).json({ error: 'Order ID is required for deletion.' });
@@ -1349,6 +1349,10 @@ router.delete(['/:id', '/'], auth, admin, async (req, res) => {
     console.error('Failed to delete order:', err);
     res.status(500).json({ error: err.message || 'Failed to delete order from database.' });
   }
-});
+}
+
+// Admin: Delete order permanently (supporting DELETE & POST on /api/orders)
+router.delete(['/:id', '/', '/:id/delete', '/delete'], auth, admin, handleOrderRoutesAdminDelete);
+router.post(['/:id/delete', '/delete'], auth, admin, handleOrderRoutesAdminDelete);
 
 export default router;

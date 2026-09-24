@@ -33,18 +33,18 @@ echo "Active NPM Version  : $(npm -v)"
 echo "Active Node Binary  : $(which node)"
 
 # 3. Locate & Update Application Directory
-if [ -d "/nathshikha/.git" ]; then
-    APP_DIR="/nathshikha"
+if [ -d "$(pwd)/server" ] && [ -d "$(pwd)/src" ]; then
+    APP_DIR="$(pwd)"
 elif [ -d "/var/www/nathshikha/.git" ]; then
     APP_DIR="/var/www/nathshikha"
-elif [ -d "$(pwd)/server" ] && [ -d "$(pwd)/src" ]; then
-    APP_DIR="$(pwd)"
-elif [ -d "/nathshikha" ]; then
+elif [ -d "/nathshikha/.git" ]; then
     APP_DIR="/nathshikha"
 elif [ -d "/var/www/nathshikha" ]; then
     APP_DIR="/var/www/nathshikha"
-else
+elif [ -d "/nathshikha" ]; then
     APP_DIR="/nathshikha"
+else
+    APP_DIR="/var/www/nathshikha"
     mkdir -p "$APP_DIR"
     git clone https://github.com/nathshikhasaaj/nathshikha.git "$APP_DIR"
 fi
@@ -57,6 +57,16 @@ if [ -d "$APP_DIR/.git" ]; then
     echo "--> Pulling latest changes from GitHub repository..."
     git fetch origin main
     git reset --hard origin/main
+fi
+
+# Synchronize companion directory if present (e.g. /var/www/nathshikha and /nathshikha)
+if [ "$APP_DIR" != "/var/www/nathshikha" ] && [ -d "/var/www/nathshikha/.git" ]; then
+    echo "--> Synchronizing /var/www/nathshikha as well..."
+    (cd /var/www/nathshikha && git fetch origin main && git reset --hard origin/main) || true
+fi
+if [ "$APP_DIR" != "/nathshikha" ] && [ -d "/nathshikha/.git" ]; then
+    echo "--> Synchronizing /nathshikha as well..."
+    (cd /nathshikha && git fetch origin main && git reset --hard origin/main) || true
 fi
 
 # 5. Ensure Environment Variables (.env) exist

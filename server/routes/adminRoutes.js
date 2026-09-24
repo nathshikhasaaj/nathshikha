@@ -875,8 +875,8 @@ router.patch(['/orders/:id/payment', '/orders/:id/edit-payment'], async (req, re
   }
 });
 
-// Admin: Delete order permanently from database
-router.delete(['/orders/:id', '/orders'], async (req, res) => {
+// Reusable Admin Order Deletion Handler
+async function handleAdminDeleteOrder(req, res) {
   const id = req.params.id || req.query.id || req.body?.id || req.body?.orderId;
   if (!id) {
     return res.status(400).json({ error: 'Order ID is required for deletion.' });
@@ -885,7 +885,7 @@ router.delete(['/orders/:id', '/orders'], async (req, res) => {
   try {
     const order = await findOrderByIdOrNo(id);
     if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
+      return res.status(404).json({ error: 'Order not found in database.' });
     }
 
     const orderId = order._id;
@@ -944,7 +944,11 @@ router.delete(['/orders/:id', '/orders'], async (req, res) => {
     console.error('Failed to delete order:', err);
     res.status(500).json({ error: err.message || 'Failed to delete order from database.' });
   }
-});
+}
+
+// Admin: Delete order permanently (supporting both DELETE and POST for maximum proxy/browser compatibility)
+router.delete(['/orders/:id', '/orders', '/orders/:id/delete', '/orders/delete'], handleAdminDeleteOrder);
+router.post(['/orders/:id/delete', '/orders/delete'], handleAdminDeleteOrder);
 
 // Review Customer Cancellation Request (Approve or Reject)
 router.post('/orders/:id/cancellation/review', async (req, res) => {

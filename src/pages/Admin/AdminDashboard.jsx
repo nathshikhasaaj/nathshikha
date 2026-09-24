@@ -316,9 +316,28 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
     try {
       const rawId = String(orderId || '').trim();
       const cleanId = rawId.replace(/^#/, '').trim();
-      const res = await api(`/admin/orders/${encodeURIComponent(cleanId || rawId)}`, {
-        method: 'DELETE'
-      });
+      const targetId = cleanId || rawId;
+
+      let res;
+      try {
+        // Try DELETE /admin/orders/:id
+        res = await api(`/admin/orders/${encodeURIComponent(targetId)}`, {
+          method: 'DELETE'
+        });
+      } catch (delErr) {
+        // If 404 or proxy error, fallback to POST /admin/orders/:id/delete or /orders/:id/delete
+        try {
+          res = await api(`/admin/orders/${encodeURIComponent(targetId)}/delete`, {
+            method: 'POST',
+            body: { id: targetId, orderId: rawId }
+          });
+        } catch (postAdminErr) {
+          res = await api(`/orders/${encodeURIComponent(targetId)}/delete`, {
+            method: 'POST',
+            body: { id: targetId, orderId: rawId }
+          });
+        }
+      }
 
       // Update local state immediately
       setOrders((prev) =>
