@@ -1018,10 +1018,15 @@ export default function AdminOrderList({
                   if (!onDeleteOrder) return;
                   setIsDeleting(true);
                   try {
-                    await onDeleteOrder(deleteModalOrder.id || deleteModalOrder._id || deleteModalOrder.order_no);
+                    const idToDelete =
+                      deleteModalOrder._id ||
+                      deleteModalOrder.id ||
+                      deleteModalOrder.order_no ||
+                      deleteModalOrder.orderNo;
+                    await onDeleteOrder(idToDelete);
                     setDeleteModalOrder(null);
-                  } catch {
-                    // Handled by dashboard
+                  } catch (err) {
+                    console.error('Delete order error:', err);
                   } finally {
                     setIsDeleting(false);
                   }

@@ -617,15 +617,34 @@ router.post('/orders', async (req, res) => {
   }
 });
 
-// Helper function to find order by MongoDB ObjectId or orderNo (e.g. NW89463805)
+// Helper function to find order by MongoDB ObjectId or orderNo (e.g. NW89463805 or #NW89463805)
 async function findOrderByIdOrNo(id) {
   if (!id) return null;
-  const cleanId = String(id).trim();
+  const rawId = String(id).trim();
+  const cleanId = rawId.replace(/^#/, '').trim();
+
+  if (mongoose.Types.ObjectId.isValid(rawId)) {
+    const found = await Order.findById(rawId);
+    if (found) return found;
+  }
   if (mongoose.Types.ObjectId.isValid(cleanId)) {
     const found = await Order.findById(cleanId);
     if (found) return found;
   }
-  return await Order.findOne({ orderNo: cleanId });
+
+  return await Order.findOne({
+    $or: [
+      { orderNo: cleanId },
+      { orderNo: `#${cleanId}` },
+      { orderNo: rawId },
+      { order_no: cleanId },
+      { order_no: `#${cleanId}` },
+      { order_no: rawId },
+      { orderId: cleanId },
+      { orderId: `#${cleanId}` },
+      { orderId: rawId }
+    ]
+  });
 }
 
 // Get single order by id
@@ -857,8 +876,11 @@ router.patch(['/orders/:id/payment', '/orders/:id/edit-payment'], async (req, re
 });
 
 // Admin: Delete order permanently from database
-router.delete('/orders/:id', async (req, res) => {
-  const { id } = req.params;
+router.delete(['/orders/:id', '/orders'], async (req, res) => {
+  const id = req.params.id || req.query.id || req.body?.id || req.body?.orderId;
+  if (!id) {
+    return res.status(400).json({ error: 'Order ID is required for deletion.' });
+  }
 
   try {
     const order = await findOrderByIdOrNo(id);
@@ -867,7 +889,7 @@ router.delete('/orders/:id', async (req, res) => {
     }
 
     const orderId = order._id;
-    const orderNo = order.orderNo;
+    const orderNo = order.orderNo || order.order_no || id;
 
     // 1. If part of a shipment group, clean up association safely
     if (order.shipmentGroupId) {
@@ -913,6 +935,7 @@ router.delete('/orders/:id', async (req, res) => {
 
     res.json({
       ok: true,
+      success: true,
       message: `Order #${orderNo} deleted permanently from database.`,
       deletedOrderNo: orderNo,
       deletedOrderId: orderId.toString()

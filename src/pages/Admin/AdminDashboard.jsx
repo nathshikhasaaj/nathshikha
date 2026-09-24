@@ -314,7 +314,9 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
   // Handle Permanent Order Deletion (Admin only)
   const handleDeleteOrder = async (orderId) => {
     try {
-      const res = await api(`/admin/orders/${orderId}`, {
+      const rawId = String(orderId || '').trim();
+      const cleanId = rawId.replace(/^#/, '').trim();
+      const res = await api(`/admin/orders/${encodeURIComponent(cleanId || rawId)}`, {
         method: 'DELETE'
       });
 
@@ -325,7 +327,11 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
             o.id !== orderId &&
             o._id !== orderId &&
             o.order_no !== orderId &&
-            o.orderNo !== orderId
+            o.orderNo !== orderId &&
+            String(o.order_no || '').replace(/^#/, '') !== cleanId &&
+            String(o.orderNo || '').replace(/^#/, '') !== cleanId &&
+            String(o._id || '') !== rawId &&
+            String(o.id || '') !== rawId
         )
       );
 
@@ -335,12 +341,17 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
         (detailsModalOrder.id === orderId ||
           detailsModalOrder._id === orderId ||
           detailsModalOrder.order_no === orderId ||
-          detailsModalOrder.orderNo === orderId)
+          detailsModalOrder.orderNo === orderId ||
+          String(detailsModalOrder.order_no || '').replace(/^#/, '') === cleanId ||
+          String(detailsModalOrder.orderNo || '').replace(/^#/, '') === cleanId ||
+          String(detailsModalOrder._id || '') === rawId ||
+          String(detailsModalOrder.id || '') === rawId)
       ) {
         setDetailsModalOrder(null);
       }
 
       setToast(res.message || 'Order deleted permanently.');
+      return res;
     } catch (err) {
       console.error('Failed to delete order:', err);
       setToast(err.message || 'Failed to delete order');

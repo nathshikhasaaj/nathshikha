@@ -8,7 +8,7 @@ import { Order } from '../models/Order.js';
 import { Product } from '../models/Product.js';
 import { Coupon } from '../models/Coupon.js';
 import { ShipmentGroup } from '../models/ShipmentGroup.js';
-import { auth, optionalAuth } from '../middleware/auth.js';
+import { auth, admin, optionalAuth } from '../middleware/auth.js';
 import { isCouponExpired, calculateCouponDiscount } from './couponRoutes.js';
 import {
   calculateShippingCharge,
@@ -1259,6 +1259,95 @@ router.get('/guest/:orderNo', lookupLimiter, async (req, res) => {
   } catch (err) {
     console.error('Error retrieving guest order:', err);
     res.status(500).json({ error: 'Failed to retrieve order.' });
+  }
+});
+
+// Admin: Delete order permanently from database
+router.delete(['/:id', '/'], auth, admin, async (req, res) => {
+  const id = req.params.id || req.query.id || req.body?.id || req.body?.orderId;
+  if (!id) {
+    return res.status(400).json({ error: 'Order ID is required for deletion.' });
+  }
+
+  try {
+    const rawId = String(id).trim();
+    const cleanId = rawId.replace(/^#/, '').trim();
+
+    let order = null;
+    if (mongoose.Types.ObjectId.isValid(rawId)) {
+      order = await Order.findById(rawId);
+    }
+    if (!order && mongoose.Types.ObjectId.isValid(cleanId)) {
+      order = await Order.findById(cleanId);
+    }
+    if (!order) {
+      order = await Order.findOne({
+        $or: [
+          { orderNo: cleanId },
+          { orderNo: `#${cleanId}` },
+          { orderNo: rawId },
+          { order_no: cleanId },
+          { order_no: `#${cleanId}` },
+          { order_no: rawId },
+          { orderId: cleanId },
+          { orderId: `#${cleanId}` },
+          { orderId: rawId }
+        ]
+      });
+    }
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found in database.' });
+    }
+
+    const orderId = order._id;
+    const orderNo = order.orderNo || order.order_no || id;
+
+    // Clean up shipment group association
+    if (order.shipmentGroupId) {
+      try {
+        const group = await ShipmentGroup.findById(order.shipmentGroupId);
+        if (group) {
+          group.orders = (group.orders || []).filter(
+            (oId) => oId.toString() !== orderId.toString()
+          );
+          if (group.orders.length === 0) {
+            await ShipmentGroup.findByIdAndDelete(group._id);
+          } else {
+            await group.save();
+          }
+        }
+      } catch (groupErr) {
+        console.warn('Failed to clean up shipment group association:', groupErr.message);
+      }
+    }
+
+    // Clean up uploaded customization image file if stored locally
+    const customImg = order.customization?.referenceImage || order.customization?.reference_image;
+    if (customImg && typeof customImg === 'string' && customImg.startsWith('/uploads/customization-')) {
+      try {
+        const filePath = path.join(uploadsDir, path.basename(customImg));
+        if (fs.existsSync(filePath)) {
+          await fs.promises.unlink(filePath).catch(() => {});
+        }
+      } catch (fileErr) {
+        console.warn('Failed to delete customization reference file:', fileErr.message);
+      }
+    }
+
+    // Delete the order document
+    await Order.findByIdAndDelete(orderId);
+
+    res.json({
+      ok: true,
+      success: true,
+      message: `Order #${orderNo} deleted permanently from database.`,
+      deletedOrderNo: orderNo,
+      deletedOrderId: orderId.toString()
+    });
+  } catch (err) {
+    console.error('Failed to delete order:', err);
+    res.status(500).json({ error: err.message || 'Failed to delete order from database.' });
   }
 });
 
