@@ -74,14 +74,14 @@ app.use(
   })
 );
 
-// 3. Request body parsing with generous size limit for multi-image uploads and product payloads
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+// 3. Request body parsing with production-safe size limit for product payloads
+app.use(express.json({ limit: '25mb' }));
+app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
 // Handle body-parser payload too large or invalid json errors gracefully
 app.use((err, req, res, next) => {
   if (err && (err.type === 'entity.too.large' || err.status === 413)) {
-    return res.status(413).json({ error: 'Request payload is too large. Maximum allowed size is 50MB.' });
+    return res.status(413).json({ error: 'Request payload is too large. Maximum allowed size is 25MB.' });
   }
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
     return res.status(400).json({ error: 'Invalid JSON formatted body in request.' });

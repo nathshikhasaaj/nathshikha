@@ -25,7 +25,13 @@ import {
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { compressImage, compressMultipleImages } from '../../utils/imageCompressor';
+import {
+  compressImage,
+  compressMultipleImages,
+  validateBatchPayload,
+  formatBytes,
+  MAX_PRODUCT_IMAGES_LIMIT
+} from '../../utils/imageCompressor';
 import { formatWhatsAppPhone } from '../../utils/formatters';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import AdminHeader from '../../components/admin/AdminHeader';
@@ -627,24 +633,38 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
   };
 
   const uploadImage = async (e) => {
-    const file = e.target?.files?.[0];
+    const file = e.target?.files?.[0] || (e instanceof File ? e : null);
     if (!file) return;
+
+    const currentList = Array.isArray(form.images) ? form.images.filter(Boolean) : (form.img ? [form.img] : []);
+    const baseList = (currentList.length === 1 && currentList[0] === '/assets/thushi.jpg') ? [] : currentList;
+    if (baseList.length >= MAX_PRODUCT_IMAGES_LIMIT) {
+      setToast(`Maximum ${MAX_PRODUCT_IMAGES_LIMIT} photos already reached for this product. Please remove a photo to upload new ones.`);
+      return;
+    }
+
     setBusy(true);
     try {
-      setToast('Optimizing & preparing photo…');
+      setToast('Optimizing photo in browser…');
       const optimizedFile = await compressImage(file);
+
+      const payloadCheck = validateBatchPayload([optimizedFile]);
+      if (!payloadCheck.valid) {
+        throw new Error(payloadCheck.error);
+      }
+
+      setToast('Uploading & applying Nathshikha watermark…');
       const fd = new FormData();
       fd.append('image', optimizedFile);
       const r = await api('/admin/upload', {
         method: 'POST',
         body: fd
       });
+
       setForm((f) => {
-        const currentList = Array.isArray(f.images) ? [...f.images.filter(Boolean)] : (f.img ? [f.img] : []);
-        const baseList = (currentList.length === 1 && currentList[0] === '/assets/thushi.jpg')
-          ? []
-          : currentList;
-        const updated = [...baseList, r.url].slice(0, 10);
+        const cur = Array.isArray(f.images) ? [...f.images.filter(Boolean)] : (f.img ? [f.img] : []);
+        const base = (cur.length === 1 && cur[0] === '/assets/thushi.jpg') ? [] : cur;
+        const updated = [...base, r.url].slice(0, MAX_PRODUCT_IMAGES_LIMIT);
         return { ...f, img: updated[0] || r.url, images: updated };
       });
       setToast('✓ Photo uploaded & watermarked successfully');
@@ -657,11 +677,45 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
 
   const uploadMultipleImages = async (files) => {
     if (!files || files.length === 0) return;
+    const fileArray = Array.from(files);
+
+    const currentList = Array.isArray(form.images) ? form.images.filter(Boolean) : (form.img ? [form.img] : []);
+    const baseList = (currentList.length === 1 && currentList[0] === '/assets/thushi.jpg') ? [] : currentList;
+    const remainingSlots = MAX_PRODUCT_IMAGES_LIMIT - baseList.length;
+
+    if (remainingSlots <= 0) {
+      setToast(`Maximum ${MAX_PRODUCT_IMAGES_LIMIT} photos already reached for this product. Please remove a photo to upload new ones.`);
+      return;
+    }
+
+    if (fileArray.length > remainingSlots) {
+      setToast(`You selected ${fileArray.length} photos, but only ${remainingSlots} more photo slot(s) are available (Max ${MAX_PRODUCT_IMAGES_LIMIT}).`);
+      return;
+    }
+
     setBusy(true);
     try {
-      const optimizedFiles = await compressMultipleImages(files, {}, (current, total) => {
-        setToast(`Optimizing photo ${current} of ${total}…`);
+      setToast(`Optimizing ${fileArray.length} photo(s) in browser…`);
+      const optimizedFiles = await compressMultipleImages(fileArray, {}, (current, total, fileName) => {
+        setToast(`Optimizing photo ${current} of ${total}… (${fileName})`);
       });
+
+      if (!optimizedFiles || optimizedFiles.length === 0) {
+        throw new Error('No valid photos could be prepared for upload.');
+      }
+
+      if (optimizedFiles.failed && optimizedFiles.failed.length > 0) {
+        const failedNames = optimizedFiles.failed.map((f) => f.file.name).join(', ');
+        console.warn('Some images could not be optimized:', failedNames);
+      }
+
+      // Check safe total upload payload before sending network request
+      const payloadCheck = validateBatchPayload(optimizedFiles);
+      if (!payloadCheck.valid) {
+        throw new Error(payloadCheck.error);
+      }
+
+      setToast(`Uploading & applying watermark on ${optimizedFiles.length} photo(s)…`);
 
       const fd = new FormData();
       optimizedFiles.forEach((f) => fd.append('images', f));
@@ -670,21 +724,32 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
         method: 'POST',
         body: fd
       });
+
       const newUrls = r.urls || (r.url ? [r.url] : []);
+      if (!newUrls.length) {
+        throw new Error('No photos were returned by the server.');
+      }
+
       setForm((prev) => {
-        const currentList = Array.isArray(prev.images) ? [...prev.images.filter(Boolean)] : (prev.img ? [prev.img] : []);
-        const baseList = (currentList.length === 1 && currentList[0] === '/assets/thushi.jpg')
-          ? []
-          : currentList;
-        const combined = [...baseList, ...newUrls].slice(0, 10);
+        const cur = Array.isArray(prev.images) ? [...prev.images.filter(Boolean)] : (prev.img ? [prev.img] : []);
+        const base = (cur.length === 1 && cur[0] === '/assets/thushi.jpg') ? [] : cur;
+        const combined = [...base, ...newUrls].slice(0, MAX_PRODUCT_IMAGES_LIMIT);
         return {
           ...prev,
           images: combined,
           img: combined[0] || ''
         };
       });
-      setToast(`✓ ${newUrls.length} photo(s) uploaded & watermarked!`);
+
+      const originalSizeFormatted = formatBytes(optimizedFiles.totalOriginalBytes);
+      const optimizedSizeFormatted = formatBytes(optimizedFiles.totalOptimizedBytes);
+      const sizeSummary = optimizedFiles.totalOriginalBytes && optimizedFiles.totalOptimizedBytes
+        ? ` (${optimizedSizeFormatted}, optimized from ${originalSizeFormatted})`
+        : '';
+
+      setToast(`✓ ${newUrls.length} photo(s) uploaded & watermarked successfully!${sizeSummary}`);
     } catch (err) {
+      console.error('Multi-image upload error:', err);
       setToast(err.message || 'Failed to upload images');
     } finally {
       setBusy(false);

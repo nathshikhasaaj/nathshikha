@@ -47,7 +47,7 @@ export async function api(path, opts = {}) {
     let errorMsg = data.error || data.message;
     if (!errorMsg) {
       if (res.status === 413) {
-        errorMsg = 'Request payload too large. Please select optimized photos.';
+        errorMsg = 'Upload payload exceeded server limit. Please upload fewer images at once.';
       } else if (res.status === 401) {
         errorMsg = 'Session expired. Please log in again.';
       } else if (res.status === 403) {
@@ -105,9 +105,10 @@ export async function uploadFile(fileOrFormData, path = '/admin/upload', fieldNa
   }
 
   if (!res.ok) {
-    const errorMsg = data.error || data.message || (res.status === 413 ? 'Image size exceeds maximum limit' : 'Failed to upload image');
+    const errorMsg = data.error || data.message || (res.status === 413 ? 'Image size exceeds maximum upload limit' : 'Failed to upload image');
     throw new Error(errorMsg);
   }
   return data;
 }
+
 
