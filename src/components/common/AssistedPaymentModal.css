@@ -1,0 +1,310 @@
+/* ============================================================ */
+/* ASSISTED PAYMENT MODAL CSS                                   */
+/* ============================================================ */
+
+.assistedPayModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 10, 10, 0.78);
+  backdrop-filter: blur(5px);
+  z-index: 1060;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeInPayModal 0.2s ease-out;
+}
+
+@keyframes fadeInPayModal {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.assistedPayModalContainer {
+  background: #ffffff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  border: 1px solid #ebdcc6;
+  overflow: hidden;
+}
+
+.assistedPayHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #4a0f1b 0%, #6d1b29 100%);
+  color: #ffffff;
+  border-bottom: 2px solid #dfc793;
+}
+
+.assistedPayHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.payHeaderBadge {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(223, 199, 147, 0.2);
+  border: 1.5px solid #dfc793;
+  color: #dfc793;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.assistedPayHeaderLeft h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-family: 'Cinzel', serif;
+  color: #ffffff;
+}
+
+.assistedPayHeaderLeft span {
+  display: block;
+  font-size: 0.78rem;
+  color: #f3e8d7;
+  margin-top: 2px;
+}
+
+.assistedPayCloseBtn {
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: #ffffff;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.assistedPayCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.assistedPayBody {
+  padding: 18px 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: #fbf9f6;
+}
+
+.assistedPayErrorBanner {
+  background: #fef2f2;
+  border: 1px solid #f87171;
+  color: #b91c1c;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* QR Card */
+.assistedPayQrCard {
+  background: #ffffff;
+  border: 1px solid #dfc793;
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.qrWrapper {
+  background: #ffffff;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  display: inline-block;
+}
+
+.qrSupportText {
+  font-size: 0.78rem;
+  color: #7a6b63;
+  font-weight: 500;
+}
+
+/* Details Card */
+.assistedPayDetailsBox {
+  background: #ffffff;
+  border: 1px solid #ebdcc6;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.payeeRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  border-bottom: 1px solid #f5ece1;
+  padding-bottom: 6px;
+}
+
+.detailLabel {
+  font-size: 0.75rem;
+  color: #7a6b63;
+}
+
+.detailVal {
+  font-weight: 700;
+  color: #2b1f1d;
+}
+
+.copyRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.copyRowLeft {
+  display: flex;
+  flex-direction: column;
+}
+
+.copyRowVal {
+  font-size: 0.92rem;
+  color: #2b1f1d;
+}
+
+.copyRowVal.amountHighlight {
+  font-size: 1.15rem;
+  color: #6d1b29;
+  font-weight: 800;
+}
+
+.copyActionBtn {
+  background: #fdfaf5;
+  border: 1px solid #c69a59;
+  color: #6d1b29;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.copyActionBtn:hover {
+  background: #6d1b29;
+  color: #ffffff;
+  border-color: #6d1b29;
+}
+
+.copyActionBtn.copied {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #86efac;
+}
+
+/* Confirmation Form */
+.paymentConfirmationForm {
+  background: #ffffff;
+  border: 1px solid #ebdcc6;
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.formSectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.formSectionTitle h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #4a0f1b;
+}
+
+.formHelperText {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #7a6b63;
+  line-height: 1.4;
+}
+
+.payFormGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.payFormGroup label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #4a3834;
+}
+
+.payFormGroup input,
+.payFormGroup select {
+  padding: 9px 12px;
+  border: 1px solid #d8c6b5;
+  border-radius: 6px;
+  font-size: 0.88rem;
+}
+
+.payFormGroup input:focus,
+.payFormGroup select:focus {
+  outline: none;
+  border-color: #6d1b29;
+  box-shadow: 0 0 0 3px rgba(109, 27, 41, 0.1);
+}
+
+.verificationDisclaimerPill {
+  background: #fefce8;
+  border: 1px solid #fef08a;
+  color: #854d0e;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  line-height: 1.4;
+}
+
+.submitPaidBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}

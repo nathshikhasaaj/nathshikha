@@ -52,6 +52,7 @@ import AdminHeroManager from '../../components/admin/AdminHeroManager';
 import AdminParameterManager from '../../components/admin/AdminParameterManager';
 import AdminCancellationModal from '../../components/admin/AdminCancellationModal';
 import AdminOrderEditModal from '../../components/admin/AdminOrderEditModal';
+import AdminCreateAssistedOrderModal from '../../components/admin/AdminCreateAssistedOrderModal';
 import '../../components/admin/AdminLayout.css';
 import './AdminDashboard.css';
 
@@ -99,6 +100,7 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
   const [isEditingPayment, setIsEditingPayment] = useState(false);
   const [detailsModalOrder, setDetailsModalOrder] = useState(null);
   const [showCreateOrderModal, setShowCreateOrderModal] = useState(false);
+  const [showCreateAssistedOrderModal, setShowCreateAssistedOrderModal] = useState(false);
   const [shipmentModalOrder, setShipmentModalOrder] = useState(null);
   const [isEditingShipment, setIsEditingShipment] = useState(false);
   const [cancellationModalOrder, setCancellationModalOrder] = useState(null);
@@ -108,6 +110,36 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
     setOrders((prev) => [newOrder, ...prev]);
     setToast(`Order #${newOrder.order_no || newOrder.orderNo} created successfully!`);
     load();
+  };
+
+  const handleResendAssistedOrder = async (orderId) => {
+    try {
+      const res = await api(`/admin/orders/${orderId}/resend-assisted`, {
+        method: 'POST'
+      });
+      if (res.ok && res.order) {
+        setOrders((prev) =>
+          prev.map((o) =>
+            o.id === orderId || o._id === orderId || o.order_no === res.order.order_no || o.orderNo === res.order.orderNo
+              ? { ...o, ...res.order }
+              : o
+          )
+        );
+        if (
+          detailsModalOrder &&
+          (detailsModalOrder.id === orderId ||
+            detailsModalOrder._id === orderId ||
+            detailsModalOrder.order_no === res.order.order_no ||
+            detailsModalOrder.orderNo === res.order.orderNo)
+        ) {
+          setDetailsModalOrder((prev) => ({ ...prev, ...res.order }));
+        }
+        setToast(res.message || 'Assisted order email resent to customer successfully!');
+      }
+    } catch (err) {
+      setToast(err.message || 'Failed to resend assisted order email');
+      throw err;
+    }
   };
 
   const handleSaveShipment = async (orderId, { shipmentPartner, trackingId }) => {
@@ -938,6 +970,7 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
                     setIsEditingShipment(isEdit);
                   }}
                   onReviewCancellationClick={(order) => setCancellationModalOrder(order)}
+                  onOpenCreateAssistedOrder={() => setShowCreateAssistedOrderModal(true)}
                 />
               </div>
 
@@ -989,6 +1022,7 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
                 }}
                 onReviewCancellationClick={(order) => setCancellationModalOrder(order)}
                 onDeleteOrder={handleDeleteOrder}
+                onOpenCreateAssistedOrder={() => setShowCreateAssistedOrderModal(true)}
               />
             </div>
           )}
@@ -1204,6 +1238,7 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
         onStatusChange={handleUpdateOrderStatus}
         onReviewCancellationClick={(order) => setCancellationModalOrder(order)}
         onEditOrderClick={(order) => setEditOrderModalOrder(order)}
+        onResendAssistedOrder={handleResendAssistedOrder}
       />
 
       {/* Admin Edit Order Modal */}
@@ -1212,12 +1247,21 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
         isOpen={Boolean(editOrderModalOrder)}
         onClose={() => setEditOrderModalOrder(null)}
         onSaveOrderEdit={handleSaveOrderEdit}
+        products={allProducts}
       />
 
       {/* Manual Order Creation Modal */}
       <AdminCreateOrderModal
         isOpen={showCreateOrderModal}
         onClose={() => setShowCreateOrderModal(false)}
+        onOrderCreated={handleOrderCreated}
+        products={allProducts}
+      />
+
+      {/* Admin Create Assisted Order Modal */}
+      <AdminCreateAssistedOrderModal
+        isOpen={showCreateAssistedOrderModal}
+        onClose={() => setShowCreateAssistedOrderModal(false)}
         onOrderCreated={handleOrderCreated}
         products={allProducts}
       />

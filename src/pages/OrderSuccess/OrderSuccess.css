@@ -2,17 +2,19 @@
   display: grid;
   place-items: center;
   min-height: 70vh;
+  padding: 20px 16px 60px;
 }
 
 .successCard {
-  max-width: 700px;
+  max-width: 680px;
   width: 100%;
   background: #fffdf9;
-  border: 1px solid #e3d6bb;
-  padding: 45px;
+  border: 1px solid #ebdcc5;
+  padding: 40px 32px;
   text-align: center;
-  box-shadow: 0 15px 40px rgba(109, 26, 37, 0.06);
-  border-radius: 8px;
+  box-shadow: 0 15px 40px rgba(109, 26, 37, 0.07);
+  border-radius: 12px;
+  box-sizing: border-box;
 }
 
 .successIcon {
@@ -21,74 +23,252 @@
   border-radius: 50%;
   display: grid;
   place-items: center;
-  margin: 0 auto 18px;
-  background: var(--maroon);
+  margin: 0 auto 14px;
+  background: var(--maroon, #6d1b29);
   color: #fff;
-  border: 2px solid var(--gold);
-  font-size: 28px;
+  border: 2px solid var(--gold, #d4af37);
+  font-size: 26px;
 }
 
-.successCard h1 {
-  font-family: var(--font-serif);
-  color: var(--maroon);
-  font-weight: 500;
-  font-size: 30px;
-  margin: 12px 0;
-}
-
-.successCard p {
-  color: #766963;
-  line-height: 1.7;
-  font-size: 12px;
-}
-
-.successSummary {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  border-top: 1px solid #e7dcc8;
-  border-bottom: 1px solid #e7dcc8;
-  margin: 25px 0;
-  padding: 16px 0;
-  gap: 10px;
-}
-
-.successSummary span {
-  font-size: 10px;
-  color: #8b7d75;
-}
-
-.successSummary b {
+.successCard .eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--gold, #d4af37);
+  text-transform: uppercase;
   display: block;
-  color: var(--maroon);
-  margin-top: 5px;
-  font-size: 12px;
 }
 
-.successNote {
-  background: #f8f1e2;
-  padding: 12px;
+.successHeading {
+  font-family: var(--font-serif, 'Cinzel', serif);
+  color: var(--maroon, #6d1b29);
+  font-weight: 700;
+  font-size: 28px;
+  margin: 8px 0 16px 0;
+  letter-spacing: 0.3px;
+}
+
+/* ============================================================ */
+/* PAYMENT VERIFICATION STATUS CARD (YELLOW/ORANGE BADGE)       */
+/* ============================================================ */
+.verificationStatusCard {
+  background: #fffbeb;
+  border: 1.5px solid #fde68a;
+  border-radius: 10px;
+  padding: 20px 18px;
+  margin: 16px 0 20px 0;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.08);
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 5px 14px;
+  border-radius: 20px;
+  letter-spacing: 0.2px;
+}
+
+.statusBadge.badgePending {
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  color: #92400e;
+}
+
+.statusBadge.badgeVerified {
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  color: #166534;
+}
+
+.badgeDot {
+  font-size: 11px;
+  line-height: 1;
+}
+
+.verificationNoticeText {
+  margin: 12px auto 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: #78350f;
+  max-width: 480px;
+  font-weight: 500;
+}
+
+/* ============================================================ */
+/* ORDER DETAILS CARD                                           */
+/* ============================================================ */
+.orderDetailsCard {
+  background: #ffffff;
+  border: 1px solid #ebdcc5;
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin: 18px 0;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.orderDetailsHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--maroon, #6d1b29);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ebdcc5;
+  margin-bottom: 12px;
+}
+
+.orderDetailsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.orderDetailRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12.5px;
+  gap: 12px;
+}
+
+.orderDetailRow .detailLabel {
+  color: #7d6e64;
+  font-weight: 500;
+}
+
+.orderDetailRow .detailVal {
+  color: #2b1f1a;
+  font-weight: 600;
+  text-align: right;
+}
+
+.highlightOrderNo {
+  font-family: monospace;
+  font-size: 13px;
+  font-weight: 700 !important;
+  color: var(--maroon, #6d1b29) !important;
+  background: #fbf6ec;
+  padding: 2px 8px;
   border-radius: 4px;
+  border: 1px solid #ebdcc5;
 }
 
-/* Ordered Items Breakdown Card */
-.successPageItemsCard {
-  background: #fdfaf4;
-  border: 1.5px solid #ebdcc5;
+.discountVal {
+  color: #16a34a !important;
+  font-weight: 700 !important;
+}
+
+.summaryDividerRow {
+  border-top: 1px dashed #ebdcc5;
+  padding-top: 10px;
+  margin-top: 4px;
+}
+
+.totalLabel {
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  color: var(--maroon, #6d1b29) !important;
+}
+
+.grandTotalVal {
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  color: var(--maroon, #6d1b29) !important;
+}
+
+.paymentStatusBadge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.paymentStatusBadge.badgePending {
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  color: #92400e;
+}
+
+.paymentStatusBadge.badgeVerified {
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  color: #166534;
+}
+
+/* ============================================================ */
+/* CUSTOMIZATION BANNER                                         */
+/* ============================================================ */
+.customizationSummaryBanner {
+  background: linear-gradient(135deg, #fffdf8 0%, #fffbf2 100%);
+  border: 1.5px solid #d4af37;
   border-radius: 8px;
+  padding: 12px 16px;
+  margin: 16px 0;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 2px 6px rgba(212, 175, 55, 0.08);
+}
+
+.customizationBannerHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--maroon, #5b1420);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.customizationBannerText {
+  margin: 0;
+  font-size: 12px;
+  color: #4a3d36;
+  line-height: 1.45;
+}
+
+.customizationQuote {
+  margin: 4px 0 0;
+  padding: 6px 10px;
+  background: #ffffff;
+  border-left: 3px solid #d4af37;
+  border-radius: 0 4px 4px 0;
+  font-size: 12px;
+  color: #2b1f1a;
+  font-style: italic;
+}
+
+/* ============================================================ */
+/* ORDERED ITEMS BREAKDOWN CARD                                 */
+/* ============================================================ */
+.successPageItemsCard {
+  background: #ffffff;
+  border: 1px solid #ebdcc5;
+  border-radius: 10px;
   padding: 16px;
   margin: 18px 0;
   text-align: left;
 }
 
 .successPageItemsTitle {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--maroon, #6d1b29);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin: 0 0 12px 0;
   padding-bottom: 8px;
-  border-bottom: 1px dashed #e2d2ba;
+  border-bottom: 1px dashed #ebdcc5;
 }
 
 .successPageItemsList {
@@ -101,7 +281,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #ffffff;
+  background: #fdfbf7;
   border: 1px solid #ebdcc5;
   border-radius: 6px;
   padding: 10px 12px;
@@ -125,13 +305,13 @@
 }
 
 .successPageItemDetails b {
-  font-size: 13px;
-  color: #2b1f1d;
+  font-size: 12.5px;
+  color: #2b1f1a;
   line-height: 1.35;
 }
 
 .successPageItemDetails small {
-  font-size: 11.5px;
+  font-size: 11px;
   color: #7a6b65;
 }
 
@@ -149,9 +329,9 @@
   background: #fef3c7;
   border: 1.5px solid #f59e0b;
   color: #78350f;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 700;
-  padding: 2px 7px;
+  padding: 2px 6px;
   border-radius: 4px;
 }
 
@@ -162,7 +342,7 @@
   background: #f1f5f9;
   border: 1px solid #cbd5e1;
   color: #334155;
-  font-size: 10.5px;
+  font-size: 10px;
   padding: 1px 6px;
   border-radius: 3px;
 }
@@ -174,20 +354,76 @@
   white-space: nowrap;
 }
 
+/* ============================================================ */
+/* ACTION BUTTONS & SOCIAL LINKS                                */
+/* ============================================================ */
 .successActions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 10px;
-  margin-top: 20px;
+  margin-top: 24px;
 }
 
-@media (max-width: 900px) {
+.successActions > * {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 0 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.whatsappActionBtn {
+  border-color: #25d366 !important;
+  color: #128c7e !important;
+}
+
+.whatsappActionBtn:hover {
+  background: #f0fdf4 !important;
+}
+
+.instagramActionBtn {
+  border-color: #dc2743 !important;
+  color: #bc1888 !important;
+}
+
+.instagramActionBtn:hover {
+  background: #fdf2f8 !important;
+}
+
+.facebookActionBtn {
+  border-color: #1877f2 !important;
+  color: #1877f2 !important;
+}
+
+.facebookActionBtn:hover {
+  background: #eff6ff !important;
+}
+
+/* ============================================================ */
+/* RESPONSIVE STYLES                                            */
+/* ============================================================ */
+@media (max-width: 768px) {
   .successCard {
-    padding: 30px 20px;
+    padding: 28px 18px;
   }
 
-  .successSummary {
-    grid-template-columns: 1fr;
+  .successHeading {
+    font-size: 24px;
+  }
+
+  .orderDetailsCard {
+    padding: 14px 14px;
+  }
+
+  .orderDetailRow {
+    font-size: 12px;
   }
 
   .successActions {
@@ -196,5 +432,24 @@
 
   .successActions > * {
     width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .successPage {
+    padding: 10px 10px 40px;
+  }
+
+  .successCard {
+    padding: 24px 14px;
+    border-radius: 8px;
+  }
+
+  .verificationStatusCard {
+    padding: 16px 12px;
+  }
+
+  .verificationNoticeText {
+    font-size: 12px;
   }
 }

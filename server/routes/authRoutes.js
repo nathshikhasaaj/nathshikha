@@ -398,22 +398,17 @@ router.get('/me', auth, async (req, res) => {
   }
 });
 
-// Update customer profile (Name, Phone)
+// Update customer profile (Strict Allowlist: Phone only. Registered name is locked for customers)
 router.put('/profile', auth, async (req, res) => {
   try {
-    const { name, phone } = req.body;
+    const { phone } = req.body;
     const userDoc = await User.findById(req.user.id);
     if (!userDoc) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    if (name !== undefined) {
-      const trimmedName = String(name).trim();
-      if (!trimmedName) {
-        return res.status(400).json({ error: 'Name cannot be empty' });
-      }
-      userDoc.name = trimmedName.slice(0, 100);
-    }
+    // Security check: Registered customer name is permanently locked.
+    // If a malicious or legacy payload contains `name`, ignore it and do NOT modify userDoc.name.
 
     if (phone !== undefined) {
       const cleanPhone = String(phone).replace(/\D/g, '');

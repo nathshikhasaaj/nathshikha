@@ -867,10 +867,65 @@ export async function sendAdminTestEmail(targetRecipient) {
 }
 
 /* ============================================================ */
+/* ============================================================ */
+/* 3B. ASSISTED ORDER SENT / UPDATED EMAIL                      */
+/* ============================================================ */
+export async function sendAssistedOrderEmail(order) {
+  const baseUrl = getAppBaseUrl();
+  const orderUrl = `${baseUrl}/orders`;
+  const recipientEmail = order.customer_email || order.customerEmail || order.email;
+  const recipientName = order.customer_name || order.customerName || order.name || 'Valued Customer';
+  const orderNo = order.order_no || order.orderNo;
+
+  const contentHtml = `
+    <h2 style="margin:0 0 14px 0; font-size: 20px;">Order Details Updated · Action Required</h2>
+    <p>Dear <strong>${recipientName}</strong>,</p>
+    <p>Your order details for Order <strong>#${orderNo}</strong> have been prepared/updated by the Nathshikha Team.</p>
+    
+    <div class="notice-card" style="border-left-color: #c69a59; background-color: #fdfaf3;">
+      <h3 style="margin:0 0 6px 0; color:#6d1b29; font-size:15px;">✦ Payment Pending · Review Required</h3>
+      <p style="margin:0; font-size:13.5px; color:#475569;">
+        Please review your updated order details below and complete payment to proceed with your order.
+      </p>
+    </div>
+
+    ${renderOrderItemsTable(order)}
+
+    <div style="background:#faf5ee; border:1px solid #ebdcc6; border-radius:6px; padding:16px; margin:20px 0;">
+      <h4 style="margin:0 0 8px 0; color:#6d1b29; font-size:13px; text-transform:uppercase;">Delivery Destination</h4>
+      <p style="margin:0; font-size:13px; color:#475569;">
+        <strong>Recipient:</strong> ${order.recipient_name || order.recipientName || order.name}<br>
+        <strong>Address:</strong> ${order.address}, ${order.city}, ${order.state} - ${order.pincode}<br>
+        <strong>Contact:</strong> ${order.recipient_phone || order.recipientPhone || order.phone}
+      </p>
+    </div>
+  `;
+
+  return sendEmailCore({
+    to: recipientEmail,
+    subject: `Action Required: Order #${orderNo} Updated — Nathshikha`,
+    html: renderEmailLayout({
+      title: `Order #${orderNo} Updated`,
+      previewText: `Your order #${orderNo} has been updated by our team. Please review and complete payment.`,
+      contentHtml,
+      ctaText: 'Review Order & Pay',
+      ctaUrl: orderUrl
+    }),
+    text: `Your order #${orderNo} has been updated by the Nathshikha Team. Please review and complete payment at: ${orderUrl}`,
+    emailType: 'ASSISTED_ORDER_SENT',
+    orderId: order._id || order.id,
+    userId: order.userId || order.user_id,
+    metadata: { total: order.total }
+  });
+}
+
+/* ============================================================ */
 /* 10. RESEND ORDER EMAIL HANDLER                               */
 /* ============================================================ */
 export async function resendOrderEmail(order, emailType) {
   switch (emailType) {
+    case 'ASSISTED_ORDER_SENT':
+      return sendAssistedOrderEmail(order);
     case 'ORDER_PLACED':
       return sendOrderPlacedEmail(order);
     case 'ORDER_CONFIRMED': {

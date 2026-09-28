@@ -12,7 +12,8 @@ import {
   Mail,
   MapPin,
   Sparkles,
-  Download
+  Download,
+  Gift
 } from 'lucide-react';
 import {
   money,
@@ -64,7 +65,11 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
     order.shipping_charge !== undefined ? order.shipping_charge : (order.shipping !== undefined ? order.shipping : 0)
   );
 
-  const grandTotal = Number(order.total || order.grandTotal || (subtotal - discount + shippingCharge));
+  const hasGiftWrap = Boolean(order.gift_wrap || order.giftWrap || (Number(order.gift_wrap_charge || order.giftWrapCharge) > 0));
+  const giftWrapCharge = hasGiftWrap ? Number(order.gift_wrap_charge || order.giftWrapCharge || 20) : 0;
+  const handwrittenNote = String(order.handwritten_note || order.handwrittenNote || '').trim();
+
+  const grandTotal = Number(order.total || order.grandTotal || (subtotal - discount + shippingCharge + giftWrapCharge));
 
   const paymentTx =
     order.payment_transaction_id || order.paymentTransactionId || order.upi_utr || order.upiUtr || order.transaction_id || null;
@@ -134,6 +139,9 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
       msg += `🏷️ *Coupon Discount:* -${money(discount)}${couponCode ? ` (${couponCode})` : ''}\n`;
     }
     msg += `🚚 *Shipping:* ${shippingCharge === 0 ? 'FREE' : money(shippingCharge)} (${order.shipping_method || order.shippingMethod || 'Standard Delivery'})\n`;
+    if (hasGiftWrap) {
+      msg += `🎁 *Luxury Gift Wrap:* +${money(giftWrapCharge)}\n`;
+    }
     msg += `✨ *GRAND TOTAL:* ${money(grandTotal)}\n`;
     msg += `💳 *Payment Method:* ${paymentMethod}\n`;
     msg += `✅ *Payment Status:* ${isVerified ? 'VERIFIED & PAID ✓' : 'VERIFICATION PENDING'}\n`;
@@ -144,6 +152,10 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
       msg += `🚀 *Shipment:* ${shipmentPartner} | Tracking ID: ${trackingId}\n`;
     }
     msg += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+    if (handwrittenNote) {
+      msg += `📝 *HANDWRITTEN NOTE FOR RECIPIENT:*\n"${handwrittenNote}"\n\n`;
+    }
 
     if (hasCustomization) {
       msg += `🎨 *CUSTOMIZATION REQUIREMENT:*\n"${customObj?.details || 'Reference design photo attached to order'}"\n\n`;
@@ -595,6 +607,14 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
       <table class="totals-table">
         <tr>
           <td class="totals-side" style="padding-right:10px;">
+            ${handwrittenNote ? `
+              <div style="background:#fdf2f8;border:1.5px solid #fbcfe8;border-radius:5px;padding:9px 12px;margin-bottom:8px;">
+                <div style="font-size:11px;font-weight:700;color:#9d174d;margin-bottom:4px;">📝 Handwritten Note for Recipient</div>
+                <div style="font-size:10.5px;color:#831843;font-style:italic;line-height:1.45;">
+                  "${handwrittenNote}"
+                </div>
+              </div>
+            ` : ''}
             ${hasCustomization ? `
               <div style="background:#fffdf8;border:1.5px solid #d4af37;border-radius:5px;padding:9px 12px;margin-bottom:8px;">
                 <div style="font-size:11px;font-weight:700;color:#5b1420;margin-bottom:4px;">🎨 Customization Requirement</div>
@@ -605,7 +625,7 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
                   <div style="font-size:10px;font-weight:700;color:#92400e;margin-top:4px;">📷 Reference Design Attached</div>
                 ` : ''}
               </div>
-            ` : `
+            ` : (!handwrittenNote ? `
               <div style="background:#fdfaf3;border:1px dashed #ebdcc5;border-radius:5px;padding:10px 12px;">
                 <div style="font-size:11px;font-weight:700;color:#5b1420;margin-bottom:4px;">✨ Authenticity & Craftsmanship Assurance</div>
                 <div style="font-size:10px;color:#6b5c53;line-height:1.45;">
@@ -613,7 +633,7 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
                   Handle with love. Keep away from moisture and perfumes for lasting lustre.
                 </div>
               </div>
-            `}
+            ` : '')}
           </td>
           <td class="totals-side" style="padding-left:10px;">
             <div class="calc-card">
@@ -631,6 +651,12 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
                 <span style="color:#5c4e47;">Shipping (${order.shipping_method || order.shippingMethod || 'Standard Delivery'}):</span>
                 <b>${shippingCharge === 0 ? '<span style="color:#16a34a;">FREE</span>' : money(shippingCharge)}</b>
               </div>
+              ${hasGiftWrap ? `
+                <div class="calc-row" style="color:#9d174d;">
+                  <span>Luxury Gift Wrap:</span>
+                  <b>+${money(giftWrapCharge)}</b>
+                </div>
+              ` : ''}
               <div class="calc-row calc-total-row">
                 <span>Grand Total:</span>
                 <span>${money(grandTotal)}</span>
@@ -993,6 +1019,41 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
             {/* Calculations & Summary Section */}
             <div className="invoiceTotalsWrap">
               <div className="invoiceNotesSide">
+                {handwrittenNote && (
+                  <div
+                    style={{
+                      background: '#fdf2f8',
+                      border: '1.5px solid #fbcfe8',
+                      borderRadius: 8,
+                      padding: '10px 12px',
+                      marginBottom: 8,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 4
+                    }}
+                  >
+                    <div style={{ color: '#9d174d', fontWeight: 700, fontSize: '12px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Gift size={13} />
+                      <span>📝 Handwritten Note for Recipient</span>
+                    </div>
+                    <blockquote
+                      style={{
+                        margin: 0,
+                        padding: '4px 8px',
+                        background: '#ffffff',
+                        borderLeft: '3px solid #db2777',
+                        borderRadius: '0 4px 4px 0',
+                        fontSize: '11px',
+                        color: '#831843',
+                        fontStyle: 'italic',
+                        lineHeight: 1.4
+                      }}
+                    >
+                      "{handwrittenNote}"
+                    </blockquote>
+                  </div>
+                )}
+
                 {hasCustomization ? (
                   <div
                     style={{
@@ -1030,7 +1091,7 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
                       </div>
                     )}
                   </div>
-                ) : (
+                ) : (!handwrittenNote && (
                   <div className="heritageAssuranceBox">
                     <div className="heritageAssuranceHeader">
                       <Sparkles size={14} color="var(--gold, #c29947)" />
@@ -1041,7 +1102,7 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
                       Handle with love. Keep away from water, moisture, and alcohol-based perfumes for lasting lustre.
                     </p>
                   </div>
-                )}
+                ))}
               </div>
 
               <div className="invoiceCalcSide">
@@ -1065,6 +1126,15 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
                   </span>
                   <b>{shippingCharge === 0 ? <span className="freeText">FREE</span> : money(shippingCharge)}</b>
                 </div>
+
+                {hasGiftWrap && (
+                  <div className="calcRow" style={{ color: '#9d174d' }}>
+                    <span>
+                      Luxury Gift Wrap:
+                    </span>
+                    <b>+{money(giftWrapCharge)}</b>
+                  </div>
+                )}
 
                 <div className="calcDivider"></div>
 

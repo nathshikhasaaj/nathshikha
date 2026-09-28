@@ -25,7 +25,8 @@ import {
   Boxes,
   FileText,
   Sparkles,
-  ExternalLink
+  ExternalLink,
+  Gift
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { money, formatOrderStatus, formatWhatsAppPhone } from '../../utils/formatters';
@@ -42,7 +43,8 @@ export default function AdminOrderDetailsModal({
   onEditShipmentClick,
   onStatusChange,
   onReviewCancellationClick,
-  onEditOrderClick
+  onEditOrderClick,
+  onResendAssistedOrder
 }) {
   const [copiedItemIndex, setCopiedItemIndex] = useState(null);
   const [generatingItemIndex, setGeneratingItemIndex] = useState(null);
@@ -149,6 +151,11 @@ export default function AdminOrderDetailsModal({
             <div className="modalHeaderMeta">
               <div className="modalHeaderHeading">
                 <h3>Order #{order.order_no}</h3>
+                {(order.assisted_order?.is_assisted || order.assistedOrder?.isAssisted || order.order_status === 'payment_pending' || order.orderStatus === 'payment_pending') && (
+                  <span className="modalAssistedBadge">
+                    ✦ Assisted Order
+                  </span>
+                )}
                 {(order.is_gift || order.isGift) && (
                   <span className="modalGiftBadge">
                     🎁 Gift Order
@@ -274,6 +281,21 @@ export default function AdminOrderDetailsModal({
               </button>
             )}
 
+            {(order.order_status === 'payment_pending' || order.orderStatus === 'payment_pending') && onResendAssistedOrder && (
+              <button
+                type="button"
+                className="goldBtn compact resendAssistedHeaderBtn"
+                onClick={async () => {
+                  if (window.confirm(`Resend assisted order review email for Order #${order.order_no}?`)) {
+                    await onResendAssistedOrder(order.id || order._id);
+                  }
+                }}
+                title="Resend assisted order payment review link to customer"
+              >
+                <Mail size={13} /> Resend Link
+              </button>
+            )}
+
             {isCancelRequested && onReviewCancellationClick && (
               <button
                 type="button"
@@ -394,6 +416,101 @@ export default function AdminOrderDetailsModal({
             </div>
           )}
 
+          {/* Dedicated Assisted Order Information Card */}
+          {(order.assisted_order?.is_assisted || order.assistedOrder?.isAssisted || order.order_status === 'payment_pending' || order.orderStatus === 'payment_pending') && (
+            <div className="detailsSectionCard assistedOrderAdminCard">
+              <div className="sectionHeader" style={{ justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Sparkles size={16} color="var(--gold, #d4af37)" />
+                  <h3 style={{ margin: 0, color: '#78350f', fontWeight: 800 }}>
+                    ✦ ASSISTED ORDER AUDIT & TIMELINE
+                  </h3>
+                </div>
+                {onResendAssistedOrder && (
+                  <button
+                    type="button"
+                    className="outlineBtn compact"
+                    style={{ padding: '3px 8px', fontSize: 11, borderColor: '#d4af37', color: '#78350f' }}
+                    onClick={async () => {
+                      if (window.confirm(`Resend assisted order review email for Order #${order.order_no}?`)) {
+                        await onResendAssistedOrder(order.id || order._id);
+                      }
+                    }}
+                  >
+                    <Mail size={12} /> Resend Email
+                  </button>
+                )}
+              </div>
+
+              <div className="infoList" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
+                <div className="infoItem">
+                  <span className="infoLabel">Created By</span>
+                  <span className="infoVal">
+                    <b>{order.assisted_order?.created_by || order.assistedOrder?.createdBy || 'Admin'}</b>
+                  </span>
+                </div>
+
+                <div className="infoItem">
+                  <span className="infoLabel">Initial Sent At</span>
+                  <span className="infoVal">
+                    {order.assisted_order?.created_at || order.assistedOrder?.createdAt ? (
+                      new Date(order.assisted_order?.created_at || order.assistedOrder?.createdAt).toLocaleString('en-IN', {
+                        dateStyle: 'medium',
+                        timeStyle: 'short'
+                      })
+                    ) : 'Recorded on creation'}
+                  </span>
+                </div>
+
+                <div className="infoItem">
+                  <span className="infoLabel">Customer Viewed At</span>
+                  <span className="infoVal">
+                    {order.assisted_order?.customer_viewed_at || order.assistedOrder?.customerViewedAt ? (
+                      <b style={{ color: '#15803d' }}>
+                        ✓ {new Date(order.assisted_order?.customer_viewed_at || order.assistedOrder?.customerViewedAt).toLocaleString('en-IN', {
+                          dateStyle: 'medium',
+                          timeStyle: 'short'
+                        })}
+                      </b>
+                    ) : (
+                      <span className="mutedText">Not yet viewed</span>
+                    )}
+                  </span>
+                </div>
+
+                <div className="infoItem">
+                  <span className="infoLabel">Customer Payment Claim</span>
+                  <span className="infoVal">
+                    {order.assisted_order?.payment_claimed_at || order.assistedOrder?.paymentClaimedAt ? (
+                      <b style={{ color: '#15803d' }}>
+                        ✓ {new Date(order.assisted_order?.payment_claimed_at || order.assistedOrder?.paymentClaimedAt).toLocaleString('en-IN', {
+                          dateStyle: 'medium',
+                          timeStyle: 'short'
+                        })}
+                      </b>
+                    ) : (
+                      <span className="mutedText">Pending payment submission</span>
+                    )}
+                  </span>
+                </div>
+
+                <div className="infoItem">
+                  <span className="infoLabel">Resend Count</span>
+                  <span className="infoVal">
+                    <b>{order.assisted_order?.resend_count || order.assistedOrder?.resendCount || 0} times</b>
+                  </span>
+                </div>
+
+                {order.assisted_order?.notes || order.assistedOrder?.notes ? (
+                  <div className="infoItem" style={{ gridColumn: 'span 2' }}>
+                    <span className="infoLabel">Admin Creation Notes</span>
+                    <span className="infoVal">{order.assisted_order?.notes || order.assistedOrder?.notes}</span>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          )}
+
           {/* Dedicated Customization Request Section */}
           <div className={`detailsSectionCard customizationAdminCard ${hasCustomization ? 'hasCustomizationCard' : 'noCustomizationCard'}`}>
             <div className="customizationCardHeader">
@@ -464,6 +581,63 @@ export default function AdminOrderDetailsModal({
               </div>
             )}
           </div>
+
+          {/* Dedicated Gift Order Information Card (When Applicable) */}
+          {(order.is_gift || order.isGift || order.gift_wrap || order.giftWrap || order.handwritten_note || order.handwrittenNote) && (
+            <div className="detailsSectionCard giftAdminDetailCard" style={{ background: '#fffdfa', border: '1.5px solid #fbcfe8', borderRadius: 8, padding: '14px 16px', marginBottom: 14 }}>
+              <div className="sectionHeader" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px dashed #fbcfe8', paddingBottom: 8, marginBottom: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Gift size={16} color="#9d174d" />
+                  <h3 style={{ margin: 0, fontSize: '0.92rem', color: '#9d174d', fontWeight: 800 }}>🎁 GIFT ORDER DETAILS & OPTIONS</h3>
+                </div>
+                <span style={{ fontSize: 11, fontWeight: 700, background: '#fdf2f8', color: '#9d174d', border: '1px solid #fbcfe8', padding: '2px 8px', borderRadius: 12 }}>
+                  Royal Gift Fulfillment
+                </span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12, fontSize: '0.82rem' }}>
+                <div>
+                  <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: '#831843', fontWeight: 700, display: 'block', marginBottom: 2 }}>
+                    Recipient Information:
+                  </span>
+                  <div style={{ fontWeight: 700, color: '#1e293b' }}>
+                    {order.recipient_name || order.recipientName || order.name || 'Recipient'}
+                  </div>
+                  <div style={{ color: '#64748b' }}>
+                    Phone: {order.recipient_phone || order.recipientPhone || order.phone || '—'}
+                  </div>
+                  <div style={{ color: '#475569', marginTop: 2 }}>
+                    {order.address} {order.city ? `, ${order.city}` : ''} {order.pincode ? `- ${order.pincode}` : ''}
+                  </div>
+                </div>
+
+                <div style={{ borderLeft: '1px dashed #fbcfe8', paddingLeft: 12 }}>
+                  <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: '#831843', fontWeight: 700, display: 'block', marginBottom: 4 }}>
+                    Selected Gift Add-Ons:
+                  </span>
+                  <div style={{ marginBottom: 6 }}>
+                    <span style={{ color: '#64748b' }}>Luxury Gift Wrap: </span>
+                    {(order.gift_wrap || order.giftWrap || Number(order.gift_wrap_charge || order.giftWrapCharge) > 0) ? (
+                      <b style={{ color: '#9d174d' }}>YES — ₹{order.gift_wrap_charge || order.giftWrapCharge || 20}</b>
+                    ) : (
+                      <span style={{ color: '#94a3b8' }}>No</span>
+                    )}
+                  </div>
+
+                  <div>
+                    <span style={{ color: '#64748b' }}>Handwritten Note: </span>
+                    {(order.handwritten_note || order.handwrittenNote) ? (
+                      <blockquote style={{ margin: '4px 0 0', padding: '6px 10px', background: '#fdf2f8', borderLeft: '3px solid #db2777', borderRadius: 4, fontStyle: 'italic', color: '#831843' }}>
+                        "{order.handwritten_note || order.handwrittenNote}"
+                      </blockquote>
+                    ) : (
+                      <span style={{ color: '#94a3b8' }}>Not requested</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* 3-Column Info Grid */}
           <div className="detailsGrid">
@@ -1125,6 +1299,14 @@ export default function AdminOrderDetailsModal({
                     : money(order.shipping_charge || order.shipping || 0)}
                 </b>
               </div>
+              {(order.gift_wrap || order.giftWrap || Number(order.gift_wrap_charge || order.giftWrapCharge) > 0) && (
+                <div className="summaryRow giftWrapSummaryRow" style={{ color: '#9d174d' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <Gift size={12} /> Gift Wrap Packaging:
+                  </span>
+                  <b>+₹{order.gift_wrap_charge || order.giftWrapCharge || 20}</b>
+                </div>
+              )}
               <div className="summaryRow grandTotalRow">
                 <span>Grand Total:</span>
                 <b>{money(order.total)}</b>
@@ -1144,6 +1326,7 @@ export default function AdminOrderDetailsModal({
                     defaultValue="ORDER_CONFIRMED"
                     className="adminEmailSelect"
                   >
+                    <option value="ASSISTED_ORDER_SENT">Assisted Order Review & Payment Email</option>
                     <option value="ORDER_PLACED">Order Placed Email</option>
                     <option value="ORDER_CONFIRMED">Order Confirmed Email</option>
                     <option value="ORDER_SHIPPED">Order Shipped Email</option>

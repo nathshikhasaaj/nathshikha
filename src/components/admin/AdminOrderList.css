@@ -1331,3 +1331,56 @@
     white-space: nowrap;
   }
 }
+
+/* Assisted Checkout Action Button & Badges */
+.createAssistedOrderBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, var(--maroon, #5b1420) 0%, #3e0b14 100%) !important;
+  color: #fff !important;
+  border: 1px solid var(--gold, #d4af37) !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  padding: 0 16px !important;
+  height: 42px;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(91, 20, 32, 0.2);
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.createAssistedOrderBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(91, 20, 32, 0.35);
+}
+
+.adminAssistedOrderBadge {
+  display: inline-block;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  border: 1px solid #f59e0b;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.adminPaymentPendingBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #fefce8;
+  color: #a16207;
+  border: 1px solid #fde047;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+

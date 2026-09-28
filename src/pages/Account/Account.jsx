@@ -168,7 +168,7 @@ export default function Account() {
     loadAddresses();
   }, [user]);
 
-  // Handle Profile Update
+  // Handle Profile Update (Strictly Phone only; registered name is permanent & locked)
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     const cleanPhone = String(profileForm.phone).replace(/\D/g, '');
@@ -182,7 +182,6 @@ export default function Account() {
       const res = await api('/auth/profile', {
         method: 'PUT',
         body: JSON.stringify({
-          name: profileForm.name.trim(),
           phone: cleanPhone
         })
       });
@@ -190,11 +189,11 @@ export default function Account() {
       if (res.user) {
         setUser(res.user);
         localStorage.setItem('nw-customer-user', JSON.stringify(res.user));
-        setToast('Personal details updated successfully!');
+        setToast('Contact number updated successfully!');
         setEditingProfile(false);
       }
     } catch (err) {
-      alert(err.message || 'Failed to update profile.');
+      alert(err.message || 'Failed to update contact number.');
     } finally {
       setSavingProfile(false);
     }
@@ -431,8 +430,11 @@ export default function Account() {
             {!editingProfile ? (
               <div className="profileInfoDisplayGrid">
                 <div className="infoField">
-                  <span className="fieldLabel">Full Name</span>
+                  <span className="fieldLabel">
+                    Full Name <Lock size={11} color="#94a3b8" title="Registered account name (non-editable)" />
+                  </span>
                   <b className="fieldVal">{user.name || 'Not provided'}</b>
+                  <small className="fieldHint">Registered account name (permanent).</small>
                 </div>
 
                 <div className="infoField">
@@ -454,20 +456,25 @@ export default function Account() {
             ) : (
               <form onSubmit={handleSaveProfile} className="profileEditForm">
                 <div className="formGrid">
-                  <div className="formGroup">
-                    <label>Full Name *</label>
-                    <input
-                      type="text"
-                      required
-                      value={profileForm.name}
-                      onChange={(e) =>
-                        setProfileForm((prev) => ({ ...prev, name: e.target.value }))
-                      }
-                    />
+                  <div className="formGroup disabled lockedField">
+                    <label>
+                      Full Name <Lock size={12} />
+                    </label>
+                    <div className="lockedInputWrap">
+                      <input
+                        type="text"
+                        value={user.name}
+                        disabled
+                        readOnly
+                        className="lockedInput"
+                      />
+                      <span className="lockBadge">🔒 Locked</span>
+                    </div>
+                    <small className="fieldHint">Registered account name is permanent and cannot be modified.</small>
                   </div>
 
                   <div className="formGroup">
-                    <label>Mobile Number (10 digits)</label>
+                    <label>Mobile Contact Number (10 digits)</label>
                     <input
                       type="tel"
                       maxLength={10}
@@ -480,13 +487,14 @@ export default function Account() {
                         }))
                       }
                     />
+                    <small className="fieldHint">Used for order tracking & delivery updates.</small>
                   </div>
 
                   <div className="formGroup disabled">
                     <label>
                       Email Address <Lock size={12} />
                     </label>
-                    <input type="email" value={user.email} disabled />
+                    <input type="email" value={user.email} disabled readOnly />
                     <small className="fieldHint">Email address cannot be changed.</small>
                   </div>
                 </div>
@@ -508,7 +516,7 @@ export default function Account() {
                     className="goldBtn saveBtn"
                     disabled={savingProfile}
                   >
-                    {savingProfile ? 'Saving...' : 'Save Profile'}
+                    {savingProfile ? 'Saving...' : 'Save Changes'}
                   </button>
                 </div>
               </form>

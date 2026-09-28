@@ -38,7 +38,8 @@ export default function AdminOrderList({
   onViewOrderClick,
   onOpenShipmentModal,
   onReviewCancellationClick,
-  onDeleteOrder
+  onDeleteOrder,
+  onOpenCreateAssistedOrder
 }) {
   const [sortBy, setSortBy] = useState('newest');
   const [deleteModalOrder, setDeleteModalOrder] = useState(null);
@@ -70,6 +71,8 @@ export default function AdminOrderList({
     switch (status) {
       case 'placed':
         return 'Order Received';
+      case 'payment_pending':
+        return 'Payment Pending';
       case 'confirmed':
         return 'Confirmed';
       case 'making':
@@ -136,6 +139,13 @@ export default function AdminOrderList({
       // 1. Filter Tab
       if (filter === 'verification_pending') {
         if (!isPendingVerification) return false;
+      } else if (filter === 'assisted') {
+        const isAssisted =
+          o.assisted_order?.is_assisted ||
+          o.assistedOrder?.isAssisted ||
+          o.order_status === 'payment_pending' ||
+          o.orderStatus === 'payment_pending';
+        if (!isAssisted) return false;
       } else if (filter === 'cancellation_requested') {
         if (!isCancelReq) return false;
       } else if (filter === 'priority') {
@@ -248,6 +258,18 @@ export default function AdminOrderList({
             <option value="priority_first">Sort: Priority Orders (15+ Days)</option>
           </select>
         </div>
+
+        {onOpenCreateAssistedOrder && (
+          <button
+            type="button"
+            className="goldBtn createAssistedOrderBtn"
+            onClick={onOpenCreateAssistedOrder}
+            title="Create or correct an assisted order for a customer"
+          >
+            <Sparkles size={14} />
+            <span>+ ASSISTED CHECKOUT</span>
+          </button>
+        )}
       </div>
 
       {/* Filter Tabs */}
@@ -271,6 +293,14 @@ export default function AdminOrderList({
           {pendingVerificationTotal > 0 && (
             <span className="pillBadge badgeAmber">{pendingVerificationTotal}</span>
           )}
+        </button>
+
+        <button
+          type="button"
+          className={`filterPill ${filter === 'assisted' ? 'active' : ''}`}
+          onClick={() => setFilter('assisted')}
+        >
+          ✦ Assisted Orders
         </button>
 
         <button
@@ -419,6 +449,11 @@ export default function AdminOrderList({
                         {/* 1. Order No */}
                         <td className="orderNoCell">
                           <b>#{o.order_no}</b>
+                          {(o.assisted_order?.is_assisted || o.assistedOrder?.isAssisted || o.order_status === 'payment_pending' || o.orderStatus === 'payment_pending') && (
+                            <span className="adminAssistedOrderBadge" title="Assisted order created/corrected by admin">
+                              ✦ Assisted Order
+                            </span>
+                          )}
                           {Boolean(
                             o.customization?.requested ||
                             (o.customization?.details && o.customization.details.trim()) ||
@@ -589,6 +624,16 @@ export default function AdminOrderList({
                             <span className="verifiedPaymentBadge">
                               <CheckCircle2 size={12} /> Verified
                             </span>
+                          ) : (o.order_status === 'payment_pending' || o.orderStatus === 'payment_pending') ? (
+                            (o.payment_transaction_id || o.upi_utr || o.assisted_order?.payment_claimed_at || o.assistedOrder?.paymentClaimedAt) ? (
+                              <span className="pendingPaymentBadge">
+                                <Clock size={12} /> Claimed (Verify)
+                              </span>
+                            ) : (
+                              <span className="adminPaymentPendingBadge">
+                                <Clock size={12} /> Awaiting Pay
+                              </span>
+                            )
                           ) : (
                             <span className="pendingPaymentBadge">
                               <Clock size={12} /> Pending Verif.
@@ -603,6 +648,7 @@ export default function AdminOrderList({
                             onChange={(e) => handleStatusChange(o, e.target.value)}
                             className={`orderStatusSelect statusSelect_${o.order_status}`}
                           >
+                            <option value="payment_pending">Payment Pending</option>
                             <option value="placed">Order Received</option>
                             <option value="confirmed">Order Confirmed</option>
                             <option value="making">Making</option>
@@ -741,6 +787,9 @@ export default function AdminOrderList({
                         {isPriority && (
                           <span className="mobilePriorityTag">🔴 {formatOrderAge(orderAgeDays)} old</span>
                         )}
+                        {(o.assisted_order?.is_assisted || o.assistedOrder?.isAssisted || o.order_status === 'payment_pending' || o.orderStatus === 'payment_pending') && (
+                          <span className="adminAssistedOrderBadge">✦ Assisted</span>
+                        )}
                       </div>
                       <div className="mobileCardHeaderBadges">
                         {Boolean(
@@ -869,6 +918,7 @@ export default function AdminOrderList({
                           onChange={(e) => handleStatusChange(o, e.target.value)}
                           className={`orderStatusSelect statusSelect_${o.order_status}`}
                         >
+                          <option value="payment_pending">Payment Pending</option>
                           <option value="placed">Received</option>
                           <option value="confirmed">Confirmed</option>
                           <option value="making">Crafting</option>

@@ -217,6 +217,10 @@ export function buildInvoicePdfBinary(order) {
   const city = order.city || null;
   const state = order.state || null;
 
+  const hasGiftWrap = Boolean(order.gift_wrap || order.giftWrap || (Number(order.gift_wrap_charge || order.giftWrapCharge) > 0));
+  const giftWrapCharge = hasGiftWrap ? Number(order.gift_wrap_charge || order.giftWrapCharge || 20) : 0;
+  const handwrittenNote = String(order.handwritten_note || order.handwrittenNote || '').trim();
+
   const getProductCode = (item, index) => {
     if (item.productCode) return String(item.productCode);
     if (item.sku) return String(item.sku);
@@ -388,57 +392,69 @@ export function buildInvoicePdfBinary(order) {
   }
 
   // Totals Area
-  const totalsY = Math.max(currentY - 78, 80);
+  const totalsY = Math.max(currentY - 84, 76);
   setColor(253, 250, 243);
   setStrokeColor(235, 220, 197);
-  drawRect(40, totalsY, 240, 75, true, true);
+  drawRect(40, totalsY, 240, 80, true, true);
 
   const customObj = order.customization;
   const hasPdfCustom = Boolean(customObj?.requested || customObj?.details || customObj?.referenceImage || customObj?.reference_image);
 
-  if (hasPdfCustom) {
-    drawText('* CUSTOMIZATION REQUIREMENT', 48, totalsY + 60, 'F2', 8, 91, 20, 32);
+  if (handwrittenNote) {
+    drawText('* HANDWRITTEN NOTE FOR RECIPIENT', 48, totalsY + 66, 'F2', 8, 157, 23, 77);
+    const noteTxt = handwrittenNote.substring(0, 48);
+    drawText(`"${noteTxt}"`, 48, totalsY + 52, 'F1', 7.5, 131, 24, 67);
+    if (handwrittenNote.length > 48) {
+      drawText(`"${handwrittenNote.substring(48, 96)}"`, 48, totalsY + 40, 'F1', 7.5, 131, 24, 67);
+    }
+  } else if (hasPdfCustom) {
+    drawText('* CUSTOMIZATION REQUIREMENT', 48, totalsY + 66, 'F2', 8, 91, 20, 32);
     const customTxt = customObj?.details || (customObj?.referenceImage || customObj?.reference_image ? 'Reference design photo attached' : 'Customization requested');
-    drawText(`"${customTxt.substring(0, 48)}"`, 48, totalsY + 46, 'F1', 7.5, 31, 20, 16);
+    drawText(`"${customTxt.substring(0, 48)}"`, 48, totalsY + 52, 'F1', 7.5, 31, 20, 16);
     if (customTxt.length > 48) {
-      drawText(`"${customTxt.substring(48, 96)}"`, 48, totalsY + 34, 'F1', 7.5, 31, 20, 16);
+      drawText(`"${customTxt.substring(48, 96)}"`, 48, totalsY + 40, 'F1', 7.5, 31, 20, 16);
     }
     if (customObj?.referenceImage || customObj?.reference_image) {
-      drawText('Reference Design: Design Image Attached', 48, totalsY + 22, 'F2', 7.5, 146, 64, 14);
+      drawText('Reference Design: Design Image Attached', 48, totalsY + 26, 'F2', 7.5, 146, 64, 14);
     }
   } else {
-    drawText('* AUTHENTICITY & CRAFTSMANSHIP ASSURANCE', 48, totalsY + 60, 'F2', 8, 91, 20, 32);
-    drawText('Every Nathshikha jewellery piece is handcrafted with', 48, totalsY + 46, 'F1', 7.5, 107, 92, 83);
-    drawText('utmost devotion and Peshwai artistry. Keep away from', 48, totalsY + 34, 'F1', 7.5, 107, 92, 83);
-    drawText('moisture and perfumes for lasting shine and lustre.', 48, totalsY + 22, 'F1', 7.5, 107, 92, 83);
+    drawText('* AUTHENTICITY & CRAFTSMANSHIP ASSURANCE', 48, totalsY + 66, 'F2', 8, 91, 20, 32);
+    drawText('Every Nathshikha jewellery piece is handcrafted with', 48, totalsY + 52, 'F1', 7.5, 107, 92, 83);
+    drawText('utmost devotion and Peshwai artistry. Keep away from', 48, totalsY + 40, 'F1', 7.5, 107, 92, 83);
+    drawText('moisture and perfumes for lasting shine and lustre.', 48, totalsY + 28, 'F1', 7.5, 107, 92, 83);
   }
 
   setColor(253, 250, 244);
   setStrokeColor(235, 220, 197);
-  drawRect(300, totalsY, 255, 75, true, true);
-  drawText('Subtotal:', 312, totalsY + 58, 'F1', 9, 74, 59, 52);
-  drawText(pdfMoney(subtotal), 485, totalsY + 58, 'F2', 9, 26, 16, 12);
+  drawRect(300, totalsY, 255, 80, true, true);
+  drawText('Subtotal:', 312, totalsY + 64, 'F1', 9, 74, 59, 52);
+  drawText(pdfMoney(subtotal), 485, totalsY + 64, 'F2', 9, 26, 16, 12);
   if (discount > 0) {
-    drawText(`Coupon Discount ${couponCode ? `(${couponCode})` : ''}:`, 312, totalsY + 44, 'F1', 8.5, 21, 128, 61);
-    drawText(`-${pdfMoney(discount)}`, 485, totalsY + 44, 'F2', 8.5, 21, 128, 61);
+    drawText(`Coupon Discount ${couponCode ? `(${couponCode})` : ''}:`, 312, totalsY + 50, 'F1', 8.5, 21, 128, 61);
+    drawText(`-${pdfMoney(discount)}`, 485, totalsY + 50, 'F2', 8.5, 21, 128, 61);
   }
   drawText(
     `Shipping (${order.shipping_method || order.shippingMethod || 'Standard Delivery'}):`,
     312,
-    totalsY + 30,
+    totalsY + (hasGiftWrap ? 38 : 32),
     'F1',
     8.5,
     74,
     59,
     52
   );
-  drawText(shippingCharge === 0 ? 'FREE' : pdfMoney(shippingCharge), 485, totalsY + 30, 'F2', 8.5, 26, 16, 12);
+  drawText(shippingCharge === 0 ? 'FREE' : pdfMoney(shippingCharge), 485, totalsY + (hasGiftWrap ? 38 : 32), 'F2', 8.5, 26, 16, 12);
+
+  if (hasGiftWrap) {
+    drawText('Luxury Gift Wrap:', 312, totalsY + 24, 'F1', 8.5, 157, 23, 77);
+    drawText(`+${pdfMoney(giftWrapCharge)}`, 485, totalsY + 24, 'F2', 8.5, 157, 23, 77);
+  }
 
   setStrokeColor(235, 220, 197);
-  drawLine(312, totalsY + 22, 542, totalsY + 22, 1);
+  drawLine(312, totalsY + 16, 542, totalsY + 16, 1);
 
-  drawText('GRAND TOTAL:', 312, totalsY + 8, 'F2', 10, 91, 20, 32);
-  drawText(pdfMoney(grandTotal), 480, totalsY + 8, 'F2', 11, 91, 20, 32);
+  drawText('GRAND TOTAL:', 312, totalsY + 4, 'F2', 10, 91, 20, 32);
+  drawText(pdfMoney(grandTotal), 480, totalsY + 4, 'F2', 11, 91, 20, 32);
 
   // Footer Block
   const footerY = 36;

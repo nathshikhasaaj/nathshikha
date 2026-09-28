@@ -1,0 +1,267 @@
+/* ==========================================================================
+   OrderAddressEditModal.css — Customer Delivery Address Edit Modal
+   ========================================================================== */
+
+.custAddressModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 16px;
+  animation: custAddrFadeIn 0.2s ease-out;
+}
+
+@keyframes custAddrFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.custAddressModalContainer {
+  background: #ffffff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 520px;
+  max-height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  animation: custAddrSlideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes custAddrSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.custAddressModalHeader {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #faf8f5;
+}
+
+.custAddressModalTitleWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.custAddressModalIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #fdf5e2;
+  color: var(--maroon, #6d1b29);
+  border: 1px solid #dfc793;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custAddressModalTitleWrap h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--maroon, #6d1b29);
+}
+
+.custAddressModalTitleWrap p {
+  margin: 1px 0 0;
+  font-size: 0.78rem;
+  color: #78685f;
+}
+
+.custAddressModalClose {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custAddressLockedNotice {
+  margin: 12px 18px 0;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: #92400e;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.custAddressLockedNotice strong {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.custAddressLockedNotice p {
+  margin: 0;
+}
+
+.custAddressErrorAlert {
+  margin: 10px 18px 0;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.custAddressForm {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.custAddressFieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.custAddressFieldGroup label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.custAddressFieldGroup .reqStar {
+  color: #dc2626;
+  font-weight: bold;
+}
+
+.custAddressInputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.custAddressInputWrap svg:first-child {
+  position: absolute;
+  left: 10px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.custAddressInputWrap input {
+  width: 100%;
+  height: 38px;
+  padding: 0 12px 0 34px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 7px;
+  font-size: 0.86rem;
+  color: #0f172a;
+  background: #ffffff;
+}
+
+.custAddressInputWrap .lockedModalInput {
+  padding-right: 90px !important;
+  background: #f8fafc !important;
+  color: #475569 !important;
+  font-weight: 600;
+  cursor: not-allowed;
+}
+
+.modalLockBadge {
+  position: absolute;
+  right: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  background: #f1f5f9;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  pointer-events: none;
+}
+
+.fieldHintSmall {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin-top: 1px;
+}
+
+.custAddressForm textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 7px;
+  font-size: 0.86rem;
+  color: #0f172a;
+  background: #ffffff;
+  resize: vertical;
+}
+
+.custAddressForm input:focus,
+.custAddressForm textarea:focus,
+.custAddressForm select:focus {
+  outline: none;
+  border-color: var(--maroon, #6d1b29);
+  box-shadow: 0 0 0 3px rgba(109, 27, 41, 0.08);
+}
+
+.custAddressRowTwoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.custAddressForm select {
+  width: 100%;
+  height: 38px;
+  padding: 0 10px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 7px;
+  font-size: 0.86rem;
+  color: #0f172a;
+  background: #ffffff;
+}
+
+.pinSpinner {
+  position: absolute;
+  right: 10px;
+  color: var(--gold, #d4af37);
+}
+
+.custAddressModalFooter {
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}

@@ -7,6 +7,7 @@ import mongoose from 'mongoose';
 import { fileURLToPath } from 'url';
 import { Product } from '../models/Product.js';
 import { Order } from '../models/Order.js';
+import { User } from '../models/User.js';
 import { Coupon } from '../models/Coupon.js';
 import { Review } from '../models/Review.js';
 import { ReviewToken } from '../models/ReviewToken.js';
@@ -23,6 +24,7 @@ import {
   sendCancellationApprovedEmail,
   sendRefundCompletedEmail,
   sendAdminTestEmail,
+  sendAssistedOrderEmail,
   resendOrderEmail
 } from '../services/emailService.js';
 
@@ -419,6 +421,445 @@ router.get('/shipment-groups', async (req, res) => {
     res.json(groups);
   } catch (err) {
     res.status(500).json({ error: err.message || 'Failed to fetch shipment groups' });
+  }
+});
+
+// Search existing registered customers & past buyers by Name, Email, or Phone
+router.get('/customers/search', async (req, res) => {
+  try {
+    const q = String(req.query.q || '').trim();
+    const cleanDigits = q.replace(/\D/g, '');
+
+    let userQuery = {};
+    if (q) {
+      const escapeRegexStr = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(escapeRegexStr(q), 'i');
+      const conditions = [{ name: regex }, { email: regex }];
+      if (cleanDigits.length >= 3) {
+        conditions.push({ phone: new RegExp(escapeRegexStr(cleanDigits)) });
+      }
+      userQuery = { $or: conditions };
+    }
+
+    const users = await User.find(userQuery)
+      .select('name email phone role defaultAddress giftAddresses')
+      .sort({ createdAt: -1 })
+      .limit(25)
+      .lean();
+
+    const seenEmails = new Set(users.map((u) => u.email?.toLowerCase()).filter(Boolean));
+    const customerList = users.map((u) => ({
+      userId: u._id.toString(),
+      name: u.name,
+      email: u.email,
+      phone: u.phone || '',
+      defaultAddress: u.defaultAddress || null,
+      giftAddresses: u.giftAddresses || [],
+      source: 'registered'
+    }));
+
+    // If search term provided and fewer than 20 results, also search recent distinct order customers
+    if (q && customerList.length < 20) {
+      const escapeRegexStr = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(escapeRegexStr(q), 'i');
+      const orderConds = [{ name: regex }, { email: regex }, { customerName: regex }, { customerEmail: regex }];
+      if (cleanDigits.length >= 3) {
+        orderConds.push({ phone: new RegExp(escapeRegexStr(cleanDigits)) }, { customerPhone: new RegExp(escapeRegexStr(cleanDigits)) });
+      }
+
+      const pastOrders = await Order.find({ $or: orderConds })
+        .sort({ createdAt: -1 })
+        .limit(20)
+        .lean();
+
+      for (const po of pastOrders) {
+        const poEmail = (po.customerEmail || po.email || '').toLowerCase().trim();
+        if (poEmail && !seenEmails.has(poEmail)) {
+          seenEmails.add(poEmail);
+          customerList.push({
+            userId: po.userId ? po.userId.toString() : null,
+            name: po.customerName || po.name,
+            email: poEmail,
+            phone: po.customerPhone || po.phone || '',
+            defaultAddress: {
+              recipientName: po.name,
+              recipientPhone: po.phone,
+              addressLine1: po.address,
+              city: po.city || '',
+              state: po.state || '',
+              pincode: po.pincode || ''
+            },
+            giftAddresses: [],
+            source: 'past_orders'
+          });
+        }
+      }
+    }
+
+    res.json(customerList);
+  } catch (err) {
+    console.error('Customer search error:', err);
+    res.status(500).json({ error: err.message || 'Failed to search customers' });
+  }
+});
+
+// Admin: Create Assisted Order (Saves in PAYMENT_PENDING state, calculates totals server-side, reserves stock)
+router.post('/orders/assisted', async (req, res) => {
+  const {
+    userId,
+    name,
+    phone,
+    email,
+    address,
+    pincode,
+    city,
+    state,
+    shippingMethod = 'Standard Delivery',
+    items,
+    couponCode,
+    isGift,
+    giftWrap,
+    gift_wrap,
+    handwrittenNote,
+    handwritten_note,
+    recipientName,
+    recipientPhone,
+    adminNotes,
+    notes
+  } = req.body;
+
+  // 1. Validate Customer & Shipping Information
+  const rawName = String(name || '').trim().slice(0, 100);
+  if (!rawName) {
+    return res.status(400).json({ error: 'Customer name is required.' });
+  }
+
+  const rawPhone = String(phone || '').trim();
+  const cleanPhoneDigits = rawPhone.replace(/\D/g, '');
+  if (!cleanPhoneDigits || cleanPhoneDigits.length < 10) {
+    return res.status(400).json({ error: 'Please enter a valid 10-digit Indian mobile number.' });
+  }
+  const cleanPhone = cleanPhoneDigits.length === 10 ? cleanPhoneDigits : cleanPhoneDigits.slice(-10);
+
+  const rawEmail = String(email || '').trim().toLowerCase().slice(0, 120);
+  if (!rawEmail || !isValidEmail(rawEmail)) {
+    return res.status(400).json({ error: 'Please enter a valid email address.' });
+  }
+
+  const rawAddress = String(address || '').trim().slice(0, 500);
+  if (!rawAddress) {
+    return res.status(400).json({ error: 'Complete delivery address is required.' });
+  }
+
+  const rawPincode = String(pincode || '').trim();
+  if (!rawPincode || !isValidPincode(rawPincode)) {
+    return res.status(400).json({ error: 'Please enter a valid 6-digit delivery PIN code.' });
+  }
+
+  if (!Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ error: 'Please add at least one product item to the order.' });
+  }
+
+  let incrementedCouponId = null;
+  const appliedStockDeductions = [];
+
+  try {
+    // 2. Validate Items & Stock
+    const validProductIds = items
+      .map((i) => (i.productId || i.id || i._id)?.toString())
+      .filter((id) => id && mongoose.Types.ObjectId.isValid(id));
+
+    if (validProductIds.length !== items.length) {
+      return res.status(400).json({ error: 'One or more items have invalid product IDs.' });
+    }
+
+    const catalogProducts = await Product.find({ _id: { $in: validProductIds } });
+    const catalogMap = new Map(catalogProducts.map((p) => [p._id.toString(), p]));
+
+    let subtotal = 0;
+    const normalizedItems = [];
+
+    // Aggregate requested quantity per product ID
+    const productTotalQtyMap = new Map();
+    for (const item of items) {
+      const pId = (item.productId || item.id || item._id)?.toString();
+      const qty = parseInt(item.qty, 10);
+      if (isNaN(qty) || qty < 1 || qty > 100) {
+        return res.status(400).json({ error: 'Item quantity must be between 1 and 100.' });
+      }
+      productTotalQtyMap.set(pId, (productTotalQtyMap.get(pId) || 0) + qty);
+    }
+
+    // Check stock availability
+    for (const [pId, totalRequestedQty] of productTotalQtyMap.entries()) {
+      const p = catalogMap.get(pId);
+      if (!p) {
+        return res.status(400).json({ error: `Product ID "${pId}" not found in catalogue.` });
+      }
+      if (p.stock < totalRequestedQty) {
+        return res.status(400).json({
+          error: `Insufficient stock for "${p.name}". Available: ${p.stock}, Requested: ${totalRequestedQty}.`
+        });
+      }
+    }
+
+    for (const item of items) {
+      const pId = (item.productId || item.id || item._id)?.toString();
+      const p = catalogMap.get(pId);
+      const qty = parseInt(item.qty, 10);
+      const price = item.price !== undefined && !isNaN(Number(item.price)) && Number(item.price) >= 0
+        ? Number(item.price)
+        : p.price;
+
+      const effectiveSelectedParams =
+        (item.selectedParameters && typeof item.selectedParameters === 'object' ? item.selectedParameters : null) ||
+        (item.selectedOptions && typeof item.selectedOptions === 'object' ? item.selectedOptions : {});
+
+      subtotal += price * qty;
+
+      normalizedItems.push({
+        productId: p._id,
+        name: p.name,
+        price,
+        qty,
+        img: p.img,
+        selectedParameters: effectiveSelectedParams,
+        selectedOptions: effectiveSelectedParams
+      });
+    }
+
+    // 3. Atomically reserve stock
+    for (const [pId, totalQty] of productTotalQtyMap.entries()) {
+      const p = catalogMap.get(pId);
+      const updatedProduct = await Product.findOneAndUpdate(
+        { _id: p._id, stock: { $gte: totalQty } },
+        { $inc: { stock: -totalQty } },
+        { new: true }
+      );
+
+      if (!updatedProduct) {
+        // Rollback already deducted
+        for (const deducted of appliedStockDeductions) {
+          await Product.findByIdAndUpdate(deducted.productId, { $inc: { stock: deducted.qty } }).catch(() => {});
+        }
+        return res.status(400).json({
+          error: `Item "${p.name}" ran out of stock during assisted order creation. Please adjust items.`
+        });
+      }
+
+      appliedStockDeductions.push({ productId: p._id, qty: totalQty });
+    }
+
+    // 4. Coupon Validation & Calculation
+    let appliedCoupon = null;
+    let couponDiscount = 0;
+
+    if (couponCode && String(couponCode).trim()) {
+      const normalizedCode = String(couponCode).trim().toUpperCase();
+      const coupon = await Coupon.findOne({ code: normalizedCode });
+
+      if (!coupon) {
+        throw new Error('Invalid coupon code.');
+      }
+      if (!coupon.isActive) {
+        throw new Error('This coupon is currently inactive.');
+      }
+      if (isCouponExpired(coupon.expiryDate)) {
+        throw new Error('This coupon has expired.');
+      }
+      if (coupon.usageLimit && coupon.usageCount >= coupon.usageLimit) {
+        throw new Error('This coupon has reached its usage limit.');
+      }
+      if (coupon.minOrderValue > 0 && subtotal < coupon.minOrderValue) {
+        throw new Error(`Minimum order value of ₹${coupon.minOrderValue} is required to use coupon "${coupon.code}".`);
+      }
+
+      couponDiscount = calculateCouponDiscount(coupon, subtotal);
+
+      const updatedCoupon = await Coupon.findOneAndUpdate(
+        {
+          _id: coupon._id,
+          isActive: true,
+          $expr: { $lt: ['$usageCount', '$usageLimit'] }
+        },
+        { $inc: { usageCount: 1 } },
+        { new: true }
+      );
+
+      if (!updatedCoupon && coupon.usageLimit > 0) {
+        throw new Error('This coupon has reached its usage limit.');
+      }
+
+      incrementedCouponId = coupon._id;
+      appliedCoupon = updatedCoupon || coupon;
+    }
+
+    // 5. Server-Side Shipping & Location Calculation
+    let shippingDetails;
+    try {
+      shippingDetails = await calculateShippingCharge(rawPincode, shippingMethod);
+    } catch (shippingErr) {
+      throw new Error(shippingErr.message || 'Invalid delivery PIN code or shipping method.');
+    }
+
+    const shippingCharge = shippingDetails.shippingCharge;
+
+    // 6. Gift Options Calculation
+    const isGiftOrder = Boolean(isGift);
+    const isGiftWrapRequested = isGiftOrder && Boolean(giftWrap || gift_wrap);
+    const giftWrapCharge = isGiftWrapRequested ? 20 : 0;
+    const rawNote = handwrittenNote !== undefined ? handwrittenNote : handwritten_note;
+    const cleanNote = isGiftOrder && typeof rawNote === 'string' && rawNote.trim()
+      ? rawNote.trim().slice(0, 1000)
+      : null;
+
+    const cleanRecipientName = isGiftOrder
+      ? (recipientName ? String(recipientName).trim().slice(0, 100) : rawName)
+      : null;
+    const cleanRecipientPhone = isGiftOrder
+      ? (recipientPhone ? String(recipientPhone).trim().replace(/\D/g, '').slice(-10) : cleanPhone)
+      : null;
+
+    // 7. Final Total Calculation (Server-Validated)
+    const grandTotal = Math.max(0, subtotal - couponDiscount) + shippingCharge + giftWrapCharge;
+    const orderNo = 'NW' + Date.now().toString().slice(-8);
+    const guestToken = crypto.randomBytes(24).toString('hex');
+
+    // 8. Resolve or Link User Account
+    let linkedUserId = userId && mongoose.Types.ObjectId.isValid(userId) ? userId : null;
+    if (!linkedUserId) {
+      const existingUser = await User.findOne({ email: rawEmail });
+      if (existingUser) {
+        linkedUserId = existingUser._id;
+      }
+    }
+
+    const finalNotes = String(adminNotes || notes || '').trim();
+
+    // 9. Create Order in PAYMENT_PENDING state
+    const order = await Order.create({
+      orderNo,
+      userId: linkedUserId,
+      name: isGiftOrder ? (cleanRecipientName || rawName) : rawName,
+      phone: isGiftOrder ? (cleanRecipientPhone || cleanPhone) : cleanPhone,
+      email: rawEmail,
+      customerName: rawName,
+      customerPhone: cleanPhone,
+      customerEmail: rawEmail,
+      recipientName: cleanRecipientName,
+      recipientPhone: cleanRecipientPhone,
+      address: rawAddress,
+      pincode: shippingDetails.pincode,
+      city: city ? String(city).trim() : shippingDetails.city,
+      state: state ? String(state).trim() : shippingDetails.state,
+      shippingMethod: shippingDetails.shippingMethodName,
+      subtotal,
+      couponCode: appliedCoupon ? appliedCoupon.code : null,
+      couponDiscount,
+      shipping: shippingCharge,
+      giftWrap: isGiftWrapRequested,
+      giftWrapCharge,
+      isGift: isGiftOrder,
+      handwrittenNote: cleanNote,
+      total: grandTotal,
+      paymentMethod: 'upi',
+      paymentStatus: 'pending',
+      orderStatus: 'payment_pending',
+      acceptedTerms: true,
+      guestToken,
+      assistedOrder: {
+        isAssisted: true,
+        createdBy: req.user?._id || req.user?.id || null,
+        createdByName: req.user?.name || req.user?.email || 'Admin',
+        sentToCustomer: true,
+        sentAt: new Date(),
+        lastEditedAt: new Date(),
+        resendCount: 0
+      },
+      editHistory: [
+        {
+          editedAt: new Date(),
+          editedBy: req.user?.name || req.user?.email || 'Admin',
+          changedFields: ['Admin-Assisted Order Created & Sent to Customer'],
+          notes: finalNotes || 'Order prepared by Nathshikha Team and sent to customer for review and payment.'
+        }
+      ],
+      items: normalizedItems
+    });
+
+    // 10. Send Email Notification to Customer (Non-blocking)
+    sendAssistedOrderEmail(order).catch((mailErr) => {
+      console.error('[Admin] Failed to send assisted order email:', mailErr.message);
+    });
+
+    res.status(201).json({
+      ok: true,
+      success: true,
+      message: `Assisted Order #${order.orderNo} created and sent to customer (${rawEmail}) successfully.`,
+      order: order.toJSON()
+    });
+  } catch (err) {
+    console.error('Failed to create assisted order:', err);
+
+    // Rollback coupon count
+    if (incrementedCouponId) {
+      await Coupon.findByIdAndUpdate(incrementedCouponId, { $inc: { usageCount: -1 } }).catch(() => {});
+    }
+
+    // Rollback stock reservations
+    for (const deducted of appliedStockDeductions) {
+      await Product.findByIdAndUpdate(deducted.productId, { $inc: { stock: deducted.qty } }).catch(() => {});
+    }
+
+    res.status(400).json({ error: err.message || 'Failed to create assisted order.' });
+  }
+});
+
+// Admin: Resend Assisted Order to Customer
+router.post('/orders/:id/resend-assisted', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const order = await findOrderByIdOrNo(id);
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found.' });
+    }
+
+    const currentResendCount = order.assistedOrder?.resendCount || 0;
+    order.assistedOrder = {
+      ...(order.assistedOrder || {}),
+      isAssisted: true,
+      sentToCustomer: true,
+      sentAt: new Date(),
+      resendCount: currentResendCount + 1
+    };
+
+    if (!Array.isArray(order.editHistory)) {
+      order.editHistory = [];
+    }
+    order.editHistory.push({
+      editedAt: new Date(),
+      editedBy: req.user?.name || req.user?.email || 'Admin',
+      changedFields: [`Assisted Order Resent to Customer (Attempt #${currentResendCount + 1})`],
+      notes: 'Admin resent payment-pending order notification to customer.'
+    });
+
+    await order.save();
+
+    // Send email notification to customer
+    sendAssistedOrderEmail(order).catch((mailErr) => {
+      console.error('[Admin] Failed to resend assisted order email:', mailErr.message);
+    });
+
+    res.json({
+      ok: true,
+      success: true,
+      message: `Assisted Order #${order.orderNo} resent to customer (${order.email}) successfully.`,
+      order: order.toJSON()
+    });
+  } catch (err) {
+    console.error('Failed to resend assisted order:', err);
+    res.status(500).json({ error: err.message || 'Failed to resend order to customer.' });
   }
 });
 
@@ -877,7 +1318,7 @@ router.patch(['/orders/:id/payment', '/orders/:id/edit-payment'], async (req, re
 });
 
 // Edit existing order details (Customer Information, Delivery Address, Customization)
-router.patch(['/orders/:id/edit', '/orders/:id/update-details'], async (req, res) => {
+router.patch(['/orders/:id/edit', '/orders/:id/update-details', '/orders/:id'], async (req, res) => {
   const { id } = req.params;
   const {
     name,
@@ -889,6 +1330,10 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details'], async (req, res
     state,
     shippingMethod,
     isGift,
+    giftWrap,
+    gift_wrap,
+    handwrittenNote,
+    handwritten_note,
     recipientName,
     recipientPhone,
     customerName,
@@ -896,16 +1341,23 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details'], async (req, res
     customerEmail,
     customizationDetails,
     customization_details,
+    items,
+    allowProductionOverride,
+    allowProductionEdit,
     adminEditNotes,
     adminNotes,
     notes
   } = req.body;
+
+  const appliedInventoryDeltas = [];
 
   try {
     const order = await findOrderByIdOrNo(id);
     if (!order) {
       return res.status(404).json({ error: 'Order not found in database.' });
     }
+
+    const changedFieldLabels = [];
 
     // 1. Validate Customer / Recipient contact fields
     const rawName = String(name !== undefined ? name : (order.name || '')).trim().slice(0, 100);
@@ -943,6 +1395,19 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details'], async (req, res
       : order.shippingMethod;
 
     const isGiftBool = isGift !== undefined ? Boolean(isGift) : Boolean(order.isGift);
+    const isGiftWrapBool = isGiftBool && (
+      giftWrap !== undefined
+        ? Boolean(giftWrap)
+        : gift_wrap !== undefined
+        ? Boolean(gift_wrap)
+        : Boolean(order.giftWrap)
+    );
+    const computedGiftWrapCharge = isGiftWrapBool ? 20 : 0;
+    const rawHandwrittenNote = handwrittenNote !== undefined ? handwrittenNote : (handwritten_note !== undefined ? handwritten_note : order.handwrittenNote);
+    const cleanHandwrittenNote = (isGiftBool && typeof rawHandwrittenNote === 'string' && rawHandwrittenNote.trim())
+      ? rawHandwrittenNote.trim().slice(0, 1000)
+      : null;
+
     const cleanRecipientName = isGiftBool
       ? (recipientName ? String(recipientName).trim().slice(0, 100) : rawName)
       : null;
@@ -959,8 +1424,7 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details'], async (req, res
       ? (customerEmail ? String(customerEmail).trim().toLowerCase().slice(0, 120) : (order.customerEmail || rawEmail))
       : rawEmail;
 
-    // Detect changed fields for human-readable audit summary
-    const changedFieldLabels = [];
+    // Detect contact & address changes
     if (order.name !== rawName) changedFieldLabels.push('Name');
     if (order.phone !== cleanPhone) changedFieldLabels.push('Phone');
     if (order.email !== rawEmail) changedFieldLabels.push('Email');
@@ -969,6 +1433,9 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details'], async (req, res
     if (cleanCity && order.city !== cleanCity) changedFieldLabels.push('City');
     if (cleanState && order.state !== cleanState) changedFieldLabels.push('State');
     if (Boolean(order.isGift) !== isGiftBool) changedFieldLabels.push('Gift Order Status');
+    if (Boolean(order.giftWrap) !== isGiftWrapBool) changedFieldLabels.push(`Gift Wrap (${isGiftWrapBool ? 'Added ₹20' : 'Removed'})`);
+    if ((order.handwrittenNote || null) !== cleanHandwrittenNote) changedFieldLabels.push('Handwritten Note');
+
     if (isGiftBool) {
       if (order.recipientName !== cleanRecipientName) changedFieldLabels.push('Recipient Name');
       if (order.recipientPhone !== cleanRecipientPhone) changedFieldLabels.push('Recipient Phone');
@@ -997,7 +1464,171 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details'], async (req, res
       }
     }
 
-    // Apply allowed updates to order document
+    // 3. PRODUCT / ITEMS EDITING & INVENTORY ATOMIC DELTA
+    let normalizedItems = order.items;
+    let subtotal = order.subtotal;
+    let couponDiscount = order.couponDiscount || 0;
+    const shipping = order.shipping !== undefined ? order.shipping : (order.shipping_charge || 0);
+
+    if (items !== undefined) {
+      if (!Array.isArray(items) || items.length === 0) {
+        return res.status(400).json({ error: 'An order must contain at least one product item.' });
+      }
+
+      // Order status restriction check
+      const productionLockedStatuses = ['making', 'packing', 'processing', 'shipped', 'delivered'];
+      const isProductionStage = productionLockedStatuses.includes(order.orderStatus);
+      const isOverrideAllowed = Boolean(allowProductionOverride || allowProductionEdit);
+
+      if (isProductionStage && !isOverrideAllowed) {
+        return res.status(400).json({
+          error: `Product modification is restricted because Order #${order.orderNo} is currently in "${order.orderStatus.toUpperCase()}" stage. Please confirm production override if authorized.`
+        });
+      }
+
+      // Validate products against catalog
+      const validProductIds = items
+        .map((i) => (i.productId || i.id || i._id)?.toString())
+        .filter((id) => id && mongoose.Types.ObjectId.isValid(id));
+
+      if (validProductIds.length !== items.length) {
+        return res.status(400).json({ error: 'One or more items have invalid product IDs.' });
+      }
+
+      const catalogProducts = await Product.find({ _id: { $in: validProductIds } });
+      const catalogMap = new Map(catalogProducts.map((p) => [p._id.toString(), p]));
+
+      // Aggregate OLD product quantities
+      const oldProductQtyMap = new Map();
+      for (const oldIt of (order.items || [])) {
+        const pId = (oldIt.productId || oldIt.id || oldIt._id)?.toString();
+        if (pId) {
+          oldProductQtyMap.set(pId, (oldProductQtyMap.get(pId) || 0) + (Number(oldIt.qty) || 1));
+        }
+      }
+
+      // Aggregate NEW product quantities & validate parameters/quantities
+      const newProductQtyMap = new Map();
+      const tempNormalizedItems = [];
+
+      for (const newItem of items) {
+        const pId = (newItem.productId || newItem.id || newItem._id)?.toString();
+        const catalogProd = catalogMap.get(pId);
+        if (!catalogProd) {
+          return res.status(400).json({ error: `Product ID "${pId}" not found in catalog.` });
+        }
+
+        const qty = parseInt(newItem.qty, 10);
+        if (isNaN(qty) || qty < 1 || qty > 100) {
+          return res.status(400).json({ error: `Invalid quantity for "${catalogProd.name}". Must be an integer between 1 and 100.` });
+        }
+
+        newProductQtyMap.set(pId, (newProductQtyMap.get(pId) || 0) + qty);
+
+        const effectiveSelectedParams =
+          (newItem.selectedParameters && typeof newItem.selectedParameters === 'object' ? newItem.selectedParameters : null) ||
+          (newItem.selectedOptions && typeof newItem.selectedOptions === 'object' ? newItem.selectedOptions : {});
+
+        // Historical price preservation: if item was already in order, keep historical item price unless catalog price is explicitly requested
+        const existingItemMatch = (order.items || []).find((oldIt) => (oldIt.productId || oldIt.id)?.toString() === pId);
+        const itemPrice = newItem.price !== undefined
+          ? Number(newItem.price)
+          : (existingItemMatch ? existingItemMatch.price : catalogProd.price);
+
+        tempNormalizedItems.push({
+          productId: catalogProd._id,
+          name: catalogProd.name,
+          price: itemPrice,
+          qty,
+          img: catalogProd.img,
+          selectedParameters: effectiveSelectedParams,
+          selectedOptions: effectiveSelectedParams
+        });
+      }
+
+      // Inventory Delta Pre-check across all affected products
+      const allProductIds = new Set([...oldProductQtyMap.keys(), ...newProductQtyMap.keys()]);
+      const deltaPlan = [];
+
+      for (const pId of allProductIds) {
+        const oldQty = oldProductQtyMap.get(pId) || 0;
+        const newQty = newProductQtyMap.get(pId) || 0;
+        const delta = newQty - oldQty; // >0 means need more stock, <0 means release stock
+
+        if (delta !== 0) {
+          let prod = catalogMap.get(pId);
+          if (!prod) {
+            prod = await Product.findById(pId);
+          }
+          if (!prod) {
+            return res.status(400).json({ error: `Product not found for inventory adjustment (${pId}).` });
+          }
+
+          if (delta > 0 && prod.stock < delta) {
+            return res.status(400).json({
+              error: `Insufficient stock for "${prod.name}". Available: ${prod.stock}, additional required: ${delta}.`
+            });
+          }
+
+          deltaPlan.push({ pId, prod, delta });
+        }
+      }
+
+      // Execute Atomic Inventory Adjustments
+      for (const { pId, prod, delta } of deltaPlan) {
+        if (delta > 0) {
+          const updated = await Product.findOneAndUpdate(
+            { _id: pId, stock: { $gte: delta } },
+            { $inc: { stock: -delta } },
+            { new: true }
+          );
+          if (!updated) {
+            // Rollback already applied adjustments
+            for (const applied of appliedInventoryDeltas) {
+              if (applied.delta > 0) {
+                await Product.findByIdAndUpdate(applied.pId, { $inc: { stock: applied.delta } }).catch(() => {});
+              } else if (applied.delta < 0) {
+                await Product.findByIdAndUpdate(applied.pId, { $inc: { stock: -Math.abs(applied.delta) } }).catch(() => {});
+              }
+            }
+            return res.status(400).json({
+              error: `Stock for "${prod.name}" changed during editing. Please try again.`
+            });
+          }
+          appliedInventoryDeltas.push({ pId, delta });
+        } else if (delta < 0) {
+          const releaseQty = Math.abs(delta);
+          await Product.findByIdAndUpdate(pId, { $inc: { stock: releaseQty } });
+          appliedInventoryDeltas.push({ pId, delta });
+        }
+      }
+
+      normalizedItems = tempNormalizedItems;
+      subtotal = normalizedItems.reduce((acc, it) => acc + (it.price * it.qty), 0);
+
+      // Revalidate Coupon Discount if coupon was applied
+      if (order.couponCode) {
+        const coupon = await Coupon.findOne({ code: order.couponCode.toUpperCase() });
+        if (coupon && coupon.isActive && !isCouponExpired(coupon.expiryDate) && subtotal >= (coupon.minOrderValue || 0)) {
+          couponDiscount = calculateCouponDiscount(coupon, subtotal);
+        } else {
+          couponDiscount = 0;
+        }
+      }
+
+      changedFieldLabels.push(`Order Products (${normalizedItems.length} items, Subtotal: ₹${subtotal})`);
+    }
+
+    // 4. Compute Final Total Server-Side
+    const calculatedTotal = Math.max(0, subtotal - couponDiscount) + shipping + computedGiftWrapCharge;
+    const prevTotal = order.total;
+    const totalDiff = calculatedTotal - prevTotal;
+
+    if (totalDiff !== 0) {
+      changedFieldLabels.push(`Order Total (₹${prevTotal} → ₹${calculatedTotal})`);
+    }
+
+    // Apply updates to Order document
     order.name = isGiftBool ? (cleanRecipientName || rawName) : rawName;
     order.phone = isGiftBool ? (cleanRecipientPhone || cleanPhone) : cleanPhone;
     order.email = isGiftBool ? (cleanCustomerEmail || rawEmail) : rawEmail;
@@ -1007,6 +1638,9 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details'], async (req, res
     if (cleanState) order.state = cleanState;
     if (cleanShippingMethod) order.shippingMethod = cleanShippingMethod;
     order.isGift = isGiftBool;
+    order.giftWrap = isGiftWrapBool;
+    order.giftWrapCharge = computedGiftWrapCharge;
+    order.handwrittenNote = cleanHandwrittenNote;
 
     if (isGiftBool) {
       order.recipientName = cleanRecipientName;
@@ -1020,6 +1654,26 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details'], async (req, res
       order.customerEmail = rawEmail;
       order.recipientName = null;
       order.recipientPhone = null;
+    }
+
+    if (items !== undefined) {
+      order.items = normalizedItems;
+      order.subtotal = subtotal;
+      order.couponDiscount = couponDiscount;
+    }
+    order.total = calculatedTotal;
+
+    // If order is assisted or payment pending, track lastEditedAt
+    if (order.assistedOrder?.isAssisted || order.orderStatus === 'payment_pending') {
+      order.assistedOrder = {
+        ...(order.assistedOrder || {}),
+        isAssisted: true,
+        lastEditedAt: new Date()
+      };
+      // If total changed after customer submitted payment claim, flag in history
+      if (order.assistedOrder?.paymentClaimedAt && totalDiff !== 0) {
+        changedFieldLabels.push('Order Total Changed After Customer Payment Claim');
+      }
     }
 
     // Record audit history entry
@@ -1045,10 +1699,23 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details'], async (req, res
         ? `Order #${order.orderNo} updated successfully (${changedFieldLabels.join(', ')}).`
         : `Order #${order.orderNo} updated successfully.`,
       changedFields: changedFieldLabels,
+      previousTotal: prevTotal,
+      newTotal: calculatedTotal,
+      totalDifference: totalDiff,
       order: order.toJSON()
     });
   } catch (err) {
     console.error('Failed to edit order:', err);
+
+    // Rollback any executed inventory deltas
+    for (const applied of appliedInventoryDeltas) {
+      if (applied.delta > 0) {
+        await Product.findByIdAndUpdate(applied.pId, { $inc: { stock: applied.delta } }).catch(() => {});
+      } else if (applied.delta < 0) {
+        await Product.findByIdAndUpdate(applied.pId, { $inc: { stock: -Math.abs(applied.delta) } }).catch(() => {});
+      }
+    }
+
     res.status(500).json({ error: err.message || 'Failed to update order details.' });
   }
 });

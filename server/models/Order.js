@@ -52,6 +52,24 @@ const orderSchema = new mongoose.Schema(
       default: false,
       alias: 'is_gift'
     },
+    giftWrap: {
+      type: Boolean,
+      default: false,
+      alias: 'gift_wrap'
+    },
+    giftWrapCharge: {
+      type: Number,
+      default: 0,
+      min: 0,
+      alias: 'gift_wrap_charge'
+    },
+    handwrittenNote: {
+      type: String,
+      default: null,
+      trim: true,
+      maxlength: 1000,
+      alias: 'handwritten_note'
+    },
     recipientName: {
       type: String,
       default: null,
@@ -308,6 +326,49 @@ const orderSchema = new mongoose.Schema(
         default: null
       }
     },
+    assistedOrder: {
+      isAssisted: {
+        type: Boolean,
+        default: false
+      },
+      createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default: null
+      },
+      createdByName: {
+        type: String,
+        default: null
+      },
+      sentToCustomer: {
+        type: Boolean,
+        default: false
+      },
+      sentAt: {
+        type: Date,
+        default: null
+      },
+      customerViewedAt: {
+        type: Date,
+        default: null
+      },
+      customerReviewedAt: {
+        type: Date,
+        default: null
+      },
+      paymentClaimedAt: {
+        type: Date,
+        default: null
+      },
+      lastEditedAt: {
+        type: Date,
+        default: null
+      },
+      resendCount: {
+        type: Number,
+        default: 0
+      }
+    },
     editHistory: [
       {
         editedAt: {
@@ -341,6 +402,12 @@ const orderSchema = new mongoose.Schema(
         ret.order_no = ret.orderNo;
         ret.user_id = ret.userId ? ret.userId.toString() : null;
         ret.is_gift = Boolean(ret.isGift);
+        ret.gift_wrap = Boolean(ret.giftWrap);
+        ret.giftWrap = Boolean(ret.giftWrap);
+        ret.gift_wrap_charge = ret.giftWrapCharge || 0;
+        ret.giftWrapCharge = ret.giftWrapCharge || 0;
+        ret.handwritten_note = ret.handwrittenNote || null;
+        ret.handwrittenNote = ret.handwrittenNote || null;
         ret.recipient_name = ret.recipientName || ret.name;
         ret.recipient_phone = ret.recipientPhone || ret.phone;
         ret.customer_name = ret.customerName || ret.name;
@@ -369,6 +436,20 @@ const orderSchema = new mongoose.Schema(
         ret.refund_processed_at = ret.refundProcessedAt || null;
         ret.refund_processed_by = ret.refundProcessedBy || null;
         ret.cancellation_admin_notes = ret.cancellationAdminNotes || null;
+        ret.assisted_order = {
+          is_assisted: Boolean(ret.assistedOrder?.isAssisted),
+          isAssisted: Boolean(ret.assistedOrder?.isAssisted),
+          created_by: ret.assistedOrder?.createdBy ? ret.assistedOrder.createdBy.toString() : null,
+          created_by_name: ret.assistedOrder?.createdByName || null,
+          sent_to_customer: Boolean(ret.assistedOrder?.sentToCustomer),
+          sent_at: ret.assistedOrder?.sentAt || null,
+          customer_viewed_at: ret.assistedOrder?.customerViewedAt || null,
+          customer_reviewed_at: ret.assistedOrder?.customerReviewedAt || null,
+          payment_claimed_at: ret.assistedOrder?.paymentClaimedAt || null,
+          last_edited_at: ret.assistedOrder?.lastEditedAt || null,
+          resend_count: ret.assistedOrder?.resendCount || 0
+        };
+        ret.assistedOrder = ret.assisted_order;
         ret.edit_history = Array.isArray(ret.editHistory)
           ? ret.editHistory.map((h) => ({
               edited_at: h.editedAt || h.edited_at,
@@ -408,6 +489,9 @@ const orderSchema = new mongoose.Schema(
 
 orderSchema.pre('validate', function () {
   if (this.is_gift !== undefined && this.isGift === undefined) this.isGift = this.is_gift;
+  if (this.gift_wrap !== undefined && this.giftWrap === undefined) this.giftWrap = this.gift_wrap;
+  if (this.gift_wrap_charge !== undefined && this.giftWrapCharge === undefined) this.giftWrapCharge = this.gift_wrap_charge;
+  if (this.handwritten_note !== undefined && this.handwrittenNote === undefined) this.handwrittenNote = this.handwritten_note;
   if (this.recipient_name && !this.recipientName) this.recipientName = this.recipient_name;
   if (this.recipient_phone && !this.recipientPhone) this.recipientPhone = this.recipient_phone;
   if (this.customer_name && !this.customerName) this.customerName = this.customer_name;

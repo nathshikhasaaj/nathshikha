@@ -199,6 +199,36 @@
   cursor: not-allowed;
 }
 
+.lockedInputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.lockedInputWrap .lockedInput {
+  width: 100%;
+  padding-right: 90px !important;
+  background: #f8fafc !important;
+  color: #475569 !important;
+  font-weight: 600;
+  border-color: #e2e8f0 !important;
+}
+
+.lockBadge {
+  position: absolute;
+  right: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  background: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  user-select: none;
+  pointer-events: none;
+}
+
 .formActionsRow {
   display: flex;
   justify-content: flex-end;

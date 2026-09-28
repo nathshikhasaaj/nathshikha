@@ -1767,5 +1767,386 @@
   color: #6d500c;
 }
 
+/* ============================================================ */
+/* CUSTOMER ORDER GIFT CARD & DETAILS                           */
+/* ============================================================ */
+.customerOrderGiftCard {
+  background: #fffdfa;
+  border: 1.5px solid #fbcfe8;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin: 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
+.customerOrderGiftHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #9d174d;
+  font-size: 13px;
+  font-weight: 700;
+  border-bottom: 1px dashed #fce7f3;
+  padding-bottom: 6px;
+}
+
+.customerOrderGiftBody {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.customerGiftRow {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.customerGiftLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #831843;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+
+.customerGiftVal {
+  color: #1e293b;
+}
+
+.customerGiftNoteRow {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.customerGiftQuote {
+  margin: 0;
+  padding: 6px 10px;
+  background: #fdf2f8;
+  border-left: 3px solid #db2777;
+  border-radius: 4px;
+  color: #831843;
+  font-style: italic;
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+
+.customerGiftWrapRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.customerGiftWrapBadge {
+  background: #fdf2f8;
+  color: #9d174d;
+  border: 1px solid #fbcfe8;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ============================================================ */
+/* CUSTOMER ORDER DELIVERY ADDRESS & LOCK BLOCK                */
+/* ============================================================ */
+.customerOrderAddressBlock {
+  background: #faf8f5;
+  border: 1px solid #ebdcc6;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.customerOrderAddressHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.addressHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--maroon, #6d1b29);
+}
+
+.customerOrderAddressText {
+  margin: 0;
+  font-size: 12px;
+  color: #4a3b34;
+  line-height: 1.4;
+}
+
+.addressLockedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.editOrderAddressBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #ffffff;
+  border: 1px solid #d4c4b0;
+  color: var(--maroon, #6d1b29);
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.editOrderAddressBtn:hover {
+  background: #fbf5e6;
+  border-color: var(--maroon, #6d1b29);
+}
+
+.metaColHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.customerOrderAddressContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.customerAddressNamePhone,
+.shippingNamePhoneRow {
+  font-size: 12.5px;
+  color: #1e293b;
+}
+
+.customerAddressNamePhone b,
+.shippingNamePhoneRow b {
+  font-weight: 700;
+  color: #1e1b18;
+}
+
+.customerAddressNamePhone span,
+.shippingNamePhoneRow span {
+  font-size: 11.5px;
+  color: #64748b;
+}
+
+.shippingAddressDetailsBox {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.shippingAddressText {
+  margin: 0;
+  font-size: 12px;
+  color: #4a3b34;
+  line-height: 1.4;
+}
+
+.addressLockedFootnote {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: #92400e;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  padding: 4px 8px;
+  border-radius: 4px;
+  line-height: 1.35;
+}
+
+/* ============================================================ */
+/* ASSISTED ORDER ACTION REQUIRED & PAYMENT PENDING CARDS      */
+/* ============================================================ */
+.assistedOrderActionRequiredCard {
+  background: linear-gradient(135deg, #fffcf5 0%, #fef8eb 100%);
+  border: 2px solid #d4af37;
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin: 14px 0;
+  box-shadow: 0 4px 16px rgba(212, 175, 55, 0.15);
+  animation: pulseGlow 2.5s infinite alternate;
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 4px 16px rgba(212, 175, 55, 0.12); }
+  100% { box-shadow: 0 6px 22px rgba(212, 175, 55, 0.28); }
+}
+
+.actionRequiredHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  border-bottom: 1px dashed #ebd39b;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+.actionBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #b45309;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.updatedByTag {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #78350f;
+}
+
+.actionRequiredBody h4 {
+  margin: 0 0 6px 0;
+  font-family: var(--font-serif, 'Playfair Display', serif);
+  font-size: 16px;
+  color: #451a03;
+}
+
+.actionRequiredBody p {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  color: #78350f;
+  line-height: 1.5;
+}
+
+.actionRequiredTotalRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #451a03;
+  margin-bottom: 14px;
+  background: #fffdf9;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #fae6b8;
+  width: fit-content;
+}
+
+.actionTotalVal {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--maroon, #6d1b29);
+}
+
+.actionRequiredBtnGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.reviewOrderBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1.5px solid #d4af37;
+  color: #78350f;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.reviewOrderBtn:hover {
+  background: #fdf5e2;
+  border-color: #b38e22;
+}
+
+.proceedToPayActionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, var(--maroon, #6d1b29) 0%, #4a0d18 100%);
+  color: #ffffff;
+  border: 1px solid #d4af37;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(109, 27, 41, 0.25);
+  transition: all 0.2s;
+}
+
+.proceedToPayActionBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(109, 27, 41, 0.35);
+}
+
+.assistedOrderPendingVerificationCard {
+  background: #fefce8;
+  border: 1.5px solid #fef08a;
+  border-left: 5px solid #eab308;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 12px 0;
+}
+
+.verificationBadgeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #854d0e;
+  font-size: 13.5px;
+  margin-bottom: 6px;
+}
+
+.assistedOrderPendingVerificationCard p {
+  margin: 0 0 10px 0;
+  font-size: 12.5px;
+  color: #713f12;
+  line-height: 1.45;
+}
+
+.assistedOrderPendingVerificationCard code {
+  background: #fef08a;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  color: #854d0e;
+}
+
+.pendingVerifActionRow {
+  display: flex;
+  gap: 8px;
+}
 

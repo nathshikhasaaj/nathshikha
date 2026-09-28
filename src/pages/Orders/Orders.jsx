@@ -28,7 +28,12 @@ import {
   Box,
   Check,
   Instagram,
-  Facebook
+  Facebook,
+  Gift,
+  Lock,
+  Boxes,
+  Eye,
+  CreditCard
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { money } from '../../utils/formatters';
@@ -41,6 +46,9 @@ import Breadcrumbs from '../../components/common/Breadcrumbs';
 import ReviewModal from '../../components/review/ReviewModal';
 import CancelOrderModal from '../../components/common/CancelOrderModal';
 import CustomizationEditModal from '../../components/common/CustomizationEditModal';
+import OrderAddressEditModal from '../../components/common/OrderAddressEditModal';
+import AssistedOrderReviewModal from '../../components/common/AssistedOrderReviewModal';
+import AssistedPaymentModal from '../../components/common/AssistedPaymentModal';
 import OrderStatusVisualBanner, { ORDER_STAGE_CONFIG } from '../../components/common/OrderStatusVisualBanner';
 import './Orders.css';
 
@@ -120,6 +128,56 @@ export default function Orders() {
     isOpen: false,
     order: null
   });
+
+  // Address Edit Modal State
+  const [addressModalState, setAddressModalState] = useState({
+    isOpen: false,
+    order: null
+  });
+
+  // Assisted Order Review & Payment Modal State
+  const [assistedReviewOrder, setAssistedReviewOrder] = useState(null);
+  const [assistedPayOrder, setAssistedPayOrder] = useState(null);
+
+  const handlePaymentClaimSuccess = (updatedOrder) => {
+    setOrders((prev) =>
+      prev.map((o) =>
+        (o.id === updatedOrder.id || o._id === updatedOrder._id || o.order_no === updatedOrder.order_no || o.orderNo === updatedOrder.orderNo)
+          ? { ...o, ...updatedOrder }
+          : o
+      )
+    );
+    if (trackResult && (trackResult.id === updatedOrder.id || trackResult._id === updatedOrder._id || trackResult.order_no === updatedOrder.order_no)) {
+      setTrackResult((prev) => ({ ...prev, ...updatedOrder }));
+    }
+  };
+
+  const openAddressModal = (order) => {
+    setAddressModalState({
+      isOpen: true,
+      order
+    });
+  };
+
+  const closeAddressModal = () => {
+    setAddressModalState({
+      isOpen: false,
+      order: null
+    });
+  };
+
+  const handleAddressSuccess = (updatedOrder) => {
+    setOrders((prev) =>
+      prev.map((o) =>
+        (o.id === updatedOrder.id || o._id === updatedOrder._id || o.order_no === updatedOrder.order_no || o.orderNo === updatedOrder.orderNo)
+          ? { ...o, ...updatedOrder }
+          : o
+      )
+    );
+    if (trackResult && (trackResult.id === updatedOrder.id || trackResult._id === updatedOrder._id || trackResult.order_no === updatedOrder.order_no)) {
+      setTrackResult((prev) => ({ ...prev, ...updatedOrder }));
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -572,8 +630,62 @@ export default function Orders() {
             {/* Status Progress Bar */}
             {renderProgress(trackResult.order_status)}
 
-            {/* Dynamic Status / Crafting / Cancellation Notification Banner */}
-            {trackResult.cancellation_status === 'cancellation_requested' || trackResult.cancellationStatus === 'cancellation_requested' ? (
+            {/* Dynamic Status / Crafting / Cancellation / Assisted Order Notification Banner */}
+            {trackResult.order_status === 'payment_pending' || trackResult.orderStatus === 'payment_pending' ? (
+              (!trackResult.payment_transaction_id && !trackResult.upi_utr && !trackResult.assisted_order?.payment_claimed_at && !trackResult.assistedOrder?.paymentClaimedAt) ? (
+                <div className="assistedOrderActionRequiredCard">
+                  <div className="actionRequiredHeader">
+                    <span className="actionBadge">✦ ACTION REQUIRED</span>
+                    <span className="updatedByTag">Updated by Nathshikha Team · Payment Pending</span>
+                  </div>
+                  <div className="actionRequiredBody">
+                    <h4>Your order details have been updated</h4>
+                    <p>
+                      Our studio team has prepared/updated your order items and delivery details. Please review your updated order and complete payment to proceed with crafting.
+                    </p>
+                    <div className="actionRequiredTotalRow">
+                      <span>Total Amount:</span>
+                      <b className="actionTotalVal">{money(trackResult.total)}</b>
+                    </div>
+                    <div className="actionRequiredBtnGroup">
+                      <button
+                        type="button"
+                        className="outlineBtn reviewOrderBtn"
+                        onClick={() => setAssistedReviewOrder(trackResult)}
+                      >
+                        <Eye size={14} /> REVIEW ORDER
+                      </button>
+                      <button
+                        type="button"
+                        className="goldBtn proceedToPayActionBtn"
+                        onClick={() => setAssistedPayOrder(trackResult)}
+                      >
+                        <CreditCard size={14} /> PROCEED TO PAYMENT
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="assistedOrderPendingVerificationCard">
+                  <div className="verificationBadgeRow">
+                    <Clock size={16} color="#b45309" />
+                    <strong>Payment Confirmation Submitted · Pending Admin Verification</strong>
+                  </div>
+                  <p>
+                    Your payment proof (UTR: <code>{trackResult.payment_transaction_id || trackResult.upi_utr}</code>) has been submitted and is currently being verified by our accounts team.
+                  </p>
+                  <div className="pendingVerifActionRow">
+                    <button
+                      type="button"
+                      className="outlineBtn compact"
+                      onClick={() => setAssistedReviewOrder(trackResult)}
+                    >
+                      <Eye size={13} /> View Order Summary
+                    </button>
+                  </div>
+                </div>
+              )
+            ) : trackResult.cancellation_status === 'cancellation_requested' || trackResult.cancellationStatus === 'cancellation_requested' ? (
               <div className="cancellationPendingBanner">
                 <Clock size={18} color="#b45309" />
                 <div>
@@ -679,17 +791,83 @@ export default function Orders() {
               </div>
             )}
 
+            {/* Gift Information if applicable */}
+            {(trackResult.is_gift || trackResult.isGift || trackResult.gift_wrap || trackResult.giftWrap || trackResult.handwritten_note || trackResult.handwrittenNote) && (
+              <div className="customerOrderGiftCard">
+                <div className="customerOrderGiftHeader">
+                  <Gift size={15} color="#9d174d" />
+                  <strong>🎁 Gift Order Details</strong>
+                </div>
+                <div className="customerOrderGiftBody">
+                  <div className="customerGiftRow">
+                    <span className="customerGiftLabel">Recipient:</span>
+                    <span className="customerGiftVal">
+                      <b>{trackResult.recipient_name || trackResult.recipientName || trackResult.name}</b>{' '}
+                      {(trackResult.recipient_phone || trackResult.recipientPhone) ? `(${trackResult.recipient_phone || trackResult.recipientPhone})` : ''}
+                    </span>
+                  </div>
+                  {(trackResult.handwritten_note || trackResult.handwrittenNote) && (
+                    <div className="customerGiftNoteRow">
+                      <span className="customerGiftLabel">Handwritten Note:</span>
+                      <blockquote className="customerGiftQuote">
+                        "{trackResult.handwritten_note || trackResult.handwrittenNote}"
+                      </blockquote>
+                    </div>
+                  )}
+                  {(trackResult.gift_wrap || trackResult.giftWrap || Number(trackResult.gift_wrap_charge || trackResult.giftWrapCharge) > 0) && (
+                    <div className="customerGiftWrapRow">
+                      <span className="customerGiftLabel">Packaging:</span>
+                      <span className="customerGiftWrapBadge">
+                        Luxury Gift Wrap (₹{trackResult.gift_wrap_charge || trackResult.giftWrapCharge || 20})
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Delivery Location & Financial Summary */}
             <div className="trackMetaSummaryGrid">
               <div className="metaSummaryCol">
-                <span className="metaColLabel">
-                  <MapPin size={13} /> Delivery Destination:
-                </span>
-                <p>
-                  {trackResult.address && `${trackResult.address}, `}
-                  {trackResult.city}, {trackResult.state} - {trackResult.pincode}
-                </p>
-                <small className="shippingMethodBadge">
+                <div className="metaColHeaderRow">
+                  <span className="metaColLabel">
+                    <MapPin size={13} /> Shipping Address:
+                  </span>
+                  {['shipped', 'delivered', 'cancelled'].includes(trackResult.order_status) ? (
+                    <span className="addressLockedBadge" title="Your shipping details can no longer be changed because this order has already been shipped.">
+                      🔒 Locked
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="editOrderAddressBtn"
+                      onClick={() => openAddressModal(trackResult)}
+                      title="Update delivery contact and address"
+                    >
+                      <Edit3 size={11} /> Edit Details
+                    </button>
+                  )}
+                </div>
+                <div className="shippingAddressDetailsBox">
+                  <div className="shippingNamePhoneRow">
+                    <b>{trackResult.recipient_name || trackResult.recipientName || trackResult.name}</b>
+                    {(trackResult.recipient_phone || trackResult.recipientPhone || trackResult.phone) && (
+                      <span> · +91 {trackResult.recipient_phone || trackResult.recipientPhone || trackResult.phone}</span>
+                    )}
+                  </div>
+                  <p className="shippingAddressText">
+                    {trackResult.address}
+                    {trackResult.city || trackResult.state || trackResult.pincode
+                      ? `, ${[trackResult.city, trackResult.state, trackResult.pincode ? `PIN: ${trackResult.pincode}` : ''].filter(Boolean).join(', ')}`
+                      : ''}
+                  </p>
+                </div>
+                {['shipped', 'delivered', 'cancelled'].includes(trackResult.order_status) ? (
+                  <small className="addressLockedFootnote">
+                    Your shipping details can no longer be changed because this order has already been shipped.
+                  </small>
+                ) : null}
+                <small className="shippingMethodBadge" style={{ marginTop: 6 }}>
                   Method: {trackResult.shipping_method || 'Standard Delivery'}
                 </small>
               </div>
@@ -1035,8 +1213,62 @@ export default function Orders() {
                 {/* Progress Bar */}
                 {renderProgress(o.order_status)}
 
-                {/* Dynamic Status / Crafting / Cancellation Notification Banner */}
-                {isCancellationRequested ? (
+                {/* Dynamic Status / Crafting / Cancellation / Assisted Order Notification Banner */}
+                {o.order_status === 'payment_pending' || o.orderStatus === 'payment_pending' ? (
+                  (!o.payment_transaction_id && !o.upi_utr && !o.assisted_order?.payment_claimed_at && !o.assistedOrder?.paymentClaimedAt) ? (
+                    <div className="assistedOrderActionRequiredCard">
+                      <div className="actionRequiredHeader">
+                        <span className="actionBadge">✦ ACTION REQUIRED</span>
+                        <span className="updatedByTag">Updated by Nathshikha Team · Payment Pending</span>
+                      </div>
+                      <div className="actionRequiredBody">
+                        <h4>Your order details have been updated</h4>
+                        <p>
+                          Our studio team has prepared/updated your order items and delivery details. Please review your updated order and complete payment to proceed with crafting.
+                        </p>
+                        <div className="actionRequiredTotalRow">
+                          <span>Total Amount:</span>
+                          <b className="actionTotalVal">{money(o.total)}</b>
+                        </div>
+                        <div className="actionRequiredBtnGroup">
+                          <button
+                            type="button"
+                            className="outlineBtn reviewOrderBtn"
+                            onClick={() => setAssistedReviewOrder(o)}
+                          >
+                            <Eye size={14} /> REVIEW ORDER
+                          </button>
+                          <button
+                            type="button"
+                            className="goldBtn proceedToPayActionBtn"
+                            onClick={() => setAssistedPayOrder(o)}
+                          >
+                            <CreditCard size={14} /> PROCEED TO PAYMENT
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="assistedOrderPendingVerificationCard">
+                      <div className="verificationBadgeRow">
+                        <Clock size={16} color="#b45309" />
+                        <strong>Payment Confirmation Submitted · Pending Admin Verification</strong>
+                      </div>
+                      <p>
+                        Your payment proof (UTR: <code>{o.payment_transaction_id || o.upi_utr}</code>) has been submitted and is currently being verified by our accounts team.
+                      </p>
+                      <div className="pendingVerifActionRow">
+                        <button
+                          type="button"
+                          className="outlineBtn compact"
+                          onClick={() => setAssistedReviewOrder(o)}
+                        >
+                          <Eye size={13} /> View Order Summary
+                        </button>
+                      </div>
+                    </div>
+                  )
+                ) : isCancellationRequested ? (
                   <div className="cancellationPendingBanner">
                     <Clock size={18} color="#b45309" />
                     <div>
@@ -1119,6 +1351,83 @@ export default function Orders() {
                     </span>
                   </div>
                 )}
+
+                {/* Gift Order Details in Customer Order Card */}
+                {(o.is_gift || o.isGift || o.gift_wrap || o.giftWrap || o.handwritten_note || o.handwrittenNote) && (
+                  <div className="customerOrderGiftCard">
+                    <div className="customerOrderGiftHeader">
+                      <Gift size={15} color="#9d174d" />
+                      <strong>🎁 Gift Order Details</strong>
+                    </div>
+                    <div className="customerOrderGiftBody">
+                      <div className="customerGiftRow">
+                        <span className="customerGiftLabel">Recipient:</span>
+                        <span className="customerGiftVal">
+                          <b>{o.recipient_name || o.recipientName || o.name}</b>{' '}
+                          {(o.recipient_phone || o.recipientPhone) ? `(${o.recipient_phone || o.recipientPhone})` : ''}
+                        </span>
+                      </div>
+                      {(o.handwritten_note || o.handwrittenNote) && (
+                        <div className="customerGiftNoteRow">
+                          <span className="customerGiftLabel">Handwritten Note:</span>
+                          <blockquote className="customerGiftQuote">
+                            "{o.handwritten_note || o.handwrittenNote}"
+                          </blockquote>
+                        </div>
+                      )}
+                      {(o.gift_wrap || o.giftWrap || Number(o.gift_wrap_charge || o.giftWrapCharge) > 0) && (
+                        <div className="customerGiftWrapRow">
+                          <span className="customerGiftLabel">Packaging:</span>
+                          <span className="customerGiftWrapBadge">
+                            Luxury Gift Wrap (₹{o.gift_wrap_charge || o.giftWrapCharge || 20})
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Delivery Address Card with Pre-Shipment Edit & Post-Shipment Lock */}
+                <div className="customerOrderAddressBlock">
+                  <div className="customerOrderAddressHeader">
+                    <div className="addressHeaderLeft">
+                      <MapPin size={14} color="var(--maroon, #6d1b29)" />
+                      <strong>Shipping Address</strong>
+                    </div>
+                    {['shipped', 'delivered', 'cancelled'].includes(o.order_status) ? (
+                      <span className="addressLockedBadge" title="Your shipping details can no longer be changed because this order has already been shipped.">
+                        🔒 Locked
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="editOrderAddressBtn"
+                        onClick={() => openAddressModal(o)}
+                        title="Update delivery contact and address"
+                      >
+                        <Edit3 size={12} />
+                        <span>Edit Details</span>
+                      </button>
+                    )}
+                  </div>
+                  <div className="customerOrderAddressContent">
+                    <div className="customerAddressNamePhone">
+                      <b>{o.recipient_name || o.recipientName || o.name}</b>
+                      {(o.recipient_phone || o.recipientPhone || o.phone) && (
+                        <span> · +91 {o.recipient_phone || o.recipientPhone || o.phone}</span>
+                      )}
+                    </div>
+                    <p className="customerOrderAddressText">
+                      {o.address}
+                      {o.city || o.state || o.pincode ? `, ${[o.city, o.state, o.pincode ? `PIN: ${o.pincode}` : ''].filter(Boolean).join(', ')}` : ''}
+                    </p>
+                  </div>
+                  {['shipped', 'delivered', 'cancelled'].includes(o.order_status) && (
+                    <small className="addressLockedFootnote">
+                      Your shipping details can no longer be changed because this order has already been shipped.
+                    </small>
+                  )}
+                </div>
 
                 {/* Customization Details Block (Order History Card) */}
                 {(() => {
@@ -1384,6 +1693,40 @@ export default function Orders() {
         onClose={closeCustomizationModal}
         order={customizationModalState.order}
         onSuccess={handleCustomizationSuccess}
+        setToast={setToast}
+      />
+
+      {/* Customer Delivery Address Edit Modal */}
+      <OrderAddressEditModal
+        isOpen={addressModalState.isOpen}
+        onClose={closeAddressModal}
+        order={addressModalState.order}
+        onSuccess={handleAddressSuccess}
+        setToast={setToast}
+      />
+
+      {/* Assisted Order Review Modal */}
+      <AssistedOrderReviewModal
+        isOpen={Boolean(assistedReviewOrder)}
+        onClose={() => setAssistedReviewOrder(null)}
+        order={assistedReviewOrder}
+        onProceedToPay={(order) => {
+          setAssistedReviewOrder(null);
+          setAssistedPayOrder(order);
+        }}
+        onOpenAddressEdit={(order) => {
+          openAddressModal(order);
+        }}
+      />
+
+      {/* Assisted Order Payment Modal */}
+      <AssistedPaymentModal
+        isOpen={Boolean(assistedPayOrder)}
+        onClose={() => setAssistedPayOrder(null)}
+        order={assistedPayOrder}
+        onPaymentSuccess={(updatedOrder) => {
+          handlePaymentClaimSuccess(updatedOrder);
+        }}
         setToast={setToast}
       />
     </main>

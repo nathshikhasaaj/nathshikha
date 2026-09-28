@@ -245,6 +245,13 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
     paymentMethod = 'upi',
     combineWithOrderId,
     isGift,
+    giftWrap,
+    gift_wrap,
+    giftWrapCharge,
+    gift_wrap_charge,
+    handwrittenNote,
+    handwritten_note,
+    gift,
     recipientName,
     recipientPhone,
     customerName,
@@ -570,7 +577,25 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
       }
     }
 
-    const total = Math.max(0, subtotal - couponDiscount) + shipping;
+    const isGiftOrder = Boolean(isGift || req.body.gift?.isGift || req.body.is_gift);
+    const isGiftWrapRequested = isGiftOrder && Boolean(
+      giftWrap === true ||
+      gift_wrap === true ||
+      req.body.gift?.giftWrap === true ||
+      req.body.gift?.gift_wrap === true
+    );
+    const computedGiftWrapCharge = isGiftWrapRequested ? 20 : 0;
+    const rawNote =
+      handwrittenNote !== undefined
+        ? handwrittenNote
+        : req.body.handwritten_note !== undefined
+        ? req.body.handwritten_note
+        : (req.body.gift?.handwrittenNote || req.body.gift?.handwritten_note);
+    const cleanHandwrittenNote = (isGiftOrder && typeof rawNote === 'string' && rawNote.trim())
+      ? rawNote.trim().slice(0, 1000)
+      : null;
+
+    const total = Math.max(0, subtotal - couponDiscount) + shipping + computedGiftWrapCharge;
     const orderNo = 'NW' + Date.now().toString().slice(-8);
     const guestToken = crypto.randomBytes(24).toString('hex'); // 48-char high-entropy token
 
@@ -631,12 +656,15 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
       userId: user?.id && isValidObjectId(user.id) ? user.id : null,
       shipmentGroupId: targetShipmentGroup ? targetShipmentGroup._id : null,
       shipmentGroupCode: targetShipmentGroup ? targetShipmentGroup.groupCode : null,
-      isGift: Boolean(isGift),
-      recipientName: isGift ? (recipientName ? String(recipientName).trim().slice(0, 100) : name.trim().slice(0, 100)) : null,
-      recipientPhone: isGift ? (recipientPhone ? String(recipientPhone).trim() : phone.trim()) : null,
-      customerName: isGift ? (customerName ? String(customerName).trim().slice(0, 100) : (user?.name || name.trim().slice(0, 100))) : null,
-      customerPhone: isGift ? (customerPhone ? String(customerPhone).trim() : (user?.phone || phone.trim())) : null,
-      customerEmail: isGift ? (customerEmail ? String(customerEmail).trim().toLowerCase() : (user?.email || email.trim().toLowerCase())) : null,
+      isGift: isGiftOrder,
+      giftWrap: isGiftWrapRequested,
+      giftWrapCharge: computedGiftWrapCharge,
+      handwrittenNote: cleanHandwrittenNote,
+      recipientName: isGiftOrder ? (recipientName ? String(recipientName).trim().slice(0, 100) : name.trim().slice(0, 100)) : null,
+      recipientPhone: isGiftOrder ? (recipientPhone ? String(recipientPhone).trim() : phone.trim()) : null,
+      customerName: isGiftOrder ? (customerName ? String(customerName).trim().slice(0, 100) : (user?.name || name.trim().slice(0, 100))) : null,
+      customerPhone: isGiftOrder ? (customerPhone ? String(customerPhone).trim() : (user?.phone || phone.trim())) : null,
+      customerEmail: isGiftOrder ? (customerEmail ? String(customerEmail).trim().toLowerCase() : (user?.email || email.trim().toLowerCase())) : null,
       name: name.trim().slice(0, 100),
       phone: phone.trim(),
       email: email.trim().toLowerCase(),
@@ -755,6 +783,15 @@ router.get('/', auth, async (req, res) => {
           shipment_group_id: o.shipmentGroupId ? o.shipmentGroupId.toString() : null,
           shipment_group_code: o.shipmentGroupCode || null,
           co_shipped_orders: coOrders,
+          is_gift: Boolean(o.isGift || o.is_gift),
+          gift_wrap: Boolean(o.giftWrap || o.gift_wrap),
+          gift_wrap_charge: o.giftWrapCharge || o.gift_wrap_charge || 0,
+          handwritten_note: o.handwrittenNote || o.handwritten_note || null,
+          recipient_name: o.recipientName || o.recipient_name || o.name,
+          recipient_phone: o.recipientPhone || o.recipient_phone || o.phone,
+          customer_name: o.customerName || o.customer_name || o.name,
+          customer_phone: o.customerPhone || o.customer_phone || o.phone,
+          customer_email: o.customerEmail || o.customer_email || o.email,
           pincode: o.pincode,
           city: o.city,
           state: o.state,
@@ -885,6 +922,361 @@ router.post('/:id/cancel-request', optionalAuth, async (req, res) => {
   } catch (err) {
     console.error('Error submitting cancellation request:', err);
     res.status(500).json({ error: 'Failed to submit cancellation request.' });
+  }
+});
+
+// Customer: Update Delivery Address & Contact Details (Allowed strictly BEFORE 'shipped' / 'delivered' stage)
+router.all(['/:id/address', '/:id/contact-details'], optionalAuth, async (req, res, next) => {
+  if (req.method !== 'PUT' && req.method !== 'PATCH') {
+    return next();
+  }
+
+  const { id } = req.params;
+  const {
+    address,
+    pincode,
+    city,
+    state,
+    recipientName,
+    recipient_name,
+    recipientPhone,
+    recipient_phone,
+    contactNumber,
+    contact_number,
+    guestToken,
+    phone,
+    email
+  } = req.body;
+
+  try {
+    let order = null;
+    if (isValidObjectId(id)) {
+      order = await Order.findById(id);
+    }
+    if (!order) {
+      order = await Order.findOne({
+        orderNo: new RegExp(`^${escapeRegex(String(id).trim().replace(/^#/, ''))}$`, 'i')
+      });
+    }
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found.' });
+    }
+
+    // 1. Strict Order Ownership Verification (Customer A cannot edit Customer B's order)
+    const user = req.user;
+    const reqEmail = (email || user?.email || '').trim().toLowerCase();
+    const reqPhone = (phone || user?.phone || '').replace(/\D/g, '');
+    const orderEmail = (order.email || '').trim().toLowerCase();
+    const orderPhone = (order.phone || '').replace(/\D/g, '');
+    const reqToken = guestToken || (req.headers['x-guest-token'] ? String(req.headers['x-guest-token']) : null);
+
+    const isOwner =
+      (user?.id && order.userId && order.userId.toString() === user.id) ||
+      (user?.role === 'admin') ||
+      (!user && reqEmail && orderEmail && reqEmail === orderEmail && reqPhone && orderPhone && orderPhone.endsWith(reqPhone)) ||
+      (!user && reqToken && order.guestToken && order.guestToken === reqToken) ||
+      (!user && !order.userId && (reqEmail === orderEmail || reqPhone === orderPhone));
+
+    if (!isOwner) {
+      return res.status(403).json({ error: 'You are not authorized to edit this order.' });
+    }
+
+    // 2. Strict Shipment-Based Lock: Check real-time database order status
+    const currentStatus = String(order.orderStatus || 'placed').toLowerCase();
+    const lockedStatuses = ['shipped', 'delivered', 'cancelled'];
+    if (lockedStatuses.includes(currentStatus) || order.shippedAt) {
+      return res.status(403).json({
+        error: 'Shipping details can no longer be changed because this order has already been shipped.'
+      });
+    }
+
+    // 3. Strict Allowlist Validation for Customer Order Edit
+    const changedFields = [];
+
+    // Delivery Address
+    if (address !== undefined) {
+      const cleanAddress = String(address).trim().slice(0, 500);
+      if (!cleanAddress) {
+        return res.status(400).json({ error: 'Please enter a complete delivery address.' });
+      }
+      if (order.address !== cleanAddress) {
+        order.address = cleanAddress;
+        changedFields.push('Address');
+      }
+    }
+
+    // PIN Code
+    if (pincode !== undefined) {
+      const cleanPin = String(pincode).trim();
+      if (!isValidPincode(cleanPin)) {
+        return res.status(400).json({ error: 'Please enter a valid 6-digit delivery PIN code.' });
+      }
+      if (order.pincode !== cleanPin) {
+        order.pincode = cleanPin;
+        changedFields.push('Pincode');
+      }
+    }
+
+    // City & State
+    if (city !== undefined && city !== null) {
+      const cleanCity = String(city).trim().slice(0, 100);
+      if (order.city !== cleanCity) {
+        order.city = cleanCity;
+        changedFields.push('City');
+      }
+    }
+    if (state !== undefined && state !== null) {
+      const cleanState = String(state).trim().slice(0, 100);
+      if (order.state !== cleanState) {
+        order.state = cleanState;
+        changedFields.push('State');
+      }
+    }
+
+    // Contact Number (Customer / Recipient Phone)
+    const rawPhone = recipientPhone || recipient_phone || contactNumber || contact_number || phone;
+    if (rawPhone !== undefined && rawPhone !== null) {
+      const cleanPhoneDigits = String(rawPhone).replace(/\D/g, '');
+      if (cleanPhoneDigits.length === 10) {
+        if (order.isGift) {
+          order.recipientPhone = cleanPhoneDigits;
+        } else {
+          order.phone = cleanPhoneDigits;
+        }
+        changedFields.push('Contact Number');
+      } else if (cleanPhoneDigits.length > 0 && cleanPhoneDigits.length !== 10) {
+        return res.status(400).json({ error: 'Please enter a valid 10-digit contact mobile number.' });
+      }
+    }
+
+    // Gift Recipient Name (For gift orders only)
+    const rName = recipientName !== undefined ? recipientName : recipient_name;
+    if (order.isGift && rName !== undefined && String(rName).trim()) {
+      order.recipientName = String(rName).trim().slice(0, 100);
+      changedFields.push('Recipient Name');
+    }
+
+    // If PIN Code changed and order is in payment_pending stage, recalculate shipping charge server-side
+    if (changedFields.includes('Pincode') && order.orderStatus === 'payment_pending') {
+      try {
+        const shippingDetails = await calculateShippingCharge(order.pincode, order.shippingMethod);
+        if (shippingDetails && shippingDetails.shippingCharge !== undefined) {
+          const oldShipping = order.shipping || 0;
+          order.shipping = shippingDetails.shippingCharge;
+          if (shippingDetails.city && !order.city) order.city = shippingDetails.city;
+          if (shippingDetails.state && !order.state) order.state = shippingDetails.state;
+
+          const sub = order.subtotal || 0;
+          const disc = order.couponDiscount || 0;
+          const wrap = order.giftWrapCharge || 0;
+          order.total = Math.max(0, sub - disc) + order.shipping + wrap;
+          changedFields.push(`Shipping recalculated (₹${oldShipping} → ₹${order.shipping}, New Total: ₹${order.total})`);
+        }
+      } catch (shipErr) {
+        console.warn('Could not recalculate shipping during customer address edit:', shipErr.message);
+      }
+    }
+
+    // Record audit history
+    if (!Array.isArray(order.editHistory)) {
+      order.editHistory = [];
+    }
+    order.editHistory.push({
+      editedAt: new Date(),
+      editedBy: user?.name || user?.email || 'Customer',
+      changedFields: changedFields.length ? changedFields : ['Delivery Contact / Address'],
+      notes: 'Customer updated delivery/contact details before shipment'
+    });
+
+    await order.save();
+
+    res.json({
+      ok: true,
+      success: true,
+      message: 'Delivery details updated successfully.',
+      order: order.toJSON()
+    });
+  } catch (err) {
+    console.error('Error updating order delivery details:', err);
+    res.status(500).json({ error: 'Failed to update order details. Please try again.' });
+  }
+});
+
+// Customer: Mark Assisted Order as Reviewed
+router.post(['/:id/mark-reviewed', '/:id/view-assisted'], optionalAuth, async (req, res) => {
+  const { id } = req.params;
+  const { guestToken, phone, email } = req.body || {};
+
+  try {
+    let order = null;
+    if (isValidObjectId(id)) {
+      order = await Order.findById(id);
+    }
+    if (!order) {
+      order = await Order.findOne({
+        orderNo: new RegExp(`^${escapeRegex(String(id).trim().replace(/^#/, ''))}$`, 'i')
+      });
+    }
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found.' });
+    }
+
+    // Ownership check (IDOR protection)
+    const user = req.user;
+    const reqEmail = (email || user?.email || '').trim().toLowerCase();
+    const reqPhone = (phone || user?.phone || '').replace(/\D/g, '');
+    const orderEmail = (order.email || '').trim().toLowerCase();
+    const orderPhone = (order.phone || '').replace(/\D/g, '');
+    const reqToken = guestToken || (req.headers['x-guest-token'] ? String(req.headers['x-guest-token']) : null);
+
+    const isOwner =
+      (user?.id && order.userId && order.userId.toString() === user.id) ||
+      (user?.role === 'admin') ||
+      (!user && reqEmail && orderEmail && reqEmail === orderEmail) ||
+      (!user && reqPhone && orderPhone && (orderPhone.endsWith(reqPhone) || reqPhone.endsWith(orderPhone))) ||
+      (!user && reqToken && order.guestToken && order.guestToken === reqToken) ||
+      (!user && !order.userId && (reqEmail === orderEmail || reqPhone === orderPhone));
+
+    if (!isOwner) {
+      return res.status(403).json({ error: 'You are not authorized to view this order.' });
+    }
+
+    if (!order.assistedOrder) {
+      order.assistedOrder = { isAssisted: false };
+    }
+    if (!order.assistedOrder.customerViewedAt) {
+      order.assistedOrder.customerViewedAt = new Date();
+    }
+    order.assistedOrder.customerReviewedAt = new Date();
+
+    await order.save();
+
+    res.json({
+      ok: true,
+      order: order.toJSON()
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Failed to record review timestamp' });
+  }
+});
+
+// Customer: Submit Payment Proof ("I HAVE PAID")
+router.post(['/:id/claim-payment', '/:id/pay', '/:id/submit-payment'], optionalAuth, async (req, res) => {
+  const { id } = req.params;
+  const {
+    transactionId,
+    paymentTransactionId,
+    upiUtr,
+    upi_utr,
+    paymentApp,
+    payment_app,
+    claimedAmount,
+    amount,
+    guestToken,
+    phone,
+    email
+  } = req.body;
+
+  const rawTxId = transactionId || paymentTransactionId || upiUtr || upi_utr;
+  const cleanTxId = String(rawTxId || '').trim();
+
+  if (!cleanTxId) {
+    return res.status(400).json({
+      error: 'Please enter your UPI Reference ID / UTR number from your payment app.'
+    });
+  }
+
+  const cleanPaymentApp = String(paymentApp || payment_app || 'UPI App').trim().slice(0, 100);
+
+  try {
+    let order = null;
+    if (isValidObjectId(id)) {
+      order = await Order.findById(id);
+    }
+    if (!order) {
+      order = await Order.findOne({
+        orderNo: new RegExp(`^${escapeRegex(String(id).trim().replace(/^#/, ''))}$`, 'i')
+      });
+    }
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found.' });
+    }
+
+    // 1. Ownership check (IDOR protection)
+    const user = req.user;
+    const reqEmail = (email || user?.email || '').trim().toLowerCase();
+    const reqPhone = (phone || user?.phone || '').replace(/\D/g, '');
+    const orderEmail = (order.email || '').trim().toLowerCase();
+    const orderPhone = (order.phone || '').replace(/\D/g, '');
+    const reqToken = guestToken || (req.headers['x-guest-token'] ? String(req.headers['x-guest-token']) : null);
+
+    const isOwner =
+      (user?.id && order.userId && order.userId.toString() === user.id) ||
+      (user?.role === 'admin') ||
+      (!user && reqEmail && orderEmail && reqEmail === orderEmail) ||
+      (!user && reqPhone && orderPhone && (orderPhone.endsWith(reqPhone) || reqPhone.endsWith(orderPhone))) ||
+      (!user && reqToken && order.guestToken && order.guestToken === reqToken) ||
+      (!user && !order.userId && (reqEmail === orderEmail || reqPhone === orderPhone));
+
+    if (!isOwner) {
+      return res.status(403).json({ error: 'You are not authorized to submit payment for this order.' });
+    }
+
+    // 2. Order status safety check
+    if (order.orderStatus === 'cancelled') {
+      return res.status(400).json({ error: 'This order has been cancelled and cannot accept payment.' });
+    }
+
+    // 3. Payment Amount Safety Check: Validate submitted amount vs current server-calculated total
+    const submittedAmount = Number(claimedAmount !== undefined ? claimedAmount : (amount !== undefined ? amount : order.total));
+    if (Math.abs(submittedAmount - order.total) > 0.01) {
+      return res.status(400).json({
+        error: `Order details have been updated. The latest total is ₹${order.total}. Please review the updated amount before making payment.`
+      });
+    }
+
+    // 4. Update Payment Proof Fields
+    order.upiUtr = cleanTxId;
+    order.paymentTransactionId = cleanTxId;
+    order.paymentApp = cleanPaymentApp;
+    order.upiPaidAt = new Date();
+    order.paymentStatus = 'verification_pending';
+    
+    // Maintain payment_pending / verification_pending order status until Admin explicitly verifies
+    if (order.orderStatus === 'placed' || order.orderStatus === 'payment_pending') {
+      order.orderStatus = 'payment_pending';
+    }
+
+    if (!order.assistedOrder) {
+      order.assistedOrder = { isAssisted: false };
+    }
+    order.assistedOrder.paymentClaimedAt = new Date();
+
+    // Record in audit editHistory
+    if (!Array.isArray(order.editHistory)) {
+      order.editHistory = [];
+    }
+    order.editHistory.push({
+      editedAt: new Date(),
+      editedBy: user?.name || user?.email || order.name || 'Customer',
+      changedFields: ['Customer Submitted Payment Proof (I HAVE PAID)'],
+      notes: `UTR: ${cleanTxId} via ${cleanPaymentApp} (Claimed: ₹${order.total})`
+    });
+
+    await order.save();
+
+    res.json({
+      ok: true,
+      success: true,
+      message: 'Payment submission received! Your order is now pending admin verification.',
+      order: order.toJSON()
+    });
+  } catch (err) {
+    console.error('Error claiming payment:', err);
+    res.status(500).json({ error: err.message || 'Failed to submit payment proof.' });
   }
 });
 
@@ -1070,6 +1462,15 @@ router.post('/track', lookupLimiter, async (req, res) => {
         shipment_group_id: order.shipmentGroupId ? order.shipmentGroupId.toString() : null,
         shipment_group_code: order.shipmentGroupCode || null,
         co_shipped_orders: coShippedOrders,
+        is_gift: Boolean(order.isGift || order.is_gift),
+        gift_wrap: Boolean(order.giftWrap || order.gift_wrap),
+        gift_wrap_charge: order.giftWrapCharge || order.gift_wrap_charge || 0,
+        handwritten_note: order.handwrittenNote || order.handwritten_note || null,
+        recipient_name: order.recipientName || order.recipient_name || order.name,
+        recipient_phone: order.recipientPhone || order.recipient_phone || order.phone,
+        customer_name: order.customerName || order.customer_name || order.name,
+        customer_phone: order.customerPhone || order.customer_phone || order.phone,
+        customer_email: order.customerEmail || order.customer_email || order.email,
         name: order.name,
         email: order.email,
         phone: maskedPhone,
@@ -1188,6 +1589,15 @@ router.post('/lookup-orders', lookupLimiter, async (req, res) => {
           shipment_group_id: o.shipmentGroupId ? o.shipmentGroupId.toString() : null,
           shipment_group_code: o.shipmentGroupCode || null,
           co_shipped_orders: coOrders,
+          is_gift: Boolean(o.isGift || o.is_gift),
+          gift_wrap: Boolean(o.giftWrap || o.gift_wrap),
+          gift_wrap_charge: o.giftWrapCharge || o.gift_wrap_charge || 0,
+          handwritten_note: o.handwrittenNote || o.handwritten_note || null,
+          recipient_name: o.recipientName || o.recipient_name || o.name,
+          recipient_phone: o.recipientPhone || o.recipient_phone || o.phone,
+          customer_name: o.customerName || o.customer_name || o.name,
+          customer_phone: o.customerPhone || o.customer_phone || o.phone,
+          customer_email: o.customerEmail || o.customer_email || o.email,
           pincode: o.pincode,
           city: o.city,
           state: o.state,

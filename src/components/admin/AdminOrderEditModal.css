@@ -30,7 +30,7 @@
   background: #ffffff;
   border-radius: 14px;
   width: 100%;
-  max-width: 860px;
+  max-width: 920px;
   max-height: calc(100vh - 32px);
   display: flex;
   flex-direction: column;
@@ -116,7 +116,7 @@
   border-color: #fca5a5;
 }
 
-/* Shipped Warning Alert */
+/* Shipped / Lifecycle Warning Alert */
 .adminEditShippedWarning {
   margin: 14px 20px 0;
   background: #fffbeb;
@@ -171,13 +171,14 @@
   flex-direction: column;
   flex: 1;
   overflow-y: auto;
+  padding: 14px 20px;
+  gap: 16px;
 }
 
 .adminEditFormGrid {
-  padding: 18px 20px 12px;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 18px;
+  gap: 16px;
 }
 
 .adminEditSectionCard {
@@ -206,6 +207,317 @@
   color: #0f172a;
 }
 
+/* ==========================================================================
+   PRODUCTS TABLE & CONTROLS (PART 1)
+   ========================================================================== */
+.adminEditProductsCard {
+  background: #ffffff;
+  border: 1.5px solid #ebdcc5;
+}
+
+.adminAddProductTriggerBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border-radius: 6px;
+}
+
+.adminOrderItemsTableWrap {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.adminOrderItemsEditTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.adminOrderItemsEditTable th {
+  background: #fcf9f2;
+  color: #5b1420;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 8px 12px;
+  border-bottom: 1px solid #ebdcc5;
+  font-weight: 700;
+}
+
+.adminOrderItemEditRow td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.adminOrderItemEditRow:last-child td {
+  border-bottom: none;
+}
+
+.adminItemCardCol {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.adminItemThumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.adminItemMetaCol {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.adminItemName {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 0.85rem;
+}
+
+.adminItemSku {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-family: monospace;
+}
+
+.adminItemParamsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.adminItemParamBadge {
+  background: #fdf5e2;
+  border: 1px solid #dfc793;
+  color: #78350f;
+  font-size: 0.68rem;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.adminItemRemoveBtn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  color: #dc2626;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 4px;
+  margin-top: 3px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.adminItemRemoveBtn:hover {
+  background: #fef2f2;
+  text-decoration: underline;
+}
+
+.adminItemUnitPrice {
+  font-weight: 600;
+  color: #334155;
+  font-size: 0.84rem;
+}
+
+.adminItemRowTotal {
+  font-weight: 800;
+  color: #0f172a;
+  font-size: 0.86rem;
+}
+
+/* Quantity Stepper */
+.adminItemQtyStepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.adminQtyStepBtn {
+  background: #f8fafc;
+  border: none;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.adminQtyStepBtn:hover:not(:disabled) {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.adminQtyStepBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.adminQtyVal {
+  width: 32px;
+  text-align: center;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Financial Calculation Strip */
+.adminEditFinancialCalculationStrip {
+  margin-top: 12px;
+  background: #fdfaf4;
+  border: 1.5px solid #ecdcc5;
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.finCol {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.finLabel {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.finVal {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.discountCol .finVal {
+  color: #16a34a;
+}
+
+.giftWrapCol .finVal {
+  color: #9d174d;
+}
+
+.grandTotalCol .grandTotalVal {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #6d1b29;
+}
+
+.diffCol {
+  border-left: 1.5px dashed #cbd5e1;
+  padding-left: 12px;
+}
+
+.diffPositive .finVal {
+  color: #d97706;
+}
+
+.diffNegative .finVal {
+  color: #16a34a;
+}
+
+/* ==========================================================================
+   GIFT OPTIONS (PART 3)
+   ========================================================================== */
+.adminEditGiftOptionsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.adminEditGiftOptionCard {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  transition: all 0.18s ease;
+}
+
+.adminEditGiftOptionCard.activeGiftCard {
+  background: #fdf2f8;
+  border-color: #f472b6;
+}
+
+.adminGiftCardText {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.84rem;
+  color: #1e293b;
+}
+
+.adminGiftPriceBadge {
+  background: #fce7f3;
+  color: #9d174d;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  border: 1px solid #fbcfe8;
+}
+
+.adminGiftFreeBadge {
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  border: 1px solid #bbf7d0;
+}
+
+.adminGiftCardDesc {
+  margin: 4px 0 0 24px;
+  font-size: 0.74rem;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.adminEditHandwrittenNoteWrap {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.adminEditHandwrittenNoteWrap label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #6d1b29;
+}
+
+/* Form Controls & Inputs */
 .adminEditGiftToggleWrap {
   background: #fdf2f8;
   border: 1px solid #fbcfe8;
@@ -223,7 +535,7 @@
 }
 
 .adminEditCheckbox {
-  accent-color: #db2777;
+  accent-color: #6d1b29;
   width: 16px;
   height: 16px;
   cursor: pointer;
@@ -364,78 +676,6 @@
   color: #d4af37;
 }
 
-/* Protected Specifications Section */
-.adminEditProtectedBox {
-  margin: 0 20px 16px;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 12px 16px;
-}
-
-.adminEditProtectedHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 8px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.adminEditProtectedTitle {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.82rem;
-  color: #334155;
-}
-
-.adminEditLockBadge {
-  font-size: 0.72rem;
-  font-weight: 700;
-  background: #e2e8f0;
-  color: #475569;
-  padding: 2px 8px;
-  border-radius: 4px;
-}
-
-.adminEditProtectedGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px 14px;
-  font-size: 0.78rem;
-}
-
-.adminEditProtectedItem {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.protLabel {
-  color: #64748b;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.protVal {
-  color: #1e293b;
-  white-space: normal;
-  word-break: break-word;
-}
-
-.adminEditProtectedNotice {
-  margin: 8px 0 0;
-  font-size: 0.72rem;
-  color: #64748b;
-  line-height: 1.4;
-  border-top: 1px dashed #cbd5e1;
-  padding-top: 6px;
-}
-
 /* Modal Footer */
 .adminEditModalFooter {
   padding: 14px 22px;
@@ -472,9 +712,301 @@
 }
 
 /* ==========================================================================
+   SUB-MODAL: ADD PRODUCT & REMOVE CONFIRMATION DIALOGS
+   ========================================================================== */
+.adminSubModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+  padding: 16px;
+  animation: adminEditFadeIn 0.15s ease-out;
+}
+
+.adminSubModalContainer {
+  background: #ffffff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 580px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.adminSubModalHeader {
+  padding: 14px 18px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.adminSubModalHeader h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.adminSubModalCloseBtn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.adminSubModalBody {
+  padding: 14px 18px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.adminCatalogSearchBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 7px;
+  padding: 0 10px;
+  background: #f8fafc;
+}
+
+.adminCatalogSearchBar input {
+  width: 100%;
+  height: 36px;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.85rem;
+  color: #0f172a;
+}
+
+.adminCatalogGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px;
+}
+
+.adminCatalogCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid #f1f5f9;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.adminCatalogCard:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.adminCatalogCard.selectedCatalogCard {
+  background: #fdf5e2;
+  border-color: #d4af37;
+}
+
+.adminCatalogThumb {
+  width: 38px;
+  height: 38px;
+  border-radius: 5px;
+  object-fit: cover;
+}
+
+.adminCatalogInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.adminCatalogName {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.adminCatalogMetaRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.adminCatalogPrice {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #6d1b29;
+}
+
+.adminCatalogStock {
+  font-size: 0.7rem;
+  color: #16a34a;
+}
+
+.adminCatalogStock.outOfStock {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.adminCatalogCheck {
+  color: #b45309;
+}
+
+.adminCatalogEmpty {
+  padding: 20px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.82rem;
+}
+
+.adminSelectedProductOptionsBox {
+  background: #fafafa;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.adminSelectedProductOptionsBox h5 {
+  margin: 0;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.adminParamsFormStack {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.adminParamFieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.adminParamFieldGroup label {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.adminParamSelect {
+  padding: 6px 8px;
+  font-size: 0.8rem;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.adminAddQtyRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 6px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.adminAddQtyRow label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.adminSubModalFooter {
+  padding: 12px 18px;
+  border-top: 1px solid #e2e8f0;
+  background: #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Remove Product Confirmation Box */
+.adminRemoveConfirmBox {
+  background: #ffffff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 420px;
+  padding: 20px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.adminRemoveConfirmHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.adminRemoveConfirmHeader h4 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.adminRemoveConfirmBox p {
+  margin: 0;
+  font-size: 0.86rem;
+  color: #475569;
+  line-height: 1.45;
+}
+
+.adminRemoveConfirmActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.adminDeleteConfirmBtn {
+  background: #dc2626;
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 7px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.adminDeleteConfirmBtn:hover {
+  background: #b91c1c;
+}
+
+/* ==========================================================================
    Responsive Breakpoints
    ========================================================================== */
-
 @media (max-width: 768px) {
   .adminEditModalContainer {
     max-height: 94vh;
@@ -483,11 +1015,10 @@
 
   .adminEditFormGrid {
     grid-template-columns: 1fr;
-    padding: 14px 16px 10px;
     gap: 14px;
   }
 
-  .adminEditProtectedGrid {
+  .adminEditGiftOptionsGrid {
     grid-template-columns: 1fr;
   }
 
@@ -518,9 +1049,8 @@
     font-size: 0.75rem;
   }
 
-  .adminEditFormGrid {
-    padding: 10px 12px 8px;
-    gap: 12px;
+  .adminEditOrderForm {
+    padding: 10px 12px;
   }
 
   .adminEditSectionCard {
@@ -532,9 +1062,17 @@
     gap: 10px;
   }
 
-  .adminEditProtectedBox {
-    margin: 0 12px 12px;
-    padding: 10px 12px;
+  .adminEditFinancialCalculationStrip {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .diffCol {
+    border-left: none;
+    border-top: 1.5px dashed #cbd5e1;
+    padding-left: 0;
+    padding-top: 8px;
+    width: 100%;
   }
 
   .adminEditModalFooter {
