@@ -109,8 +109,12 @@ pm2 start server/index.js --name "nathshikha-api" -i max --interpreter $(which n
 pm2 save
 pm2 startup systemd -u root --hp /root 2>/dev/null | bash 2>/dev/null || true
 
-# 10. Test and Reload Nginx
+# 10. Configure Nginx Upload Limits and Reload
 if command -v nginx &> /dev/null; then
+    echo "--> Configuring Nginx client_max_body_size (30M)..."
+    if [ -d "/etc/nginx/conf.d" ]; then
+        echo "client_max_body_size 30M;" > /etc/nginx/conf.d/upload_limits.conf
+    fi
     echo "--> Testing and reloading Nginx..."
     nginx -t
     systemctl reload nginx 2>/dev/null || systemctl restart nginx 2>/dev/null || true

@@ -51,6 +51,7 @@ import AdminHallOfFameManager from '../../components/admin/AdminHallOfFameManage
 import AdminHeroManager from '../../components/admin/AdminHeroManager';
 import AdminParameterManager from '../../components/admin/AdminParameterManager';
 import AdminCancellationModal from '../../components/admin/AdminCancellationModal';
+import AdminOrderEditModal from '../../components/admin/AdminOrderEditModal';
 import '../../components/admin/AdminLayout.css';
 import './AdminDashboard.css';
 
@@ -101,6 +102,7 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
   const [shipmentModalOrder, setShipmentModalOrder] = useState(null);
   const [isEditingShipment, setIsEditingShipment] = useState(false);
   const [cancellationModalOrder, setCancellationModalOrder] = useState(null);
+  const [editOrderModalOrder, setEditOrderModalOrder] = useState(null);
 
   const handleOrderCreated = (newOrder) => {
     setOrders((prev) => [newOrder, ...prev]);
@@ -178,6 +180,40 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
       }
     } catch (err) {
       setToast(err.message || 'Failed to process refund');
+      throw err;
+    }
+  };
+
+  const handleSaveOrderEdit = async (orderId, editPayload) => {
+    try {
+      const res = await api(`/admin/orders/${orderId}/edit`, {
+        method: 'PATCH',
+        body: JSON.stringify(editPayload)
+      });
+      if (res.ok && res.order) {
+        const updated = res.order;
+        setOrders((prev) =>
+          prev.map((o) =>
+            o.id === orderId || o._id === orderId || o.order_no === updated.order_no || o.orderNo === updated.orderNo
+              ? { ...o, ...updated }
+              : o
+          )
+        );
+
+        if (
+          detailsModalOrder &&
+          (detailsModalOrder.id === orderId ||
+            detailsModalOrder._id === orderId ||
+            detailsModalOrder.order_no === updated.order_no ||
+            detailsModalOrder.orderNo === updated.orderNo)
+        ) {
+          setDetailsModalOrder((prev) => ({ ...prev, ...updated }));
+        }
+
+        setToast(res.message || `Order #${updated.order_no || updated.orderNo} updated successfully.`);
+      }
+    } catch (err) {
+      setToast(err.message || 'Failed to update order');
       throw err;
     }
   };
@@ -1167,6 +1203,15 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
         }}
         onStatusChange={handleUpdateOrderStatus}
         onReviewCancellationClick={(order) => setCancellationModalOrder(order)}
+        onEditOrderClick={(order) => setEditOrderModalOrder(order)}
+      />
+
+      {/* Admin Edit Order Modal */}
+      <AdminOrderEditModal
+        order={editOrderModalOrder}
+        isOpen={Boolean(editOrderModalOrder)}
+        onClose={() => setEditOrderModalOrder(null)}
+        onSaveOrderEdit={handleSaveOrderEdit}
       />
 
       {/* Manual Order Creation Modal */}

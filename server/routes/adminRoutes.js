@@ -27,6 +27,7 @@ import {
 } from '../services/emailService.js';
 
 import { uploadSingle, uploadMultiple, uploadsDir } from '../middleware/uploadMiddleware.js';
+import { isValidEmail, isValidPhone, isValidPincode } from '../middleware/securityMiddleware.js';
 
 const router = express.Router();
 
@@ -873,6 +874,191 @@ router.patch(['/orders/:id/payment', '/orders/:id/edit-payment'], async (req, re
   } catch (err) {
     res.status(500).json({ error: err.message || 'Failed to update payment details' });
   }
+});
+
+// Edit existing order details (Customer Information, Delivery Address, Customization)
+router.patch(['/orders/:id/edit', '/orders/:id/update-details'], async (req, res) => {
+  const { id } = req.params;
+  const {
+    name,
+    phone,
+    email,
+    address,
+    pincode,
+    city,
+    state,
+    shippingMethod,
+    isGift,
+    recipientName,
+    recipientPhone,
+    customerName,
+    customerPhone,
+    customerEmail,
+    customizationDetails,
+    customization_details,
+    adminEditNotes,
+    adminNotes,
+    notes
+  } = req.body;
+
+  try {
+    const order = await findOrderByIdOrNo(id);
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found in database.' });
+    }
+
+    // 1. Validate Customer / Recipient contact fields
+    const rawName = String(name !== undefined ? name : (order.name || '')).trim().slice(0, 100);
+    if (!rawName) {
+      return res.status(400).json({ error: 'Customer / Recipient name is required.' });
+    }
+
+    const rawPhone = String(phone !== undefined ? phone : (order.phone || '')).trim();
+    const cleanPhoneDigits = rawPhone.replace(/\D/g, '');
+    if (!cleanPhoneDigits || cleanPhoneDigits.length < 10) {
+      return res.status(400).json({ error: 'Please enter a valid 10-digit mobile number.' });
+    }
+    const cleanPhone = cleanPhoneDigits.length === 10 ? cleanPhoneDigits : cleanPhoneDigits.slice(-10);
+
+    const rawEmail = String(email !== undefined ? email : (order.email || '')).trim().toLowerCase().slice(0, 120);
+    if (!rawEmail || !isValidEmail(rawEmail)) {
+      return res.status(400).json({ error: 'Please enter a valid email address.' });
+    }
+
+    // 2. Validate Delivery Address
+    const rawAddress = String(address !== undefined ? address : (order.address || '')).trim().slice(0, 500);
+    if (!rawAddress) {
+      return res.status(400).json({ error: 'Delivery address is required.' });
+    }
+
+    const rawPincode = pincode !== undefined && pincode !== null ? String(pincode).trim() : (order.pincode || '');
+    if (rawPincode && !isValidPincode(rawPincode)) {
+      return res.status(400).json({ error: 'Please enter a valid 6-digit delivery PIN code.' });
+    }
+
+    const cleanCity = city !== undefined && city !== null ? String(city).trim().slice(0, 100) : (order.city || '');
+    const cleanState = state !== undefined && state !== null ? String(state).trim().slice(0, 100) : (order.state || '');
+    const cleanShippingMethod = shippingMethod !== undefined && shippingMethod !== null
+      ? String(shippingMethod).trim().slice(0, 100)
+      : order.shippingMethod;
+
+    const isGiftBool = isGift !== undefined ? Boolean(isGift) : Boolean(order.isGift);
+    const cleanRecipientName = isGiftBool
+      ? (recipientName ? String(recipientName).trim().slice(0, 100) : rawName)
+      : null;
+    const cleanRecipientPhone = isGiftBool
+      ? (recipientPhone ? String(recipientPhone).trim().replace(/\D/g, '').slice(-10) : cleanPhone)
+      : null;
+    const cleanCustomerName = isGiftBool
+      ? (customerName ? String(customerName).trim().slice(0, 100) : (order.customerName || rawName))
+      : rawName;
+    const cleanCustomerPhone = isGiftBool
+      ? (customerPhone ? String(customerPhone).trim().replace(/\D/g, '').slice(-10) : (order.customerPhone || cleanPhone))
+      : cleanPhone;
+    const cleanCustomerEmail = isGiftBool
+      ? (customerEmail ? String(customerEmail).trim().toLowerCase().slice(0, 120) : (order.customerEmail || rawEmail))
+      : rawEmail;
+
+    // Detect changed fields for human-readable audit summary
+    const changedFieldLabels = [];
+    if (order.name !== rawName) changedFieldLabels.push('Name');
+    if (order.phone !== cleanPhone) changedFieldLabels.push('Phone');
+    if (order.email !== rawEmail) changedFieldLabels.push('Email');
+    if (order.address !== rawAddress) changedFieldLabels.push('Address');
+    if (rawPincode && order.pincode !== rawPincode) changedFieldLabels.push('PIN Code');
+    if (cleanCity && order.city !== cleanCity) changedFieldLabels.push('City');
+    if (cleanState && order.state !== cleanState) changedFieldLabels.push('State');
+    if (Boolean(order.isGift) !== isGiftBool) changedFieldLabels.push('Gift Order Status');
+    if (isGiftBool) {
+      if (order.recipientName !== cleanRecipientName) changedFieldLabels.push('Recipient Name');
+      if (order.recipientPhone !== cleanRecipientPhone) changedFieldLabels.push('Recipient Phone');
+      if (order.customerName !== cleanCustomerName) changedFieldLabels.push('Buyer Name');
+      if (order.customerPhone !== cleanCustomerPhone) changedFieldLabels.push('Buyer Phone');
+      if (order.customerEmail !== cleanCustomerEmail) changedFieldLabels.push('Buyer Email');
+    }
+
+    // Customization text update if provided
+    const rawCustomDetails = customizationDetails !== undefined ? customizationDetails : customization_details;
+    if (rawCustomDetails !== undefined) {
+      const cleanCustomDetails = typeof rawCustomDetails === 'string' && rawCustomDetails.trim()
+        ? rawCustomDetails.trim().slice(0, 2000)
+        : null;
+
+      const currentDetails = order.customization?.details || null;
+      if (cleanCustomDetails !== currentDetails) {
+        changedFieldLabels.push('Customization Details');
+        const hasRef = Boolean(order.customization?.referenceImage || order.customization?.reference_image);
+        order.customization = {
+          requested: Boolean(cleanCustomDetails || hasRef),
+          details: cleanCustomDetails,
+          referenceImage: order.customization?.referenceImage || order.customization?.reference_image || null,
+          requestedAt: order.customization?.requestedAt || (cleanCustomDetails ? new Date() : null)
+        };
+      }
+    }
+
+    // Apply allowed updates to order document
+    order.name = isGiftBool ? (cleanRecipientName || rawName) : rawName;
+    order.phone = isGiftBool ? (cleanRecipientPhone || cleanPhone) : cleanPhone;
+    order.email = isGiftBool ? (cleanCustomerEmail || rawEmail) : rawEmail;
+    order.address = rawAddress;
+    if (rawPincode) order.pincode = rawPincode;
+    if (cleanCity) order.city = cleanCity;
+    if (cleanState) order.state = cleanState;
+    if (cleanShippingMethod) order.shippingMethod = cleanShippingMethod;
+    order.isGift = isGiftBool;
+
+    if (isGiftBool) {
+      order.recipientName = cleanRecipientName;
+      order.recipientPhone = cleanRecipientPhone;
+      order.customerName = cleanCustomerName;
+      order.customerPhone = cleanCustomerPhone;
+      order.customerEmail = cleanCustomerEmail;
+    } else {
+      order.customerName = rawName;
+      order.customerPhone = cleanPhone;
+      order.customerEmail = rawEmail;
+      order.recipientName = null;
+      order.recipientPhone = null;
+    }
+
+    // Record audit history entry
+    const finalEditNotes = String(adminEditNotes || adminNotes || notes || '').trim();
+    if (changedFieldLabels.length > 0 || finalEditNotes) {
+      if (!Array.isArray(order.editHistory)) {
+        order.editHistory = [];
+      }
+      order.editHistory.push({
+        editedAt: new Date(),
+        editedBy: req.user?.name || req.user?.email || 'Admin',
+        changedFields: changedFieldLabels,
+        notes: finalEditNotes ? finalEditNotes.slice(0, 500) : null
+      });
+    }
+
+    await order.save();
+
+    res.json({
+      ok: true,
+      success: true,
+      message: changedFieldLabels.length > 0
+        ? `Order #${order.orderNo} updated successfully (${changedFieldLabels.join(', ')}).`
+        : `Order #${order.orderNo} updated successfully.`,
+      changedFields: changedFieldLabels,
+      order: order.toJSON()
+    });
+  } catch (err) {
+    console.error('Failed to edit order:', err);
+    res.status(500).json({ error: err.message || 'Failed to update order details.' });
+  }
+});
+router.put(['/orders/:id/edit', '/orders/:id/update-details', '/orders/:id'], async (req, res, next) => {
+  // If request contains order editing fields, route to patch handler above
+  if (req.body?.name || req.body?.phone || req.body?.address || req.body?.pincode || req.body?.email) {
+    req.method = 'PATCH';
+    return router.handle(req, res, next);
+  }
+  next();
 });
 
 // Reusable Admin Order Deletion Handler

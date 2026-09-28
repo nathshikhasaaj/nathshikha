@@ -41,7 +41,8 @@ export default function AdminOrderDetailsModal({
   onEditPaymentClick,
   onEditShipmentClick,
   onStatusChange,
-  onReviewCancellationClick
+  onReviewCancellationClick,
+  onEditOrderClick
 }) {
   const [copiedItemIndex, setCopiedItemIndex] = useState(null);
   const [generatingItemIndex, setGeneratingItemIndex] = useState(null);
@@ -141,32 +142,20 @@ export default function AdminOrderDetailsModal({
       >
         {/* Modal Header */}
         <div className="orderDetailsHeader">
-          <div className="modalHeaderTitle">
+          <div className="modalHeaderMain">
             <div className="modalBadge">
               <Package size={18} />
             </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div className="modalHeaderMeta">
+              <div className="modalHeaderHeading">
                 <h3>Order #{order.order_no}</h3>
                 {(order.is_gift || order.isGift) && (
-                  <span
-                    style={{
-                      background: '#fce7f3',
-                      color: '#9d174d',
-                      fontSize: '11px',
-                      fontWeight: 700,
-                      padding: '2px 8px',
-                      borderRadius: 4,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 4
-                    }}
-                  >
+                  <span className="modalGiftBadge">
                     🎁 Gift Order
                   </span>
                 )}
               </div>
-              <p>
+              <p className="modalHeaderDate">
                 Placed on{' '}
                 {new Date(order.created_at || order.createdAt).toLocaleString(
                   'en-IN',
@@ -179,7 +168,19 @@ export default function AdminOrderDetailsModal({
             </div>
           </div>
 
-          <div className="modalHeaderRight">
+          <div className="modalHeaderActions">
+            {onEditOrderClick && (
+              <button
+                type="button"
+                className="goldBtn compact editOrderHeaderBtn"
+                onClick={() => onEditOrderClick(order)}
+                title="Edit customer contact, shipping address & customization details"
+              >
+                <Edit3 size={14} />
+                <span className="btnLabelFull">Edit Order</span>
+                <span className="btnLabelShort">Edit</span>
+              </button>
+            )}
             <button
               type="button"
               className="goldBtn compact generateBillHeaderBtn"
@@ -187,7 +188,8 @@ export default function AdminOrderDetailsModal({
               title="Generate and send official order bill"
             >
               <FileText size={14} />
-              <span>Generate & Send Bill</span>
+              <span className="btnLabelFull">Generate & Send Bill</span>
+              <span className="btnLabelShort">Bill</span>
             </button>
             <button
               type="button"
@@ -196,7 +198,8 @@ export default function AdminOrderDetailsModal({
               title="Print order receipt"
             >
               <Printer size={15} />
-              <span>Print</span>
+              <span className="btnLabelFull">Print</span>
+              <span className="btnLabelShort">Print</span>
             </button>
             <button
               className="modalCloseBtn"
@@ -466,9 +469,22 @@ export default function AdminOrderDetailsModal({
           <div className="detailsGrid">
             {/* 1. Customer / Recipient Details Box */}
             <div className="detailsSectionCard">
-              <div className="sectionHeader">
-                <User size={16} />
-                <h3>{(order.is_gift || order.isGift) ? 'Delivery Recipient & Buyer Details' : 'Customer Details'}</h3>
+              <div className="sectionHeader" style={{ justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <User size={16} />
+                  <h3>{(order.is_gift || order.isGift) ? 'Delivery Recipient & Buyer Details' : 'Customer Details'}</h3>
+                </div>
+                {onEditOrderClick && (
+                  <button
+                    type="button"
+                    className="outlineBtn compact"
+                    style={{ padding: '3px 8px', fontSize: 10, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                    onClick={() => onEditOrderClick(order)}
+                    title="Edit customer contact & delivery details"
+                  >
+                    <Edit3 size={11} /> Edit
+                  </button>
+                )}
               </div>
               <div className="infoList">
                 {(order.is_gift || order.isGift) ? (
@@ -568,9 +584,22 @@ export default function AdminOrderDetailsModal({
 
             {/* 2. Shipping Information Box */}
             <div className="detailsSectionCard">
-              <div className="sectionHeader">
-                <Truck size={16} />
-                <h3>Shipping Information</h3>
+              <div className="sectionHeader" style={{ justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Truck size={16} />
+                  <h3>Shipping Information</h3>
+                </div>
+                {onEditOrderClick && (
+                  <button
+                    type="button"
+                    className="outlineBtn compact"
+                    style={{ padding: '3px 8px', fontSize: 10, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                    onClick={() => onEditOrderClick(order)}
+                    title="Edit shipping address & PIN code"
+                  >
+                    <Edit3 size={11} /> Edit Address
+                  </button>
+                )}
               </div>
               <div className="infoList">
                 {(order.shipment_group_code || order.shipmentGroupCode) && (
@@ -1184,6 +1213,17 @@ export default function AdminOrderDetailsModal({
           </div>
 
           <div className="modalFooterActions">
+            {onEditOrderClick && (
+              <button
+                type="button"
+                className="outlineBtn compact modalEditOrderBtn"
+                onClick={() => onEditOrderClick(order)}
+                title="Edit customer, delivery address or customization notes"
+              >
+                <Edit3 size={13} />
+                <span>Edit Order</span>
+              </button>
+            )}
             <button
               type="button"
               className="goldBtn compact modalBillBtn"

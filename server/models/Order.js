@@ -308,6 +308,28 @@ const orderSchema = new mongoose.Schema(
         default: null
       }
     },
+    editHistory: [
+      {
+        editedAt: {
+          type: Date,
+          default: Date.now
+        },
+        editedBy: {
+          type: String,
+          default: 'Admin'
+        },
+        changedFields: [
+          {
+            type: String
+          }
+        ],
+        notes: {
+          type: String,
+          default: null,
+          trim: true
+        }
+      }
+    ],
     items: [orderItemSchema]
   },
   {
@@ -347,6 +369,14 @@ const orderSchema = new mongoose.Schema(
         ret.refund_processed_at = ret.refundProcessedAt || null;
         ret.refund_processed_by = ret.refundProcessedBy || null;
         ret.cancellation_admin_notes = ret.cancellationAdminNotes || null;
+        ret.edit_history = Array.isArray(ret.editHistory)
+          ? ret.editHistory.map((h) => ({
+              edited_at: h.editedAt || h.edited_at,
+              edited_by: h.editedBy || h.edited_by,
+              changed_fields: h.changedFields || h.changed_fields || [],
+              notes: h.notes || null
+            }))
+          : [];
         ret.customization = {
           requested: Boolean(ret.customization?.requested),
           details: ret.customization?.details || null,
@@ -367,6 +397,7 @@ const orderSchema = new mongoose.Schema(
         ret.shipped_by = ret.shippedBy;
         ret.guest_token = ret.guestToken;
         ret.created_at = ret.createdAt ? ret.createdAt.toISOString() : new Date().toISOString();
+        ret.updated_at = ret.updatedAt ? ret.updatedAt.toISOString() : undefined;
         delete ret._id;
         delete ret.__v;
         return ret;

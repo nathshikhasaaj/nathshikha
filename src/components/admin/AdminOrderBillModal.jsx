@@ -32,6 +32,7 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
 
   if (!isOpen || !order) return null;
 
+  const orderNo = order.order_no || order.orderNo || order.id || order._id || 'ORDER';
   const createdAt = order.created_at || order.createdAt;
   const { dateStr, timeStr, fullStr: formattedDate } = formatOrderDate(createdAt);
 
@@ -42,27 +43,28 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
   const isVerified =
     order.payment_status === 'verified' ||
     order.paymentStatus === 'verified' ||
-    order.payment_status === 'paid';
+    order.payment_status === 'paid' ||
+    order.paymentStatus === 'paid';
 
   const isShipped =
     order.order_status === 'shipped' ||
     order.orderStatus === 'shipped' ||
     Boolean(order.shipment_partner || order.tracking_id);
 
-  const items = order.items || [];
+  const items = Array.isArray(order.items) ? order.items : [];
 
   const subtotal =
     Number(order.subtotal) ||
-    items.reduce((acc, item) => acc + (Number(item.price) || 0) * (Number(item.qty) || 1), 0);
+    items.reduce((acc, item) => acc + (Number(item.price || item.unitPrice || 0) * (Number(item.qty || item.quantity) || 1)), 0);
 
-  const discount = Number(order.coupon_discount || order.couponDiscount || order.discount || 0);
+  const discount = Number(order.coupon_discount ?? order.couponDiscount ?? order.discount ?? 0);
   const couponCode = order.coupon_code || order.couponCode || null;
 
   const shippingCharge = Number(
     order.shipping_charge !== undefined ? order.shipping_charge : (order.shipping !== undefined ? order.shipping : 0)
   );
 
-  const grandTotal = Number(order.total || subtotal - discount + shippingCharge);
+  const grandTotal = Number(order.total || order.grandTotal || (subtotal - discount + shippingCharge));
 
   const paymentTx =
     order.payment_transaction_id || order.paymentTransactionId || order.upi_utr || order.upiUtr || order.transaction_id || null;
@@ -91,13 +93,16 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
   );
 
   const getProductCode = (item, index) => {
+    if (item.productCode) return String(item.productCode);
+    if (item.sku) return String(item.sku);
+    if (item.product_code) return String(item.product_code);
     if (item.productId) {
       return `PRD-${String(item.productId).slice(-6).toUpperCase()}`;
     }
     if (item.id) {
       return `PRD-${String(item.id).slice(-6).toUpperCase()}`;
     }
-    return `PRD-${String(order.order_no).slice(-4)}-${index + 1}`;
+    return `PRD-${String(orderNo).slice(-4)}-${index + 1}`;
   };
 
   const generateWhatsAppMessage = () => {
@@ -105,8 +110,11 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
       .map((item, i) => {
         const params = getParameterEntries(item.selectedParameters || item.selectedOptions);
         const paramStr = params.length > 0 ? ` [${params.map((p) => `${p.name}: ${p.value}`).join(', ')}]` : '';
-        return `${i + 1}. *${item.name}*${paramStr}\n   Qty: ${item.qty || 1} × ${money(item.price)} = ${money(
-          (Number(item.price) || 0) * (Number(item.qty) || 1)
+        const itemName = item.name || item.product_name || item.title || item.productName || 'Jewellery Item';
+        const itemPrice = Number(item.price || item.unitPrice || 0);
+        const itemQty = Number(item.qty || item.quantity) || 1;
+        return `${i + 1}. *${itemName}*${paramStr}\n   Qty: ${itemQty} × ${money(itemPrice)} = ${money(
+          itemPrice * itemQty
         )}`;
       })
       .join('\n');
@@ -242,10 +250,11 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
     const itemsRows = items
       .map((item, idx) => {
         const params = getParameterEntries(item.selectedParameters || item.selectedOptions);
-        const unitPrice = Number(item.price) || 0;
+        const unitPrice = Number(item.price || item.unitPrice || 0);
         const qty = Number(item.qty || item.quantity) || 1;
         const rowTotal = unitPrice * qty;
         const prdCode = getProductCode(item, idx);
+        const itemName = item.name || item.product_name || item.title || item.productName || 'Jewellery Item';
         const paramsHtml =
           params.length > 0
             ? `<div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:4px;">
@@ -262,7 +271,7 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
           <tr>
             <td style="text-align:center;padding:8px 10px;border-bottom:1px solid #ebdcc5;font-size:11px;">${idx + 1}</td>
             <td style="padding:8px 10px;border-bottom:1px solid #ebdcc5;">
-              <div style="font-weight:700;font-size:12px;color:#1f1410;">${item.name}</div>
+              <div style="font-weight:700;font-size:12px;color:#1f1410;">${itemName}</div>
               ${paramsHtml}
             </td>
             <td style="padding:8px 10px;border-bottom:1px solid #ebdcc5;font-family:monospace;font-size:11px;color:#5c4e47;">${prdCode}</td>
@@ -938,23 +947,24 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
                   {items.length > 0 ? (
                     items.map((item, idx) => {
                       const params = getParameterEntries(item.selectedParameters || item.selectedOptions);
-                      const unitPrice = Number(item.price) || 0;
+                      const unitPrice = Number(item.price || item.unitPrice || 0);
                       const qty = Number(item.qty || item.quantity) || 1;
                       const rowTotal = unitPrice * qty;
                       const prdCode = getProductCode(item, idx);
+                      const itemName = item.name || item.product_name || item.title || item.productName || 'Jewellery Item';
 
                       return (
                         <tr key={idx}>
                           <td style={{ textAlign: 'center' }}>{idx + 1}</td>
                           <td>
                             <div className="invoiceItemTitle">
-                              <b>{item.name}</b>
+                              <b>{itemName}</b>
                             </div>
                             {params.length > 0 && (
                               <div className="invoiceItemParams">
                                 {params.map((p, pIdx) => (
                                   <span key={pIdx} className="paramTag">
-                                    {p.name}: <b>${p.value}</b>
+                                    {p.name}: <b>{p.value}</b>
                                   </span>
                                 ))}
                               </div>

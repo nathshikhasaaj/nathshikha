@@ -610,8 +610,26 @@
   margin-right: 3px;
 }
 
+.emptyRating {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.emptyRatingIcon {
+  color: var(--gold, #b8860b);
+}
+
+.emptyRating .noReviewsYetText {
+  font-weight: 600;
+  color: #4f3a34;
+  font-size: 12.5px;
+}
+
 .emptyRating em {
-  color: #a57e36;
+  color: #8c7b72;
+  font-style: normal;
+  font-size: 12px;
 }
 
 .dynamicRatingSummaryLink {

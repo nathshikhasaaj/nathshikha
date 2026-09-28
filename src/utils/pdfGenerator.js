@@ -1,5 +1,4 @@
 import {
-  money,
   formatOrderStatus,
   formatOrderDate,
   formatWhatsAppPhone
@@ -7,17 +6,122 @@ import {
 import { getParameterEntries } from './parameterHelpers.js';
 
 /**
+ * Transliterates Devanagari text to Latin and strips non-printable ASCII
+ * for PDF Type1 standard font rendering.
+ * @param {string} text
+ * @returns {string}
+ */
+export function sanitizeForPdf(text) {
+  if (!text) return '';
+  let str = String(text).trim();
+
+  // Common Marathi / Hindi jewellery terms and phrase map
+  const phraseMap = [
+    [/अ‍ॅक्रेलिक ग्रूम ब्रोच \(नवरदेवाचा ब्रोच\)/gi, 'Acrylic Groom Brooch (Navardevacha Brooch)'],
+    [/अ‍ॅक्रेलिक ग्रूम ब्रोच/gi, 'Acrylic Groom Brooch'],
+    [/अ‍ॅक्रेलिक ब्राइड ब्रोच/gi, 'Acrylic Bride Brooch'],
+    [/नवरदेवाचा ब्रोच/gi, 'Navardevacha Brooch'],
+    [/नवरीचा ब्रोच/gi, 'Navricha Brooch'],
+    [/पारंपारिक मोत्यांची नथ/gi, 'Paramparik Motyanchi Nath'],
+    [/मोत्यांची नथ/gi, 'Motyanchi Nath'],
+    [/मोत्याची नथ/gi, 'Motyachi Nath'],
+    [/गोफ माळ/gi, 'Goph Maal'],
+    [/कोल्हापुरी साज/gi, 'Kolhapuri Saaj'],
+    [/ठनका नथ/gi, 'Thanka Nath'],
+    [/ब्राह्मणी नथ/gi, 'Brahmani Nath'],
+    [/बाण नथ/gi, 'Baan Nath'],
+    [/नवरीचा भाऊ/gi, 'Navricha Bhau'],
+    [/नवरदेवाचा भाऊ/gi, 'Navardevacha Bhau'],
+    [/नवरीची बहीण/gi, 'Navrichi Bahin'],
+    [/नवरदेवाची बहीण/gi, 'Navardevachi Bahin'],
+    [/नवरीची आई/gi, 'Navrichi Aai'],
+    [/नवरदेवाची आई/gi, 'Navardevachi Aai'],
+    [/नवरीचे वडील/gi, 'Navriche Vadeel'],
+    [/नवरदेवाचे वडील/gi, 'Navardevache Vadeel']
+  ];
+
+  for (const [regex, replacement] of phraseMap) {
+    str = str.replace(regex, replacement);
+  }
+
+  // Devanagari character sets
+  const vowels = {
+    'अ': 'A', 'आ': 'Aa', 'इ': 'I', 'ई': 'Ee', 'उ': 'U', 'ऊ': 'Oo', 'ऋ': 'Ru',
+    'ए': 'E', 'ऐ': 'Ai', 'ओ': 'O', 'औ': 'Au', 'अं': 'Am', 'अः': 'Ah', 'ॲ': 'A', 'ऑ': 'O'
+  };
+  const matras = {
+    'ा': 'a', 'ि': 'i', 'ी': 'ee', 'ु': 'u', 'ू': 'oo', 'ृ': 'ru',
+    'े': 'e', 'ै': 'ai', 'ो': 'o', 'ौ': 'au', 'ं': 'n', 'ँ': 'n', 'ः': 'h',
+    'ॅ': 'e', 'ॉ': 'o', '्': ''
+  };
+  const consonants = {
+    'क': 'k', 'ख': 'kh', 'ग': 'g', 'घ': 'gh', 'ङ': 'ng',
+    'च': 'ch', 'छ': 'chh', 'ज': 'j', 'झ': 'jh', 'ञ': 'ny',
+    'ट': 't', 'ठ': 'th', 'ड': 'd', 'ढ': 'dh', 'ण': 'n',
+    'त': 't', 'थ': 'th', 'द': 'd', 'ध': 'dh', 'न': 'n',
+    'प': 'p', 'फ': 'ph', 'ब': 'b', 'भ': 'bh', 'म': 'm',
+    'य': 'y', 'र': 'r', 'ल': 'l', 'व': 'v', 'श': 'sh', 'ष': 'sh', 'स': 's', 'ह': 'h',
+    'ळ': 'l', 'क्ष': 'ksh', 'ज्ञ': 'dny'
+  };
+
+  let transliterated = '';
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i];
+    if (vowels[ch]) {
+      transliterated += vowels[ch];
+    } else if (consonants[ch]) {
+      const next = str[i + 1];
+      const cSound = consonants[ch];
+      if (next && matras[next] !== undefined) {
+        transliterated += cSound + (matras[next] || '');
+        i++;
+      } else if (next === '्') {
+        transliterated += cSound;
+        i++;
+      } else {
+        const nextChar = str[i + 1];
+        if (!nextChar || ' (),.-:;!?/[]{}'.includes(nextChar)) {
+          transliterated += cSound;
+        } else {
+          transliterated += cSound + 'a';
+        }
+      }
+    } else if (matras[ch]) {
+      transliterated += matras[ch];
+    } else {
+      transliterated += ch;
+    }
+  }
+
+  return transliterated
+    .replace(/\u20B9/g, 'Rs. ')
+    .replace(/[^\x20-\x7E]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
  * Escapes special characters for PostScript / PDF text string literals
  * @param {string} txt
  * @returns {string}
  */
-function escapePdfText(txt) {
+export function escapePdfText(txt) {
   if (!txt) return '';
-  return String(txt)
+  const sanitized = sanitizeForPdf(txt);
+  return sanitized
     .replace(/\\/g, '\\\\')
     .replace(/\(/g, '\\(')
-    .replace(/\)/g, '\\)')
-    .replace(/[\r\n]/g, ' ');
+    .replace(/\)/g, '\\)');
+}
+
+/**
+ * Formats monetary amounts cleanly for PDF streams without unicode symbols
+ * @param {number|string} amount
+ * @returns {string}
+ */
+export function pdfMoney(amount) {
+  const num = Number(amount) || 0;
+  return `Rs. ${num.toLocaleString('en-IN')}`;
 }
 
 /**
@@ -26,6 +130,8 @@ function escapePdfText(txt) {
  * @returns {string} PDF binary string
  */
 export function buildInvoicePdfBinary(order) {
+  if (!order) return '';
+
   const width = 595.28; // Standard A4 Width (points)
   const height = 841.89; // Standard A4 Height (points)
   let stream = '';
@@ -49,6 +155,7 @@ export function buildInvoicePdfBinary(order) {
     stream += 'S\n';
   };
   const drawText = (txt, x, y, font = 'F1', size = 10, r = 43, g = 29, b = 22) => {
+    if (txt === undefined || txt === null) return;
     setColor(r, g, b);
     stream += 'BT\n';
     stream += `/${font} ${size} Tf\n`;
@@ -57,21 +164,23 @@ export function buildInvoicePdfBinary(order) {
     stream += 'ET\n';
   };
 
-  // Order Details Extract
-  const createdAt = order.created_at || order.createdAt;
+  // Order Details Extraction with thorough fallbacks
+  const orderNo = order.order_no || order.orderNo || order.id || order._id || 'ORDER';
+  const createdAt = order.created_at || order.createdAt || new Date();
   const { fullStr: formattedDate } = formatOrderDate(createdAt);
 
   const isVerified =
     order.payment_status === 'verified' ||
     order.paymentStatus === 'verified' ||
-    order.payment_status === 'paid';
+    order.payment_status === 'paid' ||
+    order.paymentStatus === 'paid';
 
-  const items = order.items || [];
+  const items = Array.isArray(order.items) ? order.items : [];
   const subtotal =
     Number(order.subtotal) ||
-    items.reduce((acc, item) => acc + (Number(item.price) || 0) * (Number(item.qty) || 1), 0);
+    items.reduce((acc, item) => acc + (Number(item.price || item.unitPrice || 0) * (Number(item.qty || item.quantity) || 1)), 0);
 
-  const discount = Number(order.coupon_discount || order.couponDiscount || order.discount || 0);
+  const discount = Number(order.coupon_discount ?? order.couponDiscount ?? order.discount ?? 0);
   const couponCode = order.coupon_code || order.couponCode || null;
 
   const shippingCharge = Number(
@@ -82,7 +191,7 @@ export function buildInvoicePdfBinary(order) {
       : 0
   );
 
-  const grandTotal = Number(order.total || subtotal - discount + shippingCharge);
+  const grandTotal = Number(order.total || order.grandTotal || (subtotal - discount + shippingCharge));
 
   const paymentTx =
     order.payment_transaction_id ||
@@ -109,9 +218,12 @@ export function buildInvoicePdfBinary(order) {
   const state = order.state || null;
 
   const getProductCode = (item, index) => {
+    if (item.productCode) return String(item.productCode);
+    if (item.sku) return String(item.sku);
+    if (item.product_code) return String(item.product_code);
     if (item.productId) return `PRD-${String(item.productId).slice(-6).toUpperCase()}`;
     if (item.id) return `PRD-${String(item.id).slice(-6).toUpperCase()}`;
-    return `PRD-${String(order.order_no).slice(-4)}-${index + 1}`;
+    return `PRD-${String(orderNo).slice(-4)}-${index + 1}`;
   };
 
   // 1. Top Decorative Bar
@@ -130,10 +242,10 @@ export function buildInvoicePdfBinary(order) {
   drawRect(width - 180, height - 52, 140, 20, true, false);
   drawText('TAX INVOICE / BILL', width - 168, height - 44, 'F2', 9.5, 255, 255, 255);
 
-  drawText(`Invoice No: INV-${order.order_no}`, width - 180, height - 68, 'F2', 9.5, 43, 29, 22);
-  drawText(`Order ID: #${order.order_no}`, width - 180, height - 80, 'F1', 9, 43, 29, 22);
+  drawText(`Invoice No: INV-${orderNo}`, width - 180, height - 68, 'F2', 9.5, 43, 29, 22);
+  drawText(`Order ID: #${orderNo}`, width - 180, height - 80, 'F1', 9, 43, 29, 22);
   drawText(`Date: ${formattedDate}`, width - 180, height - 92, 'F1', 8.5, 102, 86, 78);
-  drawText(`Status: ${formatOrderStatus(order.order_status)}`, width - 180, height - 104, 'F2', 8.5, 146, 64, 14);
+  drawText(`Status: ${formatOrderStatus(order.order_status || order.orderStatus)}`, width - 180, height - 104, 'F2', 8.5, 146, 64, 14);
 
   // Divider
   setStrokeColor(219, 190, 150);
@@ -201,7 +313,7 @@ export function buildInvoicePdfBinary(order) {
   setStrokeColor(235, 220, 197);
   drawRect(40, stripY, width - 80, 20, true, true);
   drawText(
-    `PAYMENT: ${paymentMethod} (${isVerified ? 'VERIFIED & PAID ✓' : 'VERIFICATION PENDING'})`,
+    `PAYMENT: ${paymentMethod} (${isVerified ? 'VERIFIED & PAID' : 'VERIFICATION PENDING'})`,
     48,
     stripY + 6,
     'F2',
@@ -239,32 +351,44 @@ export function buildInvoicePdfBinary(order) {
   drawText('TOTAL', 500, tableHeaderY + 5, 'F2', 8, 91, 20, 32);
 
   // Items Rows
-  let currentY = tableHeaderY - 24;
-  items.forEach((item, idx) => {
-    const params = getParameterEntries(item.selectedParameters || item.selectedOptions);
-    const paramStr = params.length > 0 ? params.map((p) => `${p.name}: ${p.value}`).join(', ') : '';
-    const unitPrice = Number(item.price) || 0;
-    const qty = Number(item.qty || item.quantity) || 1;
-    const rowTotal = unitPrice * qty;
-    const prdCode = getProductCode(item, idx);
-
+  let currentY = tableHeaderY - 26;
+  if (items.length === 0) {
     setColor(255, 255, 255);
     setStrokeColor(240, 230, 216);
     drawRect(40, currentY, width - 80, 24, true, true);
-    drawText(String(idx + 1), 48, currentY + 8, 'F1', 9, 92, 78, 71);
-    drawText(item.name.substring(0, 38), 75, currentY + 12, 'F2', 9, 31, 20, 16);
-    if (paramStr) {
-      drawText(paramStr.substring(0, 45), 75, currentY + 2, 'F1', 7.5, 120, 90, 60);
-    }
-    drawText(prdCode, 300, currentY + 8, 'F1', 8.5, 92, 78, 71);
-    drawText(money(unitPrice), 370, currentY + 8, 'F1', 9, 43, 29, 22);
-    drawText(String(qty), 455, currentY + 8, 'F1', 9, 43, 29, 22);
-    drawText(money(rowTotal), 500, currentY + 8, 'F2', 9, 31, 20, 16);
-    currentY -= 25;
-  });
+    drawText('No items recorded for this order', 75, currentY + 8, 'F1', 8.5, 92, 78, 71);
+    currentY -= 26;
+  } else {
+    items.forEach((item, idx) => {
+      const params = getParameterEntries(item.selectedParameters || item.selectedOptions);
+      const paramStr = params.length > 0 ? params.map((p) => `${p.name}: ${p.value}`).join(', ') : '';
+      const unitPrice = Number(item.price || item.unitPrice || 0);
+      const qty = Number(item.qty || item.quantity) || 1;
+      const rowTotal = unitPrice * qty;
+      const prdCode = getProductCode(item, idx);
+      const itemName = item.name || item.product_name || item.title || item.productName || 'Jewellery Item';
+
+      const rowHeight = paramStr ? 28 : 22;
+      setColor(idx % 2 === 0 ? 255 : 252, idx % 2 === 0 ? 255 : 250, idx % 2 === 0 ? 255 : 246);
+      setStrokeColor(240, 230, 216);
+      drawRect(40, currentY, width - 80, rowHeight, true, true);
+
+      drawText(String(idx + 1), 48, currentY + (paramStr ? 12 : 7), 'F1', 9, 92, 78, 71);
+      drawText(itemName.substring(0, 42), 75, currentY + (paramStr ? 15 : 7), 'F2', 9, 31, 20, 16);
+      if (paramStr) {
+        drawText(paramStr.substring(0, 50), 75, currentY + 4, 'F1', 7.5, 120, 90, 60);
+      }
+      drawText(prdCode, 300, currentY + (paramStr ? 12 : 7), 'F1', 8.5, 92, 78, 71);
+      drawText(pdfMoney(unitPrice), 370, currentY + (paramStr ? 12 : 7), 'F1', 8.5, 43, 29, 22);
+      drawText(String(qty), 455, currentY + (paramStr ? 12 : 7), 'F1', 9, 43, 29, 22);
+      drawText(pdfMoney(rowTotal), 500, currentY + (paramStr ? 12 : 7), 'F2', 9, 31, 20, 16);
+
+      currentY -= (rowHeight + 2);
+    });
+  }
 
   // Totals Area
-  const totalsY = currentY - 70;
+  const totalsY = Math.max(currentY - 78, 80);
   setColor(253, 250, 243);
   setStrokeColor(235, 220, 197);
   drawRect(40, totalsY, 240, 75, true, true);
@@ -274,7 +398,7 @@ export function buildInvoicePdfBinary(order) {
 
   if (hasPdfCustom) {
     drawText('* CUSTOMIZATION REQUIREMENT', 48, totalsY + 60, 'F2', 8, 91, 20, 32);
-    const customTxt = customObj?.details || (customObj?.referenceImage ? 'Reference design photo attached' : 'Customization requested');
+    const customTxt = customObj?.details || (customObj?.referenceImage || customObj?.reference_image ? 'Reference design photo attached' : 'Customization requested');
     drawText(`"${customTxt.substring(0, 48)}"`, 48, totalsY + 46, 'F1', 7.5, 31, 20, 16);
     if (customTxt.length > 48) {
       drawText(`"${customTxt.substring(48, 96)}"`, 48, totalsY + 34, 'F1', 7.5, 31, 20, 16);
@@ -293,10 +417,10 @@ export function buildInvoicePdfBinary(order) {
   setStrokeColor(235, 220, 197);
   drawRect(300, totalsY, 255, 75, true, true);
   drawText('Subtotal:', 312, totalsY + 58, 'F1', 9, 74, 59, 52);
-  drawText(money(subtotal), 490, totalsY + 58, 'F2', 9, 26, 16, 12);
+  drawText(pdfMoney(subtotal), 485, totalsY + 58, 'F2', 9, 26, 16, 12);
   if (discount > 0) {
     drawText(`Coupon Discount ${couponCode ? `(${couponCode})` : ''}:`, 312, totalsY + 44, 'F1', 8.5, 21, 128, 61);
-    drawText(`-${money(discount)}`, 490, totalsY + 44, 'F2', 8.5, 21, 128, 61);
+    drawText(`-${pdfMoney(discount)}`, 485, totalsY + 44, 'F2', 8.5, 21, 128, 61);
   }
   drawText(
     `Shipping (${order.shipping_method || order.shippingMethod || 'Standard Delivery'}):`,
@@ -308,22 +432,22 @@ export function buildInvoicePdfBinary(order) {
     59,
     52
   );
-  drawText(shippingCharge === 0 ? 'FREE' : money(shippingCharge), 490, totalsY + 30, 'F2', 8.5, 26, 16, 12);
+  drawText(shippingCharge === 0 ? 'FREE' : pdfMoney(shippingCharge), 485, totalsY + 30, 'F2', 8.5, 26, 16, 12);
 
   setStrokeColor(235, 220, 197);
   drawLine(312, totalsY + 22, 542, totalsY + 22, 1);
 
-  drawText('GRAND TOTAL:', 312, totalsY + 8, 'F2', 10.5, 91, 20, 32);
-  drawText(money(grandTotal), 485, totalsY + 8, 'F2', 11.5, 91, 20, 32);
+  drawText('GRAND TOTAL:', 312, totalsY + 8, 'F2', 10, 91, 20, 32);
+  drawText(pdfMoney(grandTotal), 480, totalsY + 8, 'F2', 11, 91, 20, 32);
 
   // Footer Block
-  const footerY = 40;
+  const footerY = 36;
   setStrokeColor(235, 220, 197);
-  drawLine(40, footerY + 28, width - 40, footerY + 28, 1);
+  drawLine(40, footerY + 26, width - 40, footerY + 26, 1);
   drawText(
     'Computer-generated tax invoice issued by Nathshikha Luxury Jewellery (Khopoli, Dist Raigad, PIN 410203).',
     40,
-    footerY + 16,
+    footerY + 15,
     'F1',
     7.5,
     120,
@@ -333,7 +457,7 @@ export function buildInvoicePdfBinary(order) {
   drawText(
     'Support Desk: WhatsApp +91 9699668421 | Email nathshikha.saaj@gmail.com | Store: nathshikha.in',
     40,
-    footerY + 6,
+    footerY + 5,
     'F1',
     7.5,
     120,
@@ -341,8 +465,8 @@ export function buildInvoicePdfBinary(order) {
     100
   );
 
-  drawText('NATHSHIKHA', width - 110, footerY + 16, 'F2', 9.5, 91, 20, 32);
-  drawText('Authorized Signatory', width - 120, footerY + 6, 'F1', 7.5, 125, 110, 100);
+  drawText('NATHSHIKHA', width - 110, footerY + 15, 'F2', 9.5, 91, 20, 32);
+  drawText('Authorized Signatory', width - 120, footerY + 5, 'F1', 7.5, 125, 110, 100);
 
   // Build Standard PDF Object Stream
   const objects = [];
@@ -400,11 +524,11 @@ export function generateInvoicePdfBlob(order) {
  */
 export function generateInvoicePdfFile(order) {
   const blob = generateInvoicePdfBlob(order);
-  const filename = `Nathshikha_Invoice_${order.order_no || 'order'}.pdf`;
+  const orderNo = order.order_no || order.orderNo || 'order';
+  const filename = `Nathshikha_Invoice_${orderNo}.pdf`;
   try {
     return new File([blob], filename, { type: 'application/pdf' });
   } catch (e) {
-    // Fallback for older browsers
     blob.name = filename;
     blob.lastModifiedDate = new Date();
     return blob;
@@ -417,7 +541,8 @@ export function generateInvoicePdfFile(order) {
  */
 export function downloadInvoicePdf(order) {
   const blob = generateInvoicePdfBlob(order);
-  const filename = `Nathshikha_Invoice_${order.order_no || 'order'}.pdf`;
+  const orderNo = order.order_no || order.orderNo || 'order';
+  const filename = `Nathshikha_Invoice_${orderNo}.pdf`;
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

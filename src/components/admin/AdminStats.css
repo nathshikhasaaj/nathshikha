@@ -274,3 +274,11 @@
     padding-top: 6px;
   }
 }
+
+@media (max-width: 360px) {
+  .adminKpiGrid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+

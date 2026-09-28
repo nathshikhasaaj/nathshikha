@@ -138,9 +138,20 @@
 }
 
 .stars {
-  font-size: 10px;
+  font-size: 11px;
   color: #c39a42;
   letter-spacing: 1px;
+  min-height: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.stars .starFilled {
+  color: #c39a42;
+}
+
+.stars .starEmpty {
+  color: #d6cfc7;
 }
 
 .stars em {
@@ -148,6 +159,18 @@
   color: #9b8c80;
   letter-spacing: 0;
   margin-left: 4px;
+  font-size: 10px;
+}
+
+.stars--empty {
+  letter-spacing: 0;
+}
+
+.noReviewsTag {
+  color: #a3958c;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
 }
 
 .card h3 {

@@ -64,14 +64,15 @@
   flex-shrink: 0;
   width: 100%;
   box-sizing: border-box;
-  gap: 12px;
+  gap: 16px;
 }
 
-.modalHeaderTitle {
+.modalHeaderMain {
   display: flex;
   align-items: center;
   gap: 12px;
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .modalBadge {
@@ -86,7 +87,20 @@
   flex-shrink: 0;
 }
 
-.modalHeaderTitle h3 {
+.modalHeaderMeta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.modalHeaderHeading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.modalHeaderHeading h3 {
   font-family: var(--font-serif, 'Cinzel', serif);
   font-size: 18px;
   font-weight: 700;
@@ -95,17 +109,47 @@
   line-height: 1.2;
 }
 
-.modalHeaderTitle p {
+.modalGiftBadge {
+  background: #fce7f3;
+  color: #9d174d;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.modalHeaderDate {
   font-size: 11px;
   color: #7d6e64;
   margin: 3px 0 0;
 }
 
-.modalHeaderRight {
+.modalHeaderActions {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+}
+
+.btnLabelFull {
+  display: inline;
+}
+
+.btnLabelShort {
+  display: none;
+}
+
+.editOrderHeaderBtn {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px !important;
+  font-size: 11.5px !important;
+  font-weight: 700;
+  border-radius: 6px;
 }
 
 .generateBillHeaderBtn {
@@ -159,6 +203,7 @@
   align-items: center;
   justify-content: center;
   transition: all 0.15s ease;
+  order: 99;
 }
 
 .modalCloseBtn:hover {
@@ -1209,37 +1254,119 @@
   }
 
   .orderDetailsHeader {
-    padding: max(12px, env(safe-area-inset-top)) 14px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: max(12px, env(safe-area-inset-top)) 14px 10px;
     gap: 10px;
     flex-shrink: 0;
     background: #fdfaf4;
     border-bottom: 1px solid #ebdcc5;
+    position: relative;
+    box-sizing: border-box;
+    width: 100%;
   }
 
-  .modalHeaderTitle {
-    min-width: 0;
-    flex: 1 1 auto;
+  /* Row 1: Order info on left, Close button pinned on top right */
+  .modalHeaderMain {
+    display: flex;
+    align-items: flex-start;
     gap: 10px;
-    overflow: hidden;
+    width: 100%;
+    padding-right: 38px;
+    box-sizing: border-box;
   }
 
-  .modalHeaderTitle h3 {
-    font-size: 15px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .modalHeaderTitle p {
-    font-size: 10.5px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .modalHeaderRight {
-    gap: 6px;
+  .modalBadge {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
     flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .modalHeaderMeta {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .modalHeaderHeading {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .modalHeaderHeading h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--maroon, #5b1420);
+    margin: 0;
+    line-height: 1.25;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .modalGiftBadge {
+    font-size: 10px;
+    padding: 1px 6px;
+  }
+
+  .modalHeaderDate {
+    font-size: 11px;
+    color: #7d6e64;
+    margin: 2px 0 0;
+    white-space: normal;
+    line-height: 1.35;
+  }
+
+  /* Close button pinned to top right of Row 1 */
+  .modalCloseBtn {
+    position: absolute;
+    top: max(10px, env(safe-area-inset-top));
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 6px;
+    background: #f4ecdf;
+    border: 1px solid #ebdcc5;
+    color: var(--maroon, #5b1420);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+  }
+
+  /* Row 2: Action buttons span full width underneath in clean grid */
+  .modalHeaderActions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+    gap: 6px;
+    width: 100%;
+    padding-top: 2px;
+  }
+
+  .btnLabelFull {
+    display: none !important;
+  }
+
+  .btnLabelShort {
+    display: inline !important;
+  }
+
+  .editOrderHeaderBtn,
+  .generateBillHeaderBtn,
+  .printBtn {
+    width: 100% !important;
+    height: 34px !important;
+    padding: 0 8px !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    justify-content: center !important;
+    border-radius: 6px !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
   }
 
   .orderDetailsBody {
@@ -1248,7 +1375,7 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
-    padding: 12px 14px 24px;
+    padding: 12px 14px max(135px, env(safe-area-inset-bottom) + 115px) !important;
     gap: 12px;
     background: #faf7f2;
     box-sizing: border-box;
@@ -1345,13 +1472,13 @@
     position: sticky;
     bottom: 0;
     z-index: 10;
-    padding: 8px 12px max(8px, env(safe-area-inset-bottom));
+    padding: 10px 12px max(10px, env(safe-area-inset-bottom));
     flex-direction: column;
     align-items: stretch;
-    gap: 6px;
+    gap: 8px;
     background: #fdfaf4;
     border-top: 1px solid #ebdcc5;
-    box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
   }
 
   .statusChangerRow {
@@ -1376,8 +1503,8 @@
   .statusChangerRow .orderStatusSelect {
     flex: 1;
     width: auto;
-    height: 32px;
-    font-size: 11.5px;
+    height: 38px;
+    font-size: 12px;
     font-weight: 600;
     border-radius: 6px;
     padding: 0 8px;
@@ -1385,20 +1512,21 @@
 
   .modalFooterActions {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 6px;
     width: 100%;
   }
 
   .modalBillBtn,
   .modalWaBtn,
+  .modalEditOrderBtn,
   .modalCloseBottomBtn {
     flex: unset;
     width: 100%;
-    height: 35px !important;
-    font-size: 11px !important;
+    height: 38px !important;
+    font-size: 11.5px !important;
     font-weight: 700 !important;
-    padding: 0 4px !important;
+    padding: 0 8px !important;
     border-radius: 6px;
     justify-content: center;
     white-space: nowrap;
@@ -1406,34 +1534,38 @@
 }
 
 /* ==========================================================================
+   TABLET RESPONSIVE (768px - 1023px)
+   ========================================================================== */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .orderDetailsHeader {
+    padding: 12px 16px;
+    gap: 12px;
+  }
+
+  .modalHeaderActions {
+    gap: 6px;
+  }
+
+  .btnLabelFull {
+    display: none !important;
+  }
+
+  .btnLabelShort {
+    display: inline !important;
+  }
+
+  .editOrderHeaderBtn,
+  .generateBillHeaderBtn,
+  .printBtn {
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+  }
+}
+
+/* ==========================================================================
    MOBILE PHONES (< 480px)
    ========================================================================== */
 @media (max-width: 480px) {
-  .modalHeaderTitle h3 {
-    font-size: 14.5px;
-  }
-
-  .modalBadge {
-    width: 32px;
-    height: 32px;
-  }
-
-  .modalHeaderRight {
-    gap: 5px;
-  }
-
-  .printBtn span,
-  .generateBillHeaderBtn span {
-    display: none;
-  }
-
-  .printBtn,
-  .generateBillHeaderBtn {
-    padding: 6px 8px !important;
-    min-width: 32px;
-    justify-content: center;
-  }
-
   .customizationCardHeader {
     gap: 6px;
   }
@@ -1485,16 +1617,50 @@
 }
 
 /* ==========================================================================
-   EXTRA SMALL MOBILE PHONES (< 360px)
+   SMALL MOBILE PHONES (<= 390px)
    ========================================================================== */
-@media (max-width: 360px) {
+@media (max-width: 390px) {
   .orderDetailsHeader {
-    padding-left: 8px;
-    padding-right: 8px;
+    padding: max(10px, env(safe-area-inset-top)) 10px 8px;
+    gap: 8px;
   }
 
-  .modalHeaderTitle h3 {
-    font-size: 13px;
+  .modalHeaderMain {
+    padding-right: 32px;
+    gap: 8px;
+  }
+
+  .modalBadge {
+    width: 30px;
+    height: 30px;
+  }
+
+  .modalHeaderHeading h3 {
+    font-size: 14px;
+  }
+
+  .modalHeaderDate {
+    font-size: 10.5px;
+  }
+
+  .modalCloseBtn {
+    top: max(8px, env(safe-area-inset-top));
+    right: 8px;
+    width: 28px;
+    height: 28px;
+  }
+
+  .modalHeaderActions {
+    gap: 4px;
+  }
+
+  .editOrderHeaderBtn,
+  .generateBillHeaderBtn,
+  .printBtn {
+    height: 32px !important;
+    padding: 0 4px !important;
+    font-size: 10.5px !important;
+    gap: 4px !important;
   }
 
   .modalFooterActions {

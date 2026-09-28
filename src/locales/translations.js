@@ -94,6 +94,9 @@ export const translations = {
     out_of_stock: 'Out of stock',
     remove_out_of_stock_first: 'REMOVE OUT OF STOCK ITEMS',
     reviews_count: 'reviews',
+    no_reviews_yet: 'No reviews yet',
+    no_reviews_yet_desc: 'No customer reviews yet for this design',
+    be_first_to_review: 'Be the first to review',
     authentic_badge: 'Authentic craft',
     pan_india_badge: 'Pan-India delivery',
 
@@ -311,6 +314,9 @@ export const translations = {
     out_of_stock: 'साठा संपला',
     remove_out_of_stock_first: 'साठा संपलेले दागिने बॅगमधून काढा',
     reviews_count: 'रिव्ह्यूज',
+    no_reviews_yet: 'अद्याप रिव्ह्यू नाहीत',
+    no_reviews_yet_desc: 'या दागिन्यासाठी अद्याप कोणतेही रिव्ह्यू नाहीत',
+    be_first_to_review: 'पहिले रिव्ह्यू द्या',
     authentic_badge: 'अस्सल कलाकुसर',
     pan_india_badge: 'संपूर्ण भारतात डिलिव्हरी',
 

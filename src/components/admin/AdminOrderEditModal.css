@@ -1,0 +1,551 @@
+/* ==========================================================================
+   AdminOrderEditModal.css — Nathshikha Luxury Admin Order Edit Styles
+   ========================================================================== */
+
+.adminEditModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 16px;
+  animation: adminEditFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow-y: auto;
+}
+
+@keyframes adminEditFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.adminEditModalContainer {
+  background: #ffffff;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 860px;
+  max-height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  animation: adminEditSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes adminEditSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Modal Header */
+.adminEditModalHeader {
+  padding: 16px 22px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: linear-gradient(180deg, #fafafa 0%, #ffffff 100%);
+  flex-shrink: 0;
+}
+
+.adminEditModalHeaderTitle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.adminEditModalBadge {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.adminEditModalHeaderTitle h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+
+.adminEditModalHeaderTitle p {
+  margin: 2px 0 0;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.adminEditModalCloseBtn {
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.adminEditModalCloseBtn:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+/* Shipped Warning Alert */
+.adminEditShippedWarning {
+  margin: 14px 20px 0;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 9px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: #92400e;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.adminEditShippedWarning strong {
+  display: block;
+  font-weight: 700;
+  color: #78350f;
+  margin-bottom: 2px;
+}
+
+.adminEditShippedWarning p {
+  margin: 0;
+}
+
+.adminEditShippedWarning code {
+  background: #fef3c7;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  color: #b45309;
+}
+
+/* Error Alert */
+.adminEditErrorAlert {
+  margin: 12px 20px 0;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Form Body */
+.adminEditOrderForm {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.adminEditFormGrid {
+  padding: 18px 20px 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.adminEditSectionCard {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 11px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.adminEditSectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #1e293b;
+}
+
+.adminEditSectionHeader h4 {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.adminEditGiftToggleWrap {
+  background: #fdf2f8;
+  border: 1px solid #fbcfe8;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+}
+
+.adminEditCheckboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.adminEditCheckbox {
+  accent-color: #db2777;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.adminEditGiftText {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: #9d174d;
+}
+
+.adminEditGiftSubHeader {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.adminEditFieldsStack {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.adminEditFieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.adminEditFieldGroup label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.adminEditFieldGroup .reqStar {
+  color: #e11d48;
+  font-weight: 700;
+}
+
+.adminEditInputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.adminEditInputWrap svg:first-child {
+  position: absolute;
+  left: 10px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.adminEditInputWrap input {
+  width: 100%;
+  height: 38px;
+  padding: 0 12px 0 34px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 7px;
+  font-size: 0.86rem;
+  color: #0f172a;
+  background: #ffffff;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.adminEditInputWrap input:focus,
+.adminEditStandardInput:focus,
+.adminEditTextarea:focus,
+.adminEditSelect:focus {
+  outline: none;
+  border-color: #d4af37;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.18);
+  background: #ffffff;
+}
+
+.adminEditStandardInput {
+  width: 100%;
+  height: 38px;
+  padding: 0 12px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 7px;
+  font-size: 0.86rem;
+  color: #0f172a;
+  background: #ffffff;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.adminEditTextarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 7px;
+  font-size: 0.86rem;
+  color: #0f172a;
+  background: #ffffff;
+  resize: vertical;
+  min-height: 58px;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  line-height: 1.4;
+}
+
+.adminEditSelect {
+  width: 100%;
+  height: 38px;
+  padding: 0 10px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 7px;
+  font-size: 0.86rem;
+  color: #0f172a;
+  background: #ffffff;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.adminEditRowTwoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.adminEditFieldHint {
+  font-size: 0.73rem;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.pinLookupSpinner {
+  position: absolute;
+  right: 10px;
+  color: #d4af37;
+}
+
+/* Protected Specifications Section */
+.adminEditProtectedBox {
+  margin: 0 20px 16px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+
+.adminEditProtectedHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.adminEditProtectedTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: #334155;
+}
+
+.adminEditLockBadge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: #e2e8f0;
+  color: #475569;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.adminEditProtectedGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 14px;
+  font-size: 0.78rem;
+}
+
+.adminEditProtectedItem {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.protLabel {
+  color: #64748b;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.protVal {
+  color: #1e293b;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.adminEditProtectedNotice {
+  margin: 8px 0 0;
+  font-size: 0.72rem;
+  color: #64748b;
+  line-height: 1.4;
+  border-top: 1px dashed #cbd5e1;
+  padding-top: 6px;
+}
+
+/* Modal Footer */
+.adminEditModalFooter {
+  padding: 14px 22px;
+  border-top: 1px solid #e2e8f0;
+  background: #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.adminEditCancelBtn {
+  padding: 9px 18px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+.adminEditSaveBtn {
+  padding: 9px 24px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.28);
+}
+
+.adminEditSaveBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(212, 175, 55, 0.35);
+}
+
+/* ==========================================================================
+   Responsive Breakpoints
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .adminEditModalContainer {
+    max-height: 94vh;
+    border-radius: 12px;
+  }
+
+  .adminEditFormGrid {
+    grid-template-columns: 1fr;
+    padding: 14px 16px 10px;
+    gap: 14px;
+  }
+
+  .adminEditProtectedGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .adminEditModalHeader {
+    padding: 12px 16px;
+  }
+
+  .adminEditModalFooter {
+    padding: 12px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .adminEditModalOverlay {
+    padding: 8px;
+  }
+
+  .adminEditModalContainer {
+    max-height: 96vh;
+    border-radius: 10px;
+  }
+
+  .adminEditModalHeaderTitle h3 {
+    font-size: 1.05rem;
+  }
+
+  .adminEditModalHeaderTitle p {
+    font-size: 0.75rem;
+  }
+
+  .adminEditFormGrid {
+    padding: 10px 12px 8px;
+    gap: 12px;
+  }
+
+  .adminEditSectionCard {
+    padding: 12px;
+  }
+
+  .adminEditRowTwoCol {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .adminEditProtectedBox {
+    margin: 0 12px 12px;
+    padding: 10px 12px;
+  }
+
+  .adminEditModalFooter {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .adminEditCancelBtn,
+  .adminEditSaveBtn {
+    width: 100%;
+    justify-content: center;
+    padding: 11px;
+  }
+}

@@ -42,9 +42,9 @@ import './ProductDetail.css';
 
 // Helper to render star rating
 function RenderStars({ rating, size = 15 }) {
-  const rounded = Math.round(rating || 5);
+  const rounded = Math.round(Number(rating) || 0);
   return (
-    <span className="starIconsRow" aria-label={`${rating} stars`}>
+    <span className="starIconsRow" aria-label={`${rating || 0} stars`}>
       {[1, 2, 3, 4, 5].map((star) => (
         <Star
           key={star}
@@ -866,8 +866,9 @@ export default function ProductDetail() {
               </a>
             ) : (
               <a href="#customer-reviews" className="dynamicRatingSummary emptyRating dynamicRatingSummaryLink">
-                <RenderStars rating={5} size={15} />
-                <em>Be the first to review</em>
+                <MessageSquare size={14} className="emptyRatingIcon" />
+                <span className="noReviewsYetText">{t('no_reviews_yet', 'No reviews yet')}</span>
+                <em>• {t('be_first_to_review', 'Be the first to review')}</em>
               </a>
             )}
           </div>
@@ -1316,19 +1317,19 @@ export default function ProductDetail() {
         {/* Rating Breakdown & Stats Summary Card */}
         <div className="ratingOverviewCard">
           <div className="overallRatingCol">
-            <span className="bigRatingNumber">{averageRating > 0 ? averageRating : '5.0'}</span>
-            <RenderStars rating={averageRating > 0 ? averageRating : 5} size={20} />
+            <span className="bigRatingNumber">{totalReviews > 0 ? averageRating.toFixed(1) : '—'}</span>
+            <RenderStars rating={totalReviews > 0 ? averageRating : 0} size={20} />
             <span className="totalCountLabel">
               {totalReviews > 0
                 ? `Based on ${totalReviews} verified ${totalReviews === 1 ? 'review' : 'reviews'}`
-                : '100% Recommended by Customers'}
+                : t('no_reviews_yet_desc', 'No customer reviews yet for this design')}
             </span>
           </div>
 
           <div className="distributionCol">
             {[5, 4, 3, 2, 1].map((star) => {
               const count = distribution[star] || 0;
-              const pct = totalReviews > 0 ? Math.round((count / totalReviews) * 100) : star === 5 ? 100 : 0;
+              const pct = totalReviews > 0 ? Math.round((count / totalReviews) * 100) : 0;
               return (
                 <div key={star} className="distRow">
                   <span className="distStarLabel">{star} ★</span>

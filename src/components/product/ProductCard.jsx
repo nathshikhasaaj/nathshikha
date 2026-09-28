@@ -58,6 +58,24 @@ export default function ProductCard({ p }) {
     toggleWishlist(p);
   };
 
+  const reviewCount =
+    typeof p.reviewCount === 'number'
+      ? p.reviewCount
+      : typeof p.totalReviews === 'number'
+      ? p.totalReviews
+      : Array.isArray(p.reviews)
+      ? p.reviews.length
+      : 0;
+
+  const averageRating =
+    typeof p.averageRating === 'number'
+      ? p.averageRating
+      : typeof p.rating === 'number'
+      ? p.rating
+      : 0;
+
+  const roundedRating = Math.round(Number(averageRating) || 0);
+
   return (
     <article className={`card ${isOutOfStock ? 'card--outOfStock' : ''}`}>
       <div className={`pic ${secondaryImg ? 'hasHoverImage' : ''}`}>
@@ -90,9 +108,26 @@ export default function ProductCard({ p }) {
       </div>
 
       <div className="cardBody">
-        <div className="stars">
-          ★★★★★ <em>(42)</em>
-        </div>
+        {reviewCount > 0 ? (
+          <div
+            className="stars"
+            aria-label={`${averageRating} out of 5 stars based on ${reviewCount} ${reviewCount === 1 ? 'review' : 'reviews'}`}
+          >
+            {[1, 2, 3, 4, 5].map((star) => (
+              <span
+                key={star}
+                className={star <= roundedRating ? 'starFilled' : 'starEmpty'}
+              >
+                ★
+              </span>
+            ))}
+            <em>({reviewCount})</em>
+          </div>
+        ) : (
+          <div className="stars stars--empty">
+            <span className="noReviewsTag">{t('no_reviews_yet', 'No reviews yet')}</span>
+          </div>
+        )}
         <Link to={`/product/${p.id}`}>
           <h3>{p.name}</h3>
         </Link>
