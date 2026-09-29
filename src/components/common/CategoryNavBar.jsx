@@ -1,49 +1,76 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
+import { api } from '../../services/api';
 import { useLanguage } from '../../context/LanguageContext';
 import './CategoryNavBar.css';
 
-const CATEGORIES = [
-  { name: 'All Jewellery', slug: 'all', path: '/shop' },
-  { name: 'Nath', slug: 'Nath', path: '/category/Nath' },
-  { name: 'Thushi', slug: 'Thushi', path: '/category/Thushi' },
-  { name: 'Kolhapuri Saaj', slug: 'Kolhapuri Saaj', path: '/category/Kolhapuri Saaj' },
-  { name: 'Tanmani', slug: 'Tanmani', path: '/category/Tanmani' },
-  { name: 'Moti Sets', slug: 'Moti', path: '/category/Moti' },
-  { name: 'Mangalsutra', slug: 'Mangalsutra', path: '/category/Mangalsutra' },
-  { name: 'Bugadi', slug: 'Bugadi', path: '/category/Bugadi' },
-  { name: 'Chinchpeti', slug: 'Chinchpeti', path: '/category/Chinchpeti' },
-  { name: 'Bormal', slug: 'Bormal', path: '/category/Bormal' },
-  { name: 'Haar & Chokers', slug: 'Haar', path: '/category/Haar' },
-  { name: 'Earrings', slug: 'Earrings', path: '/category/Earrings' },
-  { name: 'Bangles & Chuda', slug: 'Bangles', path: '/category/Bangles' },
-  { name: 'Accessories', slug: 'Accessories', path: '/category/Accessories' }
+const DEFAULT_FALLBACK_CATEGORIES = [
+  { name: 'Nath', slug: 'nath' },
+  { name: 'Thushi', slug: 'thushi' },
+  { name: 'Kolhapuri Saaj', slug: 'kolhapuri-saaj' },
+  { name: 'Tanmani', slug: 'tanmani' },
+  { name: 'Pearl', slug: 'pearl' },
+  { name: 'Mangalsutra', slug: 'mangalsutra' },
+  { name: 'Bugadi', slug: 'bugadi' },
+  { name: 'Chinchpeti', slug: 'chinchpeti' },
+  { name: 'Bormal', slug: 'bormal' },
+  { name: 'Earrings', slug: 'earrings' },
+  { name: 'Necklace', slug: 'necklace' },
+  { name: 'Bangles', slug: 'bangles' },
+  { name: 'Accessories', slug: 'accessories' }
 ];
 
 export default function CategoryNavBar({ activeCategory }) {
   const location = useLocation();
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
+  const [categories, setCategories] = useState(DEFAULT_FALLBACK_CATEGORIES);
+
+  useEffect(() => {
+    let isMounted = true;
+    api('/categories')
+      .then((data) => {
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          setCategories(data);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const currentPath = location.pathname;
 
   return (
     <div className="categoryNavWrapper" aria-label="Explore Categories">
       <div className="categoryNavScroll">
-        {CATEGORIES.map((cat) => {
-          let isActive = false;
-          if (cat.slug === 'all') {
-            isActive = currentPath === '/shop' && !activeCategory;
-          } else if (activeCategory) {
-            isActive = activeCategory.toLowerCase() === cat.slug.toLowerCase();
-          } else {
-            isActive = currentPath === cat.path;
-          }
+        {/* 1. All Jewellery Pill */}
+        <Link
+          to="/shop"
+          className={`categoryNavPill ${currentPath === '/shop' && !activeCategory ? 'active' : ''}`}
+        >
+          <span className="pillDot"></span>
+          <span>{t('all_jewellery_nav', 'All Jewellery')}</span>
+        </Link>
+
+        {/* 2. Dynamic Active Categories from Database */}
+        {categories.map((cat) => {
+          const catSlug = cat.slug || cat.name;
+          const catPath = `/category/${catSlug}`;
+          const isSelected =
+            Boolean(activeCategory) &&
+            (activeCategory.toLowerCase() === (cat.slug || '').toLowerCase() ||
+              activeCategory.toLowerCase() === (cat.name || '').toLowerCase() ||
+              decodeURIComponent(activeCategory).toLowerCase() === (cat.name || '').toLowerCase() ||
+              decodeURIComponent(activeCategory).toLowerCase() === (cat.slug || '').toLowerCase());
+
+          const isActive = isSelected || currentPath === catPath;
 
           return (
             <Link
-              key={cat.slug}
-              to={cat.path}
+              key={cat.id || cat.slug || cat.name}
+              to={catPath}
               className={`categoryNavPill ${isActive ? 'active' : ''}`}
             >
               <span className="pillDot"></span>

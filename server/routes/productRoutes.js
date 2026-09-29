@@ -2,6 +2,11 @@ import express from 'express';
 import mongoose from 'mongoose';
 import { Product } from '../models/Product.js';
 import { Review } from '../models/Review.js';
+import { Category } from '../models/Category.js';
+
+function escapeRegex(text) {
+  return String(text || '').replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+}
 
 const router = express.Router();
 
@@ -12,11 +17,18 @@ router.get('/', async (req, res) => {
     const filter = { active: 1 };
 
     if (category) {
-      filter.category = new RegExp(`^${category.trim()}$`, 'i');
+      const trimmedCategory = category.trim();
+      // First check if the passed category matches a Category slug
+      const matchedCategoryDoc = await Category.findOne({
+        slug: trimmedCategory.toLowerCase()
+      });
+
+      const effectiveCategoryName = matchedCategoryDoc ? matchedCategoryDoc.name : trimmedCategory;
+      filter.category = new RegExp(`^${escapeRegex(effectiveCategoryName)}$`, 'i');
     }
 
     if (search) {
-      const searchRegex = new RegExp(search.trim(), 'i');
+      const searchRegex = new RegExp(escapeRegex(search.trim()), 'i');
       filter.$or = [{ name: searchRegex }, { category: searchRegex }];
     }
 

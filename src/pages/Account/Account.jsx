@@ -62,7 +62,7 @@ const INDIAN_STATES = [
 ];
 
 export default function Account() {
-  const { user, setUser, logoutCustomer } = useAuth();
+  const { user, setUser, logoutCustomer, isAdmin } = useAuth();
   const { setToast } = useToast();
 
   // Profile Edit State
@@ -397,6 +397,13 @@ export default function Account() {
               <b>My Bag</b>
               <span>Items ready to checkout</span>
             </Link>
+            {isAdmin && (
+              <Link to="/admin" className="adminQuickTile">
+                <ShieldCheck color="var(--gold, #b8860b)" />
+                <b>Admin Panel</b>
+                <span>Studio Workspace</span>
+              </Link>
+            )}
             <button className="outlineBtn logoutTileBtn" onClick={logoutCustomer} type="button">
               <LogOut />
               <b>Logout</b>

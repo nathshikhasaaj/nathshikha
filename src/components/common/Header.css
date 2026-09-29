@@ -154,6 +154,50 @@
 }
 
 /* --------------------------------------------------------------------------
+   Admin-Only Navigation Badge Link (Desktop)
+   -------------------------------------------------------------------------- */
+.adminPanelNavLink {
+  background: rgba(212, 175, 55, 0.16) !important;
+  border: 1px solid rgba(212, 175, 55, 0.45) !important;
+  border-radius: 20px !important;
+  padding: 5px 12px !important;
+  height: auto !important;
+  align-self: center;
+  color: #fce3a2 !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  white-space: nowrap;
+}
+
+.adminPanelNavLink::after {
+  display: none !important;
+}
+
+.adminPanelNavLink:hover,
+.adminPanelNavLink.currentActive {
+  background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%) !important;
+  color: #ffffff !important;
+  border-color: #fce3a2 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.35);
+}
+
+.adminNavIcon {
+  color: #fce3a2;
+  transition: color 0.2s ease;
+}
+
+.adminPanelNavLink:hover .adminNavIcon,
+.adminPanelNavLink.currentActive .adminNavIcon {
+  color: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
    Submenu Dropdown Popover Card
    -------------------------------------------------------------------------- */
 .navDropdown {
@@ -380,6 +424,19 @@
   box-sizing: border-box;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   border: 1.5px solid var(--maroon, #5b1420);
+}
+
+/* Admin Active Pip on Profile Icon */
+.adminAccountPip {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #d4af37;
+  border: 1.5px solid var(--maroon, #5b1420);
+  box-shadow: 0 0 5px rgba(252, 227, 162, 0.8);
 }
 
 /* Language Toggle Button */
@@ -790,6 +847,58 @@
 
   .drawerNavArrow {
     color: #bfa89b;
+  }
+
+  /* Admin Section in Mobile Drawer */
+  .drawerAdminSection {
+    margin: 10px 14px 4px;
+    background: #fbf7ee;
+    border: 1px solid #ebdcc5;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .drawerAdminHeader {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px 6px;
+    background: #f5ede0;
+    border-bottom: 1px solid #ebdcc5;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--maroon, #5b1420);
+  }
+
+  .drawerAdminLink {
+    background: #ffffff !important;
+    border-bottom: none !important;
+    padding: 12px 14px !important;
+  }
+
+  .drawerAdminLink:hover,
+  .drawerAdminLink.active {
+    background: #fbf5eb !important;
+    color: var(--maroon, #5b1420) !important;
+  }
+
+  .adminDrawerTitle {
+    font-weight: 700;
+    color: var(--maroon, #5b1420);
+    font-size: 13.5px;
+  }
+
+  .drawerAdminBadge {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    padding: 2px 7px;
+    border-radius: 12px;
+    background: var(--maroon, #5b1420);
+    color: #ffffff;
+    border: 1px solid #d4af37;
   }
 
   /* Drawer Footer */

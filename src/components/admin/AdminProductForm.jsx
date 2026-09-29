@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Upload,
   Camera,
@@ -24,7 +24,6 @@ import { api } from '../../services/api';
 import { ALL_CATEGORIES } from '../../utils/parameterHelpers';
 import './AdminProductForm.css';
 
-const CATEGORIES = ALL_CATEGORIES;
 const POPULAR_TAGS = ['NEW', 'BESTSELLER', 'BRIDAL', 'TRENDING', 'FEATURED', 'HANDMADE'];
 
 export default function AdminProductForm({
@@ -41,11 +40,12 @@ export default function AdminProductForm({
   const [manualUrl, setManualUrl] = useState('');
   const [dragOver, setDragOver] = useState(false);
   const [masterParameters, setMasterParameters] = useState([]);
+  const [categoriesList, setCategoriesList] = useState([]);
   const [selectedParamToAdd, setSelectedParamToAdd] = useState('');
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
-  // Load master parameter library
+  // Load master parameter library & categories
   useEffect(() => {
     api('/parameters/admin/all')
       .then((data) => {
@@ -54,7 +54,32 @@ export default function AdminProductForm({
         }
       })
       .catch(() => {});
+
+    api('/categories/admin/all')
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setCategoriesList(data.map((c) => c.name));
+        }
+      })
+      .catch(() => {
+        // Fallback to public categories
+        api('/categories')
+          .then((data) => {
+            if (Array.isArray(data) && data.length > 0) {
+              setCategoriesList(data.map((c) => c.name));
+            }
+          })
+          .catch(() => {});
+      });
   }, []);
+
+  const effectiveCategories = useMemo(() => {
+    const list = categoriesList.length > 0 ? categoriesList : ALL_CATEGORIES;
+    if (form.category && !list.includes(form.category)) {
+      return [form.category, ...list];
+    }
+    return list;
+  }, [categoriesList, form.category]);
 
   const imagesList = Array.isArray(form.images) && form.images.length > 0
     ? form.images.filter(Boolean)
@@ -395,7 +420,7 @@ export default function AdminProductForm({
               <span>Category *</span>
             </label>
             <div className="quickChipsList">
-              {CATEGORIES.map((cat) => (
+              {effectiveCategories.slice(0, 12).map((cat) => (
                 <button
                   key={cat}
                   type="button"
@@ -408,10 +433,10 @@ export default function AdminProductForm({
             </div>
           </div>
           <select
-            value={form.category || 'Traditional'}
+            value={form.category || (effectiveCategories[0] || 'Traditional')}
             onChange={(e) => setForm({ ...form, category: e.target.value })}
           >
-            {CATEGORIES.map((cat) => (
+            {effectiveCategories.map((cat) => (
               <option key={cat} value={cat}>
                 {cat}
               </option>

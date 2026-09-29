@@ -50,6 +50,7 @@ import AdminShowcaseReviewManager from '../../components/admin/AdminShowcaseRevi
 import AdminHallOfFameManager from '../../components/admin/AdminHallOfFameManager';
 import AdminHeroManager from '../../components/admin/AdminHeroManager';
 import AdminParameterManager from '../../components/admin/AdminParameterManager';
+import AdminCategoryManager from '../../components/admin/AdminCategoryManager';
 import AdminCancellationModal from '../../components/admin/AdminCancellationModal';
 import AdminOrderEditModal from '../../components/admin/AdminOrderEditModal';
 import AdminCreateAssistedOrderModal from '../../components/admin/AdminCreateAssistedOrderModal';
@@ -85,6 +86,7 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
   const [showcaseReviews, setShowcaseReviews] = useState([]);
   const [hallOfFameStories, setHallOfFameStories] = useState([]);
   const [heroSlides, setHeroSlides] = useState([]);
+  const [categoriesList, setCategoriesList] = useState([]);
   const [allProducts, setAllProducts] = useState(products);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm);
@@ -253,7 +255,7 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
   const load = async () => {
     setRefreshing(true);
     try {
-      const [o, p, s, c, r, h, sr, hs] = await Promise.all([
+      const [o, p, s, c, r, h, sr, hs, cats] = await Promise.all([
         api('/admin/orders'),
         api('/admin/products'),
         api('/suggestions/admin').catch(() => []),
@@ -261,7 +263,8 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
         api('/admin/reviews').catch(() => ({ reviews: [], summary: {} })),
         api('/hall-of-fame/admin').catch(() => []),
         api('/showcase-reviews/admin').catch(() => []),
-        api('/hero-slides/admin/all').catch(() => [])
+        api('/hero-slides/admin/all').catch(() => []),
+        api('/categories/admin/all').catch(() => [])
       ]);
       setOrders(Array.isArray(o) ? o : []);
       setAllProducts(Array.isArray(p) ? p : []);
@@ -271,6 +274,7 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
       setHallOfFameStories(Array.isArray(h) ? h : []);
       setShowcaseReviews(Array.isArray(sr) ? sr : []);
       setHeroSlides(Array.isArray(hs) ? hs : []);
+      setCategoriesList(Array.isArray(cats) ? cats : []);
     } catch (e) {
       setToast(e.message || 'Failed to load dashboard data');
     } finally {
@@ -836,6 +840,7 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
         setMobileOpen={setMobileSidebarOpen}
         analytics={analytics}
         productsCount={allProducts.length}
+        categoriesCount={categoriesList.length}
         couponsCount={coupons.length}
         reviewsCount={reviewsData.reviews?.length || 0}
         suggestionsCount={suggestions.length}
@@ -1065,7 +1070,19 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
             </div>
           )}
 
-          {/* TAB 5: MASTER PARAMETER LIBRARY */}
+          {/* TAB 5: CATEGORIES MANAGEMENT */}
+          {tab === 'categories' && (
+            <div className="adminCategoriesView">
+              <AdminCategoryManager
+                onCategoriesUpdated={(updatedCats) => {
+                  setCategoriesList(updatedCats);
+                  if (refreshProducts) refreshProducts();
+                }}
+              />
+            </div>
+          )}
+
+          {/* TAB 6: MASTER PARAMETER LIBRARY */}
           {tab === 'parameters' && (
             <div className="adminParametersView">
               <AdminParameterManager />

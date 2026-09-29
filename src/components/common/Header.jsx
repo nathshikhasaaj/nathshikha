@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   Menu,
@@ -17,8 +17,10 @@ import {
   Phone,
   Layers,
   Gem,
-  Crown
+  Crown,
+  ShieldCheck
 } from 'lucide-react';
+import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -28,12 +30,27 @@ export default function Header({ searchOpen, setSearchOpen }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [mobileCollOpen, setMobileCollOpen] = useState(true);
+  const [categories, setCategories] = useState([]);
 
   const dropdownRef = useRef(null);
   const closeTimeoutRef = useRef(null);
   const location = useLocation();
 
-  const { user, logoutCustomer } = useAuth();
+  useEffect(() => {
+    let isMounted = true;
+    api('/categories')
+      .then((data) => {
+        if (isMounted && Array.isArray(data)) {
+          setCategories(data);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, [location.pathname]);
+
+  const { user, logoutCustomer, isAdmin } = useAuth();
   const { cartCount } = useCart();
   const { lang, toggleLang, t } = useLanguage();
 
@@ -91,44 +108,83 @@ export default function Header({ searchOpen, setSearchOpen }) {
     };
   }, [mobileMenuOpen]);
 
-  const collectionSubMenus = [
-    {
+  const collectionSubMenus = useMemo(() => {
+    const defaultAllItem = {
       title: t('nav_all_jewellery', 'All Jewellery'),
       path: '/shop',
       tag: 'ALL',
       icon: Gem
-    },
-    {
-      title: t('nav_signature_collections', 'Signature Collections'),
-      path: '/category/Signature',
-      tag: 'HOT',
-      icon: Crown
-    },
-    {
-      title: t('nav_handmade_collections', 'Handmade Collections'),
-      path: '/category/Pearl',
-      tag: 'PEARL',
-      icon: Sparkles
-    },
-    {
-      title: t('nav_traditional_collections', 'Traditional Collections'),
-      path: '/category/Traditional',
-      tag: 'HERITAGE',
-      icon: Layers
-    },
-    {
-      title: t('nav_bridal_collections', 'Bridal Collections'),
-      path: '/category/Nath',
-      tag: 'BRIDAL',
-      icon: Sparkles
-    },
-    {
-      title: t('nav_accessories_collections', 'Accessories'),
-      path: '/category/Accessories',
-      tag: 'NEW',
-      icon: Gem
+    };
+
+    if (!categories || categories.length === 0) {
+      return [
+        defaultAllItem,
+        {
+          title: t('nav_bridal_collections', 'Nath Collection'),
+          path: '/category/Nath',
+          tag: 'BRIDAL',
+          icon: Sparkles
+        },
+        {
+          title: t('nav_signature_collections', 'Signature Collections'),
+          path: '/category/Signature',
+          tag: 'HOT',
+          icon: Crown
+        },
+        {
+          title: t('nav_handmade_collections', 'Handmade Pearls'),
+          path: '/category/Pearl',
+          tag: 'PEARL',
+          icon: Sparkles
+        },
+        {
+          title: t('nav_traditional_collections', 'Traditional Heirloom'),
+          path: '/category/Traditional',
+          tag: 'HERITAGE',
+          icon: Layers
+        },
+        {
+          title: t('nav_accessories_collections', 'Accessories'),
+          path: '/category/Accessories',
+          tag: 'NEW',
+          icon: Gem
+        }
+      ];
     }
-  ];
+
+    const dynamicItems = categories.map((cat) => {
+      const slug = cat.slug || cat.name;
+      const lower = (cat.name || '').toLowerCase();
+      let icon = Gem;
+      let tag = null;
+
+      if (lower.includes('nath') || lower.includes('bridal')) {
+        icon = Sparkles;
+        tag = 'BRIDAL';
+      } else if (lower.includes('saaj') || lower.includes('signature')) {
+        icon = Crown;
+        tag = 'HOT';
+      } else if (lower.includes('pearl') || lower.includes('moti')) {
+        icon = Sparkles;
+        tag = 'PEARL';
+      } else if (lower.includes('traditional') || lower.includes('thushi') || lower.includes('heirloom')) {
+        icon = Layers;
+        tag = 'HERITAGE';
+      } else if (lower.includes('accessories') || lower.includes('new')) {
+        icon = Gem;
+        tag = 'NEW';
+      }
+
+      return {
+        title: cat.name,
+        path: `/category/${slug}`,
+        tag,
+        icon
+      };
+    });
+
+    return [defaultAllItem, ...dynamicItems];
+  }, [categories, t]);
 
   const isCollectionActive = location.pathname.startsWith('/category') || location.pathname === '/shop';
 
@@ -264,6 +320,19 @@ export default function Header({ searchOpen, setSearchOpen }) {
           >
             <span>{t('nav_track_order', 'Track Order')}</span>
           </Link>
+
+          {/* 7. ADMIN-ONLY: Return to Admin Panel */}
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className={`navLink adminPanelNavLink ${location.pathname.startsWith('/admin') ? 'currentActive' : ''}`}
+              title="Switch back to Studio Admin Workspace"
+              aria-label="Admin Panel"
+            >
+              <ShieldCheck size={14} className="adminNavIcon" />
+              <span>Admin Panel</span>
+            </Link>
+          )}
         </nav>
 
         {/* Right-Side Header Actions */}
@@ -308,9 +377,10 @@ export default function Header({ searchOpen, setSearchOpen }) {
             className="iconBtn accountBtn"
             to={user ? '/account' : '/login'}
             aria-label={t('nav_account', 'Profile')}
-            title={user ? user.name : t('nav_account', 'Profile')}
+            title={isAdmin ? `${user?.name || 'Admin'} (Studio Admin)` : (user ? user.name : t('nav_account', 'Profile'))}
           >
             <User size={19} />
+            {isAdmin && <span className="adminAccountPip" title="Studio Admin Active" />}
           </Link>
         </div>
       </header>
@@ -485,6 +555,27 @@ export default function Header({ searchOpen, setSearchOpen }) {
                 </div>
                 <ChevronRight size={14} className="drawerNavArrow" />
               </Link>
+
+              {/* 8. ADMIN-ONLY: Studio Workspace in Mobile Drawer */}
+              {isAdmin && (
+                <div className="drawerAdminSection">
+                  <div className="drawerAdminHeader">
+                    <Sparkles size={13} color="var(--gold, #d4af37)" />
+                    <span>STUDIO ADMIN</span>
+                  </div>
+                  <Link
+                    className={`drawerNavLink drawerAdminLink ${location.pathname.startsWith('/admin') ? 'active' : ''}`}
+                    onClick={() => setMobileMenuOpen(false)}
+                    to="/admin"
+                  >
+                    <div className="drawerNavLeft">
+                      <ShieldCheck size={16} color="var(--gold, #d4af37)" />
+                      <span className="adminDrawerTitle">Admin Panel</span>
+                    </div>
+                    <span className="drawerAdminBadge">ADMIN</span>
+                  </Link>
+                </div>
+              )}
             </div>
 
             {/* Drawer Footer */}

@@ -101,6 +101,11 @@ export function AuthProvider({ children }) {
     setToast('Admin logged out');
   };
 
+  const isAdmin = Boolean(
+    (adminUser && adminUser.role === 'admin') ||
+    (user && user.role === 'admin')
+  );
+
   return (
     <AuthContext.Provider
       value={{
@@ -108,6 +113,7 @@ export function AuthProvider({ children }) {
         setUser,
         adminUser,
         setAdminUser,
+        isAdmin,
         loginCustomer,
         logoutCustomer,
         loginAdmin,

@@ -5,6 +5,7 @@ import {
   ShoppingBag,
   Truck,
   Box,
+  FolderTree,
   SlidersHorizontal,
   Tag,
   Star,
@@ -29,6 +30,7 @@ export default function AdminSidebar({
   setMobileOpen,
   analytics = {},
   productsCount = 0,
+  categoriesCount = 0,
   couponsCount = 0,
   reviewsCount = 0,
   suggestionsCount = 0,
@@ -88,6 +90,12 @@ export default function AdminSidebar({
           label: 'Products Catalogue',
           icon: Box,
           badge: productsCount > 0 ? <span className="navBadge">{productsCount}</span> : null
+        },
+        {
+          id: 'categories',
+          label: 'Categories',
+          icon: FolderTree,
+          badge: categoriesCount > 0 ? <span className="navBadge goldBadge">{categoriesCount}</span> : null
         },
         {
           id: 'parameters',

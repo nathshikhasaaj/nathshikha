@@ -20,6 +20,7 @@ import showcaseReviewRoutes from './routes/showcaseReviewRoutes.js';
 import heroSlideRoutes from './routes/heroSlideRoutes.js';
 import translateRoutes from './routes/translateRoutes.js';
 import parameterRoutes, { ensureDefaultParameters } from './routes/parameterRoutes.js';
+import categoryRoutes, { ensureDefaultCategories } from './routes/categoryRoutes.js';
 import { Coupon } from './models/Coupon.js';
 import { Review } from './models/Review.js';
 import { Order } from './models/Order.js';
@@ -327,6 +328,9 @@ async function seedDatabase() {
     // Seed Master Parameter Library if empty
     await ensureDefaultParameters();
 
+    // Synchronize Master Categories from Products and Catalogue
+    await ensureDefaultCategories();
+
     const adminEmail = process.env.ADMIN_EMAIL;
     const adminPass = process.env.ADMIN_PASSWORD;
     if (adminEmail && adminPass) {
@@ -352,6 +356,8 @@ app.get('/api/health', (req, res) => res.json({ ok: true, upiId: UPI_ID }));
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/admin/categories', categoryRoutes);
 app.use('/api/parameters', parameterRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/shipping', orderRoutes);

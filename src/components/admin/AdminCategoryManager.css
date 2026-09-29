@@ -1,0 +1,1340 @@
+/* ==========================================================================
+   NATHSHIKHA ADMIN CATEGORY MANAGEMENT STYLES
+   Warm ivory, deep maroon, antique gold & clean warm white surfaces.
+   Scoped strictly to .adminCategoryManager and .catModalOverlay.
+   ========================================================================== */
+
+.adminCategoryManager {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  font-family: var(--admin-font-sans, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+  color: var(--admin-text-main, #1e1917);
+}
+
+/* ==========================================================================
+   1. BRAND PAGE HEADER & KPI METRICS CARD
+   ========================================================================== */
+.adminCategoryManager .catHeaderCard {
+  background: var(--admin-card-bg, #ffffff);
+  border: 1px solid var(--admin-border, #ebdcc5);
+  border-radius: var(--admin-radius-lg, 14px);
+  padding: 24px;
+  box-shadow: 0 2px 10px rgba(79, 61, 56, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  box-sizing: border-box;
+}
+
+.adminCategoryManager .catHeaderTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.adminCategoryManager .catHeaderTitles {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.adminCategoryManager .catSectionPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--admin-gold-subtle, #fbf5e6);
+  color: var(--admin-gold-hover, #9c7108);
+  border: 1px solid #dfcfb2;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  width: fit-content;
+}
+
+.adminCategoryManager .catMainTitle {
+  font-family: var(--admin-font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--admin-maroon, #5b1420);
+  margin: 2px 0 0 0;
+  line-height: 1.2;
+}
+
+.adminCategoryManager .catMainSub {
+  font-size: 13px;
+  color: var(--admin-text-muted, #6b5e58);
+  margin: 0;
+  line-height: 1.45;
+  max-width: 600px;
+}
+
+.adminCategoryManager .catHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Primary Gold Button */
+.adminCategoryManager .goldBtn,
+.catModalOverlay .goldBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+  color: #ffffff;
+  border: 1px solid #a07408;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 9px 18px;
+  border-radius: var(--admin-radius-sm, 6px);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(184, 134, 11, 0.25);
+  transition: all var(--admin-transition-fast, 0.18s ease);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.adminCategoryManager .goldBtn:hover:not(:disabled),
+.catModalOverlay .goldBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #deba42 0%, #9c7108 100%);
+  box-shadow: 0 4px 14px rgba(184, 134, 11, 0.35);
+  transform: translateY(-1px);
+}
+
+.adminCategoryManager .goldBtn:disabled,
+.catModalOverlay .goldBtn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Outline Secondary Button */
+.adminCategoryManager .outlineBtn,
+.catModalOverlay .outlineBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid var(--admin-border, #e8ded1);
+  color: var(--admin-text-main, #1e1917);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: var(--admin-radius-sm, 6px);
+  cursor: pointer;
+  transition: all var(--admin-transition-fast, 0.18s ease);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.adminCategoryManager .outlineBtn:hover:not(:disabled),
+.catModalOverlay .outlineBtn:hover:not(:disabled) {
+  background: #fbf7f1;
+  border-color: var(--admin-gold, #b8860b);
+  color: var(--admin-maroon, #5b1420);
+}
+
+.adminCategoryManager .btnSmall,
+.catModalOverlay .btnSmall {
+  padding: 7px 14px;
+  font-size: 12.5px;
+}
+
+/* Refresh Button */
+.adminCategoryManager .catRefreshBtn {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border: 1px solid var(--admin-border, #e8ded1);
+  color: var(--admin-text-muted, #6b5e58);
+  border-radius: var(--admin-radius-sm, 6px);
+  cursor: pointer;
+  transition: all var(--admin-transition-fast, 0.18s ease);
+}
+
+.adminCategoryManager .catRefreshBtn:hover:not(:disabled) {
+  background: #fbf7f1;
+  border-color: var(--admin-gold, #b8860b);
+  color: var(--admin-maroon, #5b1420);
+}
+
+.adminCategoryManager .catRefreshBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   2. KPI METRICS CARDS GRID
+   ========================================================================== */
+.adminCategoryManager .catKpiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+  width: 100%;
+}
+
+.adminCategoryManager .catKpiCard {
+  background: #fdfaf4;
+  border: 1px solid #ebdcc5;
+  border-radius: var(--admin-radius-md, 10px);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.adminCategoryManager .catKpiCard:hover {
+  border-color: var(--admin-gold, #b8860b);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(91, 20, 32, 0.05);
+}
+
+.adminCategoryManager .catKpiCard .kpiTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.adminCategoryManager .catKpiCard .kpiLabel {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #7a6b65;
+}
+
+.adminCategoryManager .kpiIconBadge {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.adminCategoryManager .kpiIconMaroon {
+  background: var(--admin-maroon-subtle, #faeff1);
+  color: var(--admin-maroon, #5b1420);
+  border: 1px solid #f2d2d7;
+}
+
+.adminCategoryManager .kpiIconGreen {
+  background: var(--admin-green-subtle, #dcfce7);
+  color: var(--admin-green, #15803d);
+  border: 1px solid #bbf7d0;
+}
+
+.adminCategoryManager .kpiIconNeutral {
+  background: #f4eee1;
+  color: #78716c;
+  border: 1px solid #e2d9cf;
+}
+
+.adminCategoryManager .kpiIconGold {
+  background: var(--admin-gold-subtle, #fbf5e6);
+  color: var(--admin-gold-hover, #9c7108);
+  border: 1px solid #dfcfb2;
+}
+
+.adminCategoryManager .catKpiCard .kpiValue {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--admin-text-main, #1e1917);
+  line-height: 1.15;
+  font-feature-settings: 'tnum';
+}
+
+.adminCategoryManager .catKpiCard .kpiValue.textGreen {
+  color: var(--admin-green, #15803d);
+}
+
+.adminCategoryManager .catKpiCard .kpiValue.textMuted {
+  color: #78716c;
+}
+
+.adminCategoryManager .catKpiCard .kpiValue.textGold {
+  color: var(--admin-gold-hover, #9c7108);
+}
+
+.adminCategoryManager .catKpiCard .kpiSub {
+  font-size: 11px;
+  color: #8c7d76;
+}
+
+/* ==========================================================================
+   3. SEARCH & FILTER TOOLBAR
+   ========================================================================== */
+.adminCategoryManager .catControlsBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.adminCategoryManager .catSearchBox {
+  position: relative;
+  flex: 1;
+  min-width: 260px;
+  max-width: 440px;
+}
+
+.adminCategoryManager .catSearchIcon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #a89a90;
+  pointer-events: none;
+}
+
+.adminCategoryManager .catSearchInput {
+  width: 100%;
+  height: 40px;
+  padding: 0 38px 0 40px;
+  border: 1px solid #dfcfb2;
+  border-radius: var(--admin-radius-sm, 6px);
+  background: #ffffff;
+  font-size: 13px;
+  color: var(--admin-text-main, #1e1917);
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.adminCategoryManager .catSearchInput:focus {
+  border-color: var(--admin-maroon, #5b1420);
+  box-shadow: 0 0 0 2px rgba(91, 20, 32, 0.1);
+}
+
+.adminCategoryManager .catSearchInput::placeholder {
+  color: #9c8e87;
+}
+
+.adminCategoryManager .catClearSearchBtn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: #a89a90;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.adminCategoryManager .catClearSearchBtn:hover {
+  color: var(--admin-maroon, #5b1420);
+  background: #f4eee1;
+}
+
+.adminCategoryManager .catFilterPills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.adminCategoryManager .catFilterPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: 1px solid #dfcfb2;
+  background: #fdfaf4;
+  color: #6a5952;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.adminCategoryManager .catFilterPill:hover {
+  background: #f7eedc;
+  color: var(--admin-maroon, #5b1420);
+  border-color: var(--admin-gold, #b8860b);
+}
+
+.adminCategoryManager .catFilterPill.active {
+  background: var(--admin-maroon, #5b1420);
+  color: #ffffff;
+  border-color: var(--admin-maroon, #5b1420);
+  box-shadow: 0 2px 6px rgba(91, 20, 32, 0.2);
+}
+
+.adminCategoryManager .catFilterPill .catPillBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 10px;
+  font-size: 10.5px;
+  font-weight: 700;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.adminCategoryManager .catFilterPill.active .catPillBadge {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   4. CATEGORY TABLE CARD (Desktop & Tablet)
+   ========================================================================== */
+.adminCategoryManager .catTableCard {
+  background: #ffffff;
+  border: 1px solid var(--admin-border, #ebdcc5);
+  border-radius: var(--admin-radius-lg, 12px);
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(79, 61, 56, 0.04);
+  width: 100%;
+}
+
+.adminCategoryManager .catDesktopTableWrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--admin-gold, #b8860b) #fbf7ee;
+}
+
+.adminCategoryManager .catDesktopTableWrap::-webkit-scrollbar {
+  height: 8px;
+}
+
+.adminCategoryManager .catDesktopTableWrap::-webkit-scrollbar-track {
+  background: #fbf7ee;
+  border-radius: 4px;
+}
+
+.adminCategoryManager .catDesktopTableWrap::-webkit-scrollbar-thumb {
+  background: var(--admin-gold, #b8860b);
+  border-radius: 4px;
+  border: 1.5px solid #fbf7ee;
+}
+
+.adminCategoryManager .catTable {
+  width: 100%;
+  min-width: 780px;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+
+.adminCategoryManager .catTable th {
+  background: #f9f4ea;
+  padding: 12px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6a5952;
+  border-bottom: 1px solid #e7ddc8;
+  white-space: nowrap;
+}
+
+.adminCategoryManager .catTable td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f0e6d6;
+  color: var(--admin-text-main, #1e1917);
+  vertical-align: middle;
+}
+
+.adminCategoryManager .catTable tbody tr {
+  transition: background 0.15s ease;
+}
+
+.adminCategoryManager .catTable tbody tr:hover {
+  background: #fffdfa;
+}
+
+.adminCategoryManager .catTable tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.adminCategoryManager .catTable tbody tr.catRowInactive {
+  background: #faf7f2;
+}
+
+.adminCategoryManager .catTable tbody tr.catRowInactive:hover {
+  background: #f6efe4;
+}
+
+/* Order Controls */
+.adminCategoryManager .catOrderBox {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.adminCategoryManager .catOrderNum {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: #fbf5e6;
+  border: 1px solid #dfcfb2;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--admin-gold-hover, #9c7108);
+  font-feature-settings: 'tnum';
+}
+
+.adminCategoryManager .catOrderArrows {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.adminCategoryManager .catArrowBtn {
+  background: transparent;
+  border: none;
+  color: #8c7d76;
+  cursor: pointer;
+  padding: 1px 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  transition: all 0.12s ease;
+}
+
+.adminCategoryManager .catArrowBtn:hover {
+  color: var(--admin-maroon, #5b1420);
+  background: #f0e6d6;
+}
+
+/* Category Name Column */
+.adminCategoryManager .catNameWrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.adminCategoryManager .catDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.adminCategoryManager .catDotActive {
+  background: var(--admin-green, #15803d);
+  box-shadow: 0 0 0 2px rgba(21, 128, 61, 0.2);
+}
+
+.adminCategoryManager .catDotInactive {
+  background: #9c8e87;
+}
+
+.adminCategoryManager .catNameHeading {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--admin-text-main, #1e1917);
+  letter-spacing: -0.1px;
+}
+
+.adminCategoryManager .catRowInactive .catNameHeading {
+  color: #78716c;
+}
+
+/* Slug Pill */
+.adminCategoryManager .catSlugPill {
+  display: inline-block;
+  background: #fdfaf4;
+  border: 1px solid #ebdcc5;
+  color: #6b5e58;
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11.5px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+
+/* Product Count Badge */
+.adminCategoryManager .catCountBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.adminCategoryManager .catCountBadge.hasCount {
+  background: var(--admin-gold-subtle, #fbf5e6);
+  color: var(--admin-gold-hover, #9c7108);
+  border: 1px solid #dfcfb2;
+}
+
+.adminCategoryManager .catCountBadge.zeroCount {
+  background: #f4eee1;
+  color: #8c7d76;
+  border: 1px solid #e2d9cf;
+}
+
+/* Status Button Badge */
+.adminCategoryManager .catStatusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.adminCategoryManager .catStatusBadge .catStatusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.adminCategoryManager .catStatusBadge.statusActive {
+  background: #e2f2df;
+  color: #1e6124;
+  border: 1px solid #b7e3b2;
+}
+
+.adminCategoryManager .catStatusBadge.statusActive:hover {
+  background: #d4edd0;
+  border-color: #9cd994;
+}
+
+.adminCategoryManager .catStatusBadge.statusInactive {
+  background: #f5f0eb;
+  color: #78716c;
+  border: 1px solid #e2d9cf;
+}
+
+.adminCategoryManager .catStatusBadge.statusInactive:hover {
+  background: #eae2d9;
+  border-color: #d1c5b8;
+}
+
+.adminCategoryManager .catDateText {
+  color: #7a6b65;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* Action Buttons in Table */
+.adminCategoryManager .catRowActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.adminCategoryManager .catEditBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #ffffff;
+  border: 1px solid #dfcfb2;
+  color: var(--admin-text-main, #1e1917);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.adminCategoryManager .catEditBtn:hover {
+  background: #fbf7f1;
+  border-color: var(--admin-gold, #b8860b);
+  color: var(--admin-maroon, #5b1420);
+}
+
+.adminCategoryManager .catDeleteBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #fffafa;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.adminCategoryManager .catDeleteBtn:hover {
+  background: #fee2e2;
+  border-color: #ef4444;
+  color: #b91c1c;
+}
+
+.adminCategoryManager .catDeleteBtn.reassignBtnStyle {
+  background: #fffdf5;
+  border-color: #fde68a;
+  color: #b45309;
+}
+
+.adminCategoryManager .catDeleteBtn.reassignBtnStyle:hover {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  color: #92400e;
+}
+
+/* ==========================================================================
+   5. LOADING & EMPTY STATES
+   ========================================================================== */
+.adminCategoryManager .catLoadingWrap,
+.adminCategoryManager .catEmptyWrap {
+  padding: 48px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.adminCategoryManager .catLoadingWrap p {
+  color: var(--admin-text-muted, #6b5e58);
+  font-size: 13.5px;
+  margin: 0;
+}
+
+.adminCategoryManager .catEmptyIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--admin-gold-subtle, #fbf5e6);
+  color: var(--admin-gold, #b8860b);
+  border: 1px solid #ebdcc5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.adminCategoryManager .catEmptyWrap h4 {
+  font-family: var(--admin-font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 18px;
+  color: var(--admin-maroon, #5b1420);
+  margin: 0;
+}
+
+.adminCategoryManager .catEmptyWrap p {
+  font-size: 13px;
+  color: var(--admin-text-muted, #6b5e58);
+  max-width: 420px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.adminCategoryManager .catEmptyAddBtn {
+  margin-top: 6px;
+}
+
+/* ==========================================================================
+   6. RESPONSIVE MOBILE CARDS VIEW (<= 768px)
+   ========================================================================== */
+.adminCategoryManager .catMobileCardsGrid {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+}
+
+.adminCategoryManager .catMobileCard {
+  background: #ffffff;
+  border: 1px solid #ebdcc5;
+  border-radius: var(--admin-radius-md, 10px);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 1px 4px rgba(79, 61, 56, 0.04);
+}
+
+.adminCategoryManager .catMobileCard.cardInactive {
+  background: #faf7f2;
+}
+
+.adminCategoryManager .catCardHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.adminCategoryManager .catCardTitleWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.adminCategoryManager .catCardTitle {
+  font-family: var(--admin-font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--admin-maroon, #5b1420);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.adminCategoryManager .catCardSlugRow {
+  display: flex;
+}
+
+.adminCategoryManager .catCardMetaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  background: #fdfaf4;
+  border-radius: 6px;
+  border: 1px solid #f0e6d6;
+}
+
+.adminCategoryManager .catMetaItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.adminCategoryManager .catMetaLabel {
+  font-size: 11px;
+  color: #7a6b65;
+  font-weight: 600;
+}
+
+.adminCategoryManager .catCardActionsRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.adminCategoryManager .catCardActionsRow button {
+  flex: 1;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .adminCategoryManager .catDesktopTableWrap {
+    display: none;
+  }
+
+  .adminCategoryManager .catMobileCardsGrid {
+    display: flex;
+  }
+
+  .adminCategoryManager .catHeaderCard {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .adminCategoryManager .catControlsBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .adminCategoryManager .catSearchBox {
+    max-width: 100%;
+  }
+
+  .adminCategoryManager .catFilterPills {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .adminCategoryManager .catFilterPill {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+/* ==========================================================================
+   7. MODAL OVERLAY & MODAL DIALOG STYLING
+   ========================================================================== */
+.catModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 20, 16, 0.65);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+  animation: catFadeIn 0.18s ease-out;
+}
+
+@keyframes catFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.catModalOverlay .catModalContainer {
+  background: #ffffff;
+  border: 1px solid #ebdcc6;
+  border-radius: var(--admin-radius-lg, 12px);
+  box-shadow: 0 20px 50px rgba(44, 22, 16, 0.28);
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  animation: catSlideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes catSlideUp {
+  from { transform: translateY(14px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Modal Header */
+.catModalOverlay .catModalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px 22px;
+  border-bottom: 1px solid #f0e6d6;
+  background: #fffdfa;
+}
+
+.catModalOverlay .catModalTitleWrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.catModalOverlay .catModalTitle {
+  font-family: var(--admin-font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--admin-maroon, #5b1420);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.catModalOverlay .catModalSubtitle {
+  font-size: 12px;
+  color: var(--admin-text-muted, #6b5e58);
+  margin: 3px 0 0 0;
+  line-height: 1.35;
+}
+
+.catModalOverlay .catModalCloseBtn {
+  background: transparent;
+  border: 1px solid #dfcfb2;
+  color: #7a6b65;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.catModalOverlay .catModalCloseBtn:hover {
+  background: #fbf7f1;
+  color: var(--admin-maroon, #5b1420);
+  border-color: var(--admin-gold, #b8860b);
+}
+
+/* Modal Form Body */
+.catModalOverlay .catModalForm {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-sizing: border-box;
+}
+
+.catModalOverlay .catFormField {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+}
+
+.catModalOverlay .catFieldLabelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.catModalOverlay .catFieldLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: #4a3b32;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.catModalOverlay .catFieldNote {
+  font-size: 11px;
+  color: #8c7d76;
+}
+
+.catModalOverlay .catInput {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #ded5c5;
+  background: #fffdf9;
+  border-radius: var(--admin-radius-sm, 6px);
+  font-size: 13px;
+  color: var(--admin-text-main, #1e1917);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.catModalOverlay .catInput:focus {
+  border-color: var(--admin-maroon, #5b1420);
+  box-shadow: 0 0 0 3px rgba(91, 20, 32, 0.08);
+  background: #ffffff;
+}
+
+.catModalOverlay .catInputError {
+  border-color: #ef4444 !important;
+  background: #fffafa !important;
+}
+
+.catModalOverlay .catFieldError {
+  font-size: 11.5px;
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.catModalOverlay .catFieldHint {
+  font-size: 11px;
+  color: #8c7d76;
+  line-height: 1.35;
+}
+
+.catModalOverlay .catFieldHint code {
+  color: var(--admin-maroon, #5b1420);
+  background: #fbf5e6;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 10.5px;
+}
+
+/* Slug Input Group with Prefix */
+.catModalOverlay .catSlugInputGroup {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid #ded5c5;
+  border-radius: var(--admin-radius-sm, 6px);
+  background: #fffdf9;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.catModalOverlay .catSlugInputGroup:focus-within {
+  border-color: var(--admin-maroon, #5b1420);
+  box-shadow: 0 0 0 3px rgba(91, 20, 32, 0.08);
+  background: #ffffff;
+}
+
+.catModalOverlay .catSlugPrefix {
+  background: #f7eedc;
+  color: #6a5952;
+  font-family: monospace;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 10px 12px;
+  border-right: 1px solid #e2d2b7;
+  user-select: none;
+}
+
+.catModalOverlay .catSlugInput {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  flex: 1;
+  padding: 10px 12px !important;
+}
+
+/* Form Row Grid (Order & Status) */
+.catModalOverlay .catFormRow {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 14px;
+}
+
+@media (max-width: 480px) {
+  .catModalOverlay .catFormRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.catModalOverlay .catStatusRadios {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.catModalOverlay .catRadioCard {
+  background: #fffdf9;
+  border: 1.5px solid #ded5c5;
+  border-radius: 6px;
+  padding: 8px 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.catModalOverlay .catRadioCard:hover {
+  background: #fdfaf4;
+  border-color: var(--admin-gold, #b8860b);
+}
+
+.catModalOverlay .catRadioCard.isSelected {
+  background: var(--admin-maroon-subtle, #faeff1);
+  border-color: var(--admin-maroon, #5b1420);
+}
+
+.catModalOverlay .catRadioCard input[type='radio'] {
+  accent-color: var(--admin-maroon, #5b1420);
+  margin: 0;
+}
+
+.catModalOverlay .catRadioText {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.catModalOverlay .catRadioText b {
+  font-size: 12px;
+  color: var(--admin-text-main, #1e1917);
+}
+
+.catModalOverlay .catRadioText small {
+  font-size: 10px;
+  color: #7a6b65;
+}
+
+/* Cascading Edit Notice */
+.catModalOverlay .catCascadeNotice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #fbf5e6;
+  border: 1px solid #dfcfb2;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+}
+
+.catModalOverlay .catCascadeNotice b {
+  color: var(--admin-maroon, #5b1420);
+  display: block;
+  margin-bottom: 2px;
+}
+
+.catModalOverlay .catCascadeNotice p {
+  color: #6a5952;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Modal Footer */
+.catModalOverlay .catModalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 22px;
+  border-top: 1px solid #f0e6d6;
+  background: #faf7f2;
+}
+
+/* ==========================================================================
+   8. SAFE DELETE / REASSIGN MODAL SPECIFICS
+   ========================================================================== */
+.catModalOverlay .catDeleteModal {
+  max-width: 480px;
+}
+
+.catModalOverlay .catDeleteHeader {
+  background: #fffafa;
+}
+
+.catModalOverlay .catDeleteModalBody {
+  padding: 22px;
+  box-sizing: border-box;
+}
+
+/* Case A: Reassignment Warning Banner */
+.catModalOverlay .catReassignWorkflow {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.catModalOverlay .catWarningBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-left: 4px solid #f59e0b;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.catModalOverlay .catWarningIcon {
+  color: #d97706;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.catModalOverlay .catWarningBanner h5 {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #b45309;
+  margin: 0 0 4px 0;
+}
+
+.catModalOverlay .catWarningBanner p {
+  font-size: 12px;
+  color: #92400e;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.catModalOverlay .catSelect {
+  cursor: pointer;
+}
+
+.catModalOverlay .catReassignBtnRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+/* Case B: Safe Delete Confirmation */
+.catModalOverlay .catSafeDeleteConfirmation {
+  text-align: center;
+  padding: 10px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.catModalOverlay .catDeleteIconWrap {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.catModalOverlay .catSafeDeleteConfirmation h4 {
+  font-family: var(--admin-font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--admin-maroon, #5b1420);
+  margin: 0;
+}
+
+.catModalOverlay .catSafeDeleteConfirmation p {
+  font-size: 13px;
+  color: var(--admin-text-muted, #6b5e58);
+  max-width: 380px;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.catModalOverlay .catDangerNotice {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #dc2626;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+}
+
+.catModalOverlay .catConfirmDeleteBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #dc2626;
+  color: #ffffff;
+  border: 1px solid #b91c1c;
+  padding: 8px 18px;
+  border-radius: var(--admin-radius-sm, 6px);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.catModalOverlay .catConfirmDeleteBtn:hover:not(:disabled) {
+  background: #b91c1c;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.catModalOverlay .catConfirmDeleteBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

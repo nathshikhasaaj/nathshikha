@@ -11,30 +11,57 @@ import './Category.css';
 export default function Category() {
   const { cat } = useParams();
   const [items, setItems] = useState([]);
+  const [categoryInfo, setCategoryInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const { t } = useLanguage();
 
   useEffect(() => {
+    let isMounted = true;
     setLoading(true);
-    api(`/products?category=${encodeURIComponent(cat)}`)
-      .then((data) => setItems(data))
-      .catch(() => setItems([]))
-      .finally(() => setLoading(false));
+
+    Promise.all([
+      api(`/products?category=${encodeURIComponent(cat)}`).catch(() => []),
+      api('/categories').catch(() => [])
+    ])
+      .then(([prods, allCats]) => {
+        if (!isMounted) return;
+        setItems(Array.isArray(prods) ? prods : []);
+
+        if (Array.isArray(allCats)) {
+          const matched = allCats.find(
+            (c) =>
+              (c.slug && c.slug.toLowerCase() === cat.toLowerCase()) ||
+              (c.name && c.name.toLowerCase() === cat.toLowerCase()) ||
+              (c.slug && c.slug.toLowerCase() === decodeURIComponent(cat).toLowerCase()) ||
+              (c.name && c.name.toLowerCase() === decodeURIComponent(cat).toLowerCase())
+          );
+          setCategoryInfo(matched || null);
+        }
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [cat]);
+
+  const displayCategoryName = categoryInfo ? categoryInfo.name : decodeURIComponent(cat);
 
   return (
     <main className="page">
       <Breadcrumbs
         items={[
           { label: t('nav_all_jewellery', 'All Jewellery'), path: '/shop' },
-          { label: `${cat} Collection` }
+          { label: `${displayCategoryName} Collection` }
         ]}
         backPath="/shop"
         backLabel={t('nav_all_jewellery', 'All Jewellery')}
       />
 
       <SectionTitle
-        title={`${cat} Collection`}
+        title={`${displayCategoryName} Collection`}
         sub={t(
           'all_jewellery_sub',
           'Crafted with tradition, finished with a modern heirloom feel.'

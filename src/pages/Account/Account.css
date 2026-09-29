@@ -52,9 +52,22 @@
   font-size: 15px;
 }
 
-.accountGrid span {
-  font-size: 11.5px;
-  color: #8c7f78;
+.accountGrid a.adminQuickTile {
+  background: #fdfaf4;
+  border-color: #dfcfb2;
+}
+
+.accountGrid a.adminQuickTile:hover {
+  background: #fbf5e6;
+  border-color: var(--gold, #b8860b);
+}
+
+.accountGrid a.adminQuickTile svg {
+  color: var(--gold, #b8860b);
+}
+
+.accountGrid a.adminQuickTile b {
+  color: var(--maroon, #5b1420);
 }
 
 .accountCard {
