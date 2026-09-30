@@ -25,6 +25,7 @@ import {
   sendRefundCompletedEmail,
   sendAdminTestEmail,
   sendAssistedOrderEmail,
+  sendOrderPlacedEmail,
   resendOrderEmail
 } from '../services/emailService.js';
 
@@ -863,71 +864,191 @@ router.post('/orders/:id/resend-assisted', async (req, res) => {
   }
 });
 
-// Create manual order on behalf of customer
+// Create manual order on behalf of customer (with 100% customer-order compatibility)
 router.post('/orders', async (req, res) => {
   const {
+    userId,
     name,
     phone,
     email,
+    customerName,
+    customerPhone,
+    customerEmail,
+    recipientName,
+    recipientPhone,
     address,
     pincode,
-    shippingMethod = 'self_pickup',
+    city,
+    state,
+    shippingMethod = 'Standard Delivery',
     items,
     couponCode,
+    isGift,
+    giftWrap,
+    gift_wrap,
+    giftWrapCharge,
+    gift_wrap_charge,
+    handwrittenNote,
+    handwritten_note,
+    customizationDetails,
+    customization_details,
+    customizationImage,
+    customization_image,
+    customization,
     paymentMethod = 'upi',
     paymentStatus = 'verification_pending',
     orderStatus,
     transactionId,
-    paymentApp
+    paymentApp,
+    adminNotes,
+    notes
   } = req.body;
 
-  if (
-    !name ||
-    !phone ||
-    !address ||
-    !pincode ||
-    !Array.isArray(items) ||
-    !items.length
-  ) {
-    return res
-      .status(400)
-      .json({ error: 'Customer name, phone, address, PIN code, and at least one product item are required.' });
+  const isGiftOrder = Boolean(isGift || req.body.gift?.isGift || req.body.is_gift);
+  const rawName = String(name || '').trim().slice(0, 100);
+  const rawCustomerName = String(customerName || req.body.customer_name || rawName).trim().slice(0, 100);
+  const rawRecipientName = isGiftOrder
+    ? String(recipientName || req.body.recipient_name || rawName).trim().slice(0, 100)
+    : rawName;
+
+  if (!rawName && !rawCustomerName && !rawRecipientName) {
+    return res.status(400).json({ error: 'Customer name is required.' });
+  }
+
+  const effectiveDeliveryName = isGiftOrder ? (rawRecipientName || rawCustomerName || rawName) : (rawCustomerName || rawName);
+  const effectiveCustomerName = rawCustomerName || rawName;
+
+  const rawPhone = String(phone || customerPhone || req.body.customer_phone || '').trim();
+  const cleanPhoneDigits = rawPhone.replace(/\D/g, '');
+  if (!cleanPhoneDigits || cleanPhoneDigits.length < 10) {
+    return res.status(400).json({ error: 'Please enter a valid 10-digit Indian mobile number.' });
+  }
+  const cleanCustomerPhone = cleanPhoneDigits.length === 10 ? cleanPhoneDigits : cleanPhoneDigits.slice(-10);
+
+  const rawRecipientPhone = isGiftOrder && (recipientPhone || req.body.recipient_phone)
+    ? String(recipientPhone || req.body.recipient_phone).replace(/\D/g, '').slice(-10)
+    : cleanCustomerPhone;
+
+  const effectiveDeliveryPhone = isGiftOrder ? rawRecipientPhone : cleanCustomerPhone;
+
+  const rawEmail = String(email || customerEmail || req.body.customer_email || 'customer@nathshikha.com').trim().toLowerCase().slice(0, 120);
+  if (!rawEmail || !isValidEmail(rawEmail)) {
+    return res.status(400).json({ error: 'Please enter a valid email address.' });
+  }
+
+  const rawAddress = String(address || '').trim().slice(0, 500);
+  if (!rawAddress) {
+    return res.status(400).json({ error: 'Complete delivery address is required.' });
+  }
+
+  const rawPincode = String(pincode || '').trim();
+  if (!rawPincode || !isValidPincode(rawPincode)) {
+    return res.status(400).json({ error: 'Please enter a valid 6-digit delivery PIN code.' });
+  }
+
+  if (!Array.isArray(items) || items.length === 0 || items.length > 50) {
+    return res.status(400).json({ error: 'Please add at least one product item to the order.' });
   }
 
   let incrementedCouponId = null;
+  const appliedStockDeductions = [];
 
   try {
+    // 1. Validate Product IDs & Items
     const validProductIds = items
-      .map((i) => i.id || i.productId)
-      .filter((id) => mongoose.Types.ObjectId.isValid(id));
+      .map((i) => (i.productId || i.id || i._id)?.toString())
+      .filter((id) => id && mongoose.Types.ObjectId.isValid(id));
 
-    if (!validProductIds.length) {
-      return res.status(400).json({ error: 'No valid products selected for order.' });
+    if (!validProductIds.length || validProductIds.length !== items.length) {
+      return res.status(400).json({ error: 'One or more items have invalid product IDs.' });
     }
 
-    const products = await Product.find({
-      _id: { $in: validProductIds }
-    });
+    const catalogProducts = await Product.find({ _id: { $in: validProductIds } });
+    const catalogMap = new Map(catalogProducts.map((p) => [p._id.toString(), p]));
 
-    const productMap = new Map(products.map((p) => [p._id.toString(), p]));
+    // Aggregate requested quantity per product ID
+    const productTotalQtyMap = new Map();
+    for (const item of items) {
+      const pId = (item.productId || item.id || item._id)?.toString();
+      const qty = parseInt(item.qty, 10);
+      if (isNaN(qty) || qty < 1 || qty > 100) {
+        return res.status(400).json({ error: 'Item quantity must be between 1 and 100.' });
+      }
+      productTotalQtyMap.set(pId, (productTotalQtyMap.get(pId) || 0) + qty);
+    }
+
+    // Check stock availability
+    for (const [pId, totalRequestedQty] of productTotalQtyMap.entries()) {
+      const p = catalogMap.get(pId);
+      if (!p) {
+        return res.status(400).json({ error: `Product ID "${pId}" not found in catalogue.` });
+      }
+      if (p.stock === 0) {
+        return res.status(400).json({ error: `Sorry, "${p.name}" is currently out of stock.` });
+      }
+      if (p.stock < totalRequestedQty) {
+        const unitText = p.stock === 1 ? '1 unit is' : `${p.stock} units are`;
+        return res.status(400).json({
+          error: `Sorry, only ${unitText} currently available in stock for "${p.name}". (Requested: ${totalRequestedQty})`
+        });
+      }
+    }
 
     let subtotal = 0;
     const normalizedItems = [];
 
     for (const item of items) {
-      const pId = String(item.id || item.productId);
-      const p = productMap.get(pId);
-      if (!p) continue;
-      const qty = Math.max(1, Number(item.qty) || 1);
-      subtotal += p.price * qty;
+      const pId = (item.productId || item.id || item._id)?.toString();
+      const p = catalogMap.get(pId);
+      const qty = parseInt(item.qty, 10);
+      const price = item.price !== undefined && !isNaN(Number(item.price)) && Number(item.price) >= 0
+        ? Number(item.price)
+        : p.price;
+
       const effectiveSelectedParams =
         (item.selectedParameters && typeof item.selectedParameters === 'object' ? item.selectedParameters : null) ||
         (item.selectedOptions && typeof item.selectedOptions === 'object' ? item.selectedOptions : {});
 
+      // Validate required parameters and in-stock option values
+      if (Array.isArray(p.productParameters) && p.productParameters.length > 0) {
+        for (const param of p.productParameters) {
+          const selectedVal = effectiveSelectedParams[param.name];
+          const isTextParam = param.displayType === 'text' || param.displayType === 'textbox';
+
+          if (param.required && (!selectedVal || String(selectedVal).trim() === '')) {
+            return res.status(400).json({
+              error: isTextParam
+                ? `Please enter customized "${param.name}" for "${p.name}".`
+                : `Please select an option for "${param.name}" on "${p.name}".`
+            });
+          }
+
+          if (selectedVal && !isTextParam) {
+            const paramVals = Array.isArray(param.selectedValues) && param.selectedValues.length > 0
+              ? param.selectedValues
+              : (Array.isArray(param.values) ? param.values : []);
+
+            if (paramVals.length > 0) {
+              const matchingVal = paramVals.find(
+                (v) => String(v.value || v.label).trim().toLowerCase() === String(selectedVal).trim().toLowerCase()
+              );
+
+              if (matchingVal && matchingVal.inStock === false) {
+                return res.status(400).json({
+                  error: `Sorry, option "${selectedVal}" for "${p.name}" is currently out of stock.`
+                });
+              }
+            }
+          }
+        }
+      }
+
+      subtotal += price * qty;
+
       normalizedItems.push({
         productId: p._id,
         name: p.name,
-        price: p.price,
+        price,
         qty,
         img: p.img,
         selectedParameters: effectiveSelectedParams,
@@ -936,10 +1057,32 @@ router.post('/orders', async (req, res) => {
     }
 
     if (!normalizedItems.length) {
-      return res.status(400).json({ error: 'No valid products found in catalog.' });
+      return res.status(400).json({ error: 'No valid products in order.' });
     }
 
-    // Optional Coupon Validation & Atomic Increment
+    // 2. Atomically reserve stock
+    for (const [pId, totalQty] of productTotalQtyMap.entries()) {
+      const p = catalogMap.get(pId);
+      const updatedProduct = await Product.findOneAndUpdate(
+        { _id: p._id, stock: { $gte: totalQty } },
+        { $inc: { stock: -totalQty } },
+        { new: true }
+      );
+
+      if (!updatedProduct) {
+        // Rollback already deducted
+        for (const deducted of appliedStockDeductions) {
+          await Product.findByIdAndUpdate(deducted.productId, { $inc: { stock: deducted.qty } }).catch(() => {});
+        }
+        return res.status(400).json({
+          error: `Item "${p.name}" ran out of stock during order creation. Please adjust items.`
+        });
+      }
+
+      appliedStockDeductions.push({ productId: p._id, qty: totalQty });
+    }
+
+    // 3. Coupon Validation & Calculation
     let appliedCoupon = null;
     let couponDiscount = 0;
 
@@ -948,27 +1091,19 @@ router.post('/orders', async (req, res) => {
       const coupon = await Coupon.findOne({ code: normalizedCode });
 
       if (!coupon) {
-        return res.status(400).json({ error: 'Invalid coupon code.' });
+        throw new Error('Invalid coupon code.');
       }
-
       if (!coupon.isActive) {
-        return res.status(400).json({ error: 'This coupon is currently unavailable.' });
+        throw new Error('This coupon is currently inactive.');
       }
-
       if (isCouponExpired(coupon.expiryDate)) {
-        return res.status(400).json({ error: 'This coupon has expired.' });
+        throw new Error('This coupon has expired.');
       }
-
       if (coupon.usageLimit && coupon.usageCount >= coupon.usageLimit) {
-        return res.status(400).json({ error: 'This coupon has reached its usage limit.' });
+        throw new Error('This coupon has reached its usage limit.');
       }
-
       if (coupon.minOrderValue > 0 && subtotal < coupon.minOrderValue) {
-        return res.status(400).json({
-          error: `Minimum order value of ₹${coupon.minOrderValue.toLocaleString(
-            'en-IN'
-          )} is required to use this coupon.`
-        });
+        throw new Error(`Minimum order value of ₹${coupon.minOrderValue.toLocaleString('en-IN')} is required to use coupon "${coupon.code}".`);
       }
 
       couponDiscount = calculateCouponDiscount(coupon, subtotal);
@@ -983,79 +1118,188 @@ router.post('/orders', async (req, res) => {
         { new: true }
       );
 
-      if (!updatedCoupon) {
-        return res.status(400).json({ error: 'This coupon has reached its usage limit.' });
+      if (!updatedCoupon && coupon.usageLimit > 0) {
+        throw new Error('This coupon has reached its usage limit.');
       }
 
       incrementedCouponId = coupon._id;
-      appliedCoupon = updatedCoupon;
+      appliedCoupon = updatedCoupon || coupon;
     }
 
-    // Decrement product stock
-    for (const item of normalizedItems) {
-      await Product.findByIdAndUpdate(item.productId, {
-        $inc: { stock: -item.qty }
-      });
-    }
-
-    // Server-side shipping calculation
+    // 4. Shipping Calculation
     let shippingDetails;
     try {
-      shippingDetails = await calculateShippingCharge(pincode, shippingMethod);
+      shippingDetails = await calculateShippingCharge(rawPincode, shippingMethod);
     } catch (shippingErr) {
-      if (incrementedCouponId) {
-        await Coupon.findByIdAndUpdate(incrementedCouponId, { $inc: { usageCount: -1 } }).catch(() => {});
-      }
-      return res.status(400).json({
-        error: shippingErr.message || 'Invalid PIN code or shipping method.'
-      });
+      throw new Error(shippingErr.message || 'Invalid delivery PIN code or shipping method.');
     }
 
     const shipping = shippingDetails.shippingCharge;
-    const total = Math.max(0, subtotal - couponDiscount) + shipping;
-    const orderNo = 'NW' + Date.now().toString().slice(-8);
-    const guestToken = crypto.randomBytes(18).toString('hex');
 
+    // 5. Gift Options Calculation
+    const isGiftWrapRequested = isGiftOrder && Boolean(
+      giftWrap === true || gift_wrap === true || req.body.gift?.giftWrap === true || req.body.gift?.gift_wrap === true
+    );
+    const computedGiftWrapCharge = isGiftWrapRequested ? 20 : 0;
+    const rawNote = handwrittenNote !== undefined
+      ? handwrittenNote
+      : req.body.handwritten_note !== undefined
+      ? req.body.handwritten_note
+      : (req.body.gift?.handwrittenNote || req.body.gift?.handwritten_note);
+    const cleanHandwrittenNote = isGiftOrder && typeof rawNote === 'string' && rawNote.trim()
+      ? rawNote.trim().slice(0, 1000)
+      : null;
+
+    // 6. Customization Processing
+    const rawCustomDetails =
+      customizationDetails !== undefined
+        ? customizationDetails
+        : customization_details !== undefined
+        ? customization_details
+        : (typeof customization === 'object' && customization !== null ? customization.details : null);
+
+    const rawCustomImage =
+      customizationImage !== undefined
+        ? customizationImage
+        : customization_image !== undefined
+        ? customization_image
+        : (typeof customization === 'object' && customization !== null
+          ? (customization.referenceImage || customization.reference_image)
+          : null);
+
+    const cleanCustomDetails =
+      typeof rawCustomDetails === 'string' && rawCustomDetails.trim()
+        ? rawCustomDetails.trim().slice(0, 2000)
+        : null;
+
+    let cleanCustomImage = null;
+    if (typeof rawCustomImage === 'string' && rawCustomImage.trim()) {
+      const trimmed = rawCustomImage.trim();
+      const match = trimmed.match(/(\/?uploads\/[a-zA-Z0-9_\-\.]+)/);
+      if (match && !trimmed.includes('..')) {
+        cleanCustomImage = match[1].startsWith('/') ? match[1] : `/${match[1]}`;
+      } else if (trimmed.startsWith('data:image/') || trimmed.startsWith('http')) {
+        cleanCustomImage = trimmed;
+      }
+    }
+
+    const hasCustomization = Boolean(
+      cleanCustomDetails ||
+      cleanCustomImage ||
+      (typeof customization === 'object' && customization !== null && Boolean(customization.requested))
+    );
+
+    const customizationObj = hasCustomization
+      ? {
+          requested: true,
+          details: cleanCustomDetails || null,
+          referenceImage: cleanCustomImage || null,
+          requestedAt: new Date()
+        }
+      : {
+          requested: false,
+          details: null,
+          referenceImage: null,
+          requestedAt: null
+        };
+
+    // 7. Grand Total
+    const grandTotal = Math.max(0, subtotal - couponDiscount) + shipping + computedGiftWrapCharge;
+    const orderNo = 'NW' + Date.now().toString().slice(-8);
+    const guestToken = crypto.randomBytes(24).toString('hex');
+
+    // 8. Resolve Linked Customer User Account
+    let linkedUserId = userId && mongoose.Types.ObjectId.isValid(userId) ? userId : null;
+    if (!linkedUserId && rawEmail) {
+      const existingUser = await User.findOne({ email: rawEmail });
+      if (existingUser) {
+        linkedUserId = existingUser._id;
+      }
+    }
+
+    // 9. Payment Status & Order Status
     const isPaymentVerified = paymentStatus === 'verified' || paymentStatus === 'paid';
     const finalOrderStatus = orderStatus || (isPaymentVerified ? 'confirmed' : 'placed');
+    const finalNotes = String(adminNotes || notes || '').trim();
 
     const order = await Order.create({
       orderNo,
-      userId: null,
-      name: String(name).trim(),
-      phone: String(phone).trim(),
-      email: email ? String(email).trim().toLowerCase() : 'customer@nathshikha.com',
-      address: String(address).trim(),
+      userId: linkedUserId,
+      name: effectiveDeliveryName,
+      phone: effectiveDeliveryPhone,
+      email: rawEmail,
+      customerName: effectiveCustomerName,
+      customerPhone: cleanCustomerPhone,
+      customerEmail: rawEmail,
+      recipientName: isGiftOrder ? (rawRecipientName || effectiveDeliveryName) : null,
+      recipientPhone: isGiftOrder ? (rawRecipientPhone || effectiveDeliveryPhone) : null,
+      address: rawAddress,
       pincode: shippingDetails.pincode,
-      city: shippingDetails.city,
-      state: shippingDetails.state,
+      city: city ? String(city).trim() : shippingDetails.city,
+      state: state ? String(state).trim() : shippingDetails.state,
       shippingMethod: shippingDetails.shippingMethodName,
       subtotal,
       couponCode: appliedCoupon ? appliedCoupon.code : null,
       couponDiscount,
       shipping,
-      total,
+      giftWrap: isGiftWrapRequested,
+      giftWrapCharge: computedGiftWrapCharge,
+      isGift: isGiftOrder,
+      handwrittenNote: cleanHandwrittenNote,
+      total: grandTotal,
       paymentMethod,
-      paymentStatus: isPaymentVerified ? 'verified' : 'verification_pending',
+      paymentStatus: isPaymentVerified ? 'verified' : (paymentStatus || 'verification_pending'),
       orderStatus: finalOrderStatus,
+      acceptedTerms: true,
       guestToken,
+      customization: customizationObj,
       items: normalizedItems,
-      paymentTransactionId: isPaymentVerified ? String(transactionId || '').trim() : null,
-      upiUtr: isPaymentVerified ? String(transactionId || '').trim() : null,
+      paymentTransactionId: isPaymentVerified ? String(transactionId || '').trim() || null : null,
+      upiUtr: isPaymentVerified ? String(transactionId || '').trim() || null : null,
       paymentApp: isPaymentVerified ? String(paymentApp || 'Other').trim() : null,
       verifiedAt: isPaymentVerified ? new Date() : null,
-      verifiedBy: isPaymentVerified ? (req.user?.name || req.user?.email || 'Admin') : null
+      verifiedBy: isPaymentVerified ? (req.user?.name || req.user?.email || 'Admin') : null,
+      editHistory: [
+        {
+          editedAt: new Date(),
+          editedBy: req.user?.name || req.user?.email || 'Admin',
+          changedFields: ['Order Created by Admin'],
+          notes: finalNotes || 'Manual order placed by Admin on behalf of customer.'
+        }
+      ]
     });
+
+    // Send Order Notification Email (non-blocking)
+    if (isPaymentVerified) {
+      sendOrderConfirmedEmail(order).catch((mailErr) => {
+        console.error('[Admin] Failed to send order confirmed email:', mailErr.message);
+      });
+    } else {
+      sendOrderPlacedEmail(order).catch((mailErr) => {
+        console.error('[Admin] Failed to send order placed email:', mailErr.message);
+      });
+    }
 
     res.status(201).json({
       ok: true,
-      order
+      success: true,
+      message: `Order #${order.orderNo} created successfully.`,
+      order: order.toJSON()
     });
   } catch (err) {
+    console.error('Failed to create admin order:', err);
+
+    // Rollback coupon count
     if (incrementedCouponId) {
       await Coupon.findByIdAndUpdate(incrementedCouponId, { $inc: { usageCount: -1 } }).catch(() => {});
     }
-    res.status(500).json({ error: err.message || 'Failed to create manual order.' });
+
+    // Rollback stock reservations
+    for (const deducted of appliedStockDeductions) {
+      await Product.findByIdAndUpdate(deducted.productId, { $inc: { stock: deducted.qty } }).catch(() => {});
+    }
+
+    res.status(400).json({ error: err.message || 'Failed to create order.' });
   }
 });
 

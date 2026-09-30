@@ -1,441 +1,2643 @@
-.createOrderModalContainer {
-  max-width: 920px !important;
-  width: 95% !important;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
+/* ============================================================ */
+/* NATHSHIKHA LUXURY ADMIN CREATE ORDER MODAL STYLES            */
+/* ============================================================ */
+
+:root {
+  --admin-maroon-dark: #4a050e;
+  --admin-maroon-primary: #5c0612;
+  --admin-maroon-rich: #6d1b29;
+  --admin-maroon-light: #852233;
+  --admin-maroon-subtle: #fdf5f6;
+  --admin-gold-primary: #b8860b;
+  --admin-gold-rich: #c59b27;
+  --admin-gold-bright: #ffd700;
+  --admin-gold-light: #fef7e6;
+  --admin-ivory-bg: #fcfbf8;
+  --admin-card-bg: #ffffff;
+  --admin-border-subtle: #ebdcc6;
+  --admin-border-medium: #d6c4a8;
+  --admin-text-main: #2b1f1a;
+  --admin-text-muted: #6e5c54;
+  --admin-text-light: #8c7a72;
 }
 
-.createOrderForm {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  overflow-y: auto;
-  padding: 20px 24px;
+/* Universal Box-Sizing & Zero Overflow Safety for Modal Components */
+.adminOrderModalDialog,
+.adminOrderModalDialog *,
+.adminOrderModalDialog *::before,
+.adminOrderModalDialog *::after {
+  box-sizing: border-box;
 }
 
-.createOrderGrid {
-  display: grid;
-  grid-template-columns: 1.1fr 1fr;
-  gap: 24px;
-  align-items: start;
-}
-
-.formColumn {
+/* ------------------------------------------------------------ */
+/* MODAL OVERLAY & ROOT CONTAINER                               */
+/* ------------------------------------------------------------ */
+.adminOrderModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(18, 10, 10, 0.76);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 9999;
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  background: #fdfaf4;
-  border: 1px solid #ebdcc5;
-  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
   padding: 16px;
+  animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
 }
 
-.columnHeader {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--maroon);
-  border-bottom: 1px solid #e7ddc8;
-  padding-bottom: 8px;
-  margin-bottom: 4px;
-}
-
-.columnHeader h4 {
-  font-family: var(--font-serif);
-  font-size: 14px;
-  color: var(--char);
-  margin: 0;
-}
-
-.formRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.formGroup {
+.adminOrderModalDialog {
+  max-width: 1180px;
+  width: 100%;
+  max-height: 94vh;
+  height: 94vh;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-}
-
-.formGroup label {
-  font-size: 11px;
-  font-weight: 700;
-  color: #6a5952;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.reqStar {
-  color: #dc2626;
-}
-
-.modalInput,
-.modalSelect,
-.modalTextarea {
-  padding: 9px 12px;
-  border: 1px solid #dcd1be;
-  border-radius: 6px;
-  font-size: 12px;
-  background: #ffffff;
-  outline: none;
-  transition: all 0.2s ease;
-  font-family: inherit;
-}
-
-.modalInput:focus,
-.modalSelect:focus,
-.modalTextarea:focus {
-  border-color: var(--maroon);
-  box-shadow: 0 0 0 2px rgba(91, 42, 26, 0.08);
-}
-
-.modalTextarea {
-  resize: vertical;
-}
-
-/* PIN Code Lookup */
-.pincodeFieldWrap {
+  background: var(--admin-ivory-bg);
+  border-radius: 14px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 215, 0, 0.15);
+  border: 1px solid var(--admin-border-subtle);
+  overflow: hidden;
   position: relative;
-  display: flex;
-  align-items: center;
+  color: var(--admin-text-main);
+  animation: modalSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.pincodeSpinner {
-  position: absolute;
-  right: 12px;
-  color: var(--gold);
-  animation: spin 1s linear infinite;
-}
-
-.locationVerifiedBadge {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 11px;
-  color: #166534;
-  margin-top: 3px;
-}
-
-.locationVerifiedBadge svg {
-  color: #16a34a;
-  flex-shrink: 0;
-}
-
-.khopoliTag {
-  color: var(--maroon);
-  font-weight: 700;
-}
-
-.fieldErrorText {
-  color: #dc2626;
-  font-size: 10.5px;
-  margin-top: 2px;
-}
-
-.pincodeHelpNote {
-  background: #f9f4ea;
-  border: 1px dashed #dcd0bc;
-  border-radius: 4px;
-  padding: 8px 10px;
-  font-size: 11px;
-  color: #8c7d76;
-}
-
-/* Shipping Radio Cards */
-.shippingRadioGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.shippingRadioCard {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #ffffff;
-  border: 1px solid #e0d5c1;
-  border-radius: 6px;
-  padding: 8px 10px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.shippingRadioCard:hover {
-  border-color: var(--gold);
-}
-
-.shippingRadioCard.active {
-  border-color: var(--maroon);
-  background: #fffdf9;
-  box-shadow: 0 1px 4px rgba(91, 42, 26, 0.08);
-}
-
-.shippingRadioCard input[type='radio'] {
-  accent-color: var(--maroon);
-}
-
-.radioCardContent {
+/* ------------------------------------------------------------ */
+/* TOP HEADER                                                   */
+/* ------------------------------------------------------------ */
+.adminOrderModalHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
+  padding: 14px 22px;
+  background: linear-gradient(135deg, var(--admin-maroon-dark) 0%, var(--admin-maroon-rich) 100%);
+  color: #ffffff;
+  border-bottom: 1px solid var(--admin-maroon-light);
+  flex-shrink: 0;
   width: 100%;
-  font-size: 11.5px;
 }
 
-.radioCardContent b {
-  color: var(--char);
-}
-
-.radioCardContent span {
-  font-weight: 700;
-  color: var(--maroon);
-}
-
-/* Product Picker */
-.productPickerBox {
-  background: #ffffff;
-  border: 1px solid #ebdcc5;
-  border-radius: 6px;
-  padding: 10px;
-}
-
-.pickerInputs {
+.adminModalHeaderLeft {
   display: flex;
-  gap: 8px;
   align-items: center;
-}
-
-.productSelect {
-  flex: 1;
+  gap: 12px;
   min-width: 0;
+  flex: 1;
 }
 
-.qtyInput {
-  width: 60px !important;
-  text-align: center;
-}
-
-.addProductBtn {
-  padding: 8px 12px !important;
-  font-size: 11.5px !important;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-/* Selected Items */
-.selectedItemsList {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.itemsListLabel {
-  font-size: 11px;
-  font-weight: 700;
-  color: #6a5952;
-  text-transform: uppercase;
-}
-
-.itemsScrollList {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-height: 160px;
-  overflow-y: auto;
-}
-
-.selectedItemRow {
+.adminModalIconBadge {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 215, 0, 0.3);
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: #ffffff;
-  border: 1px solid #ebdcc5;
-  border-radius: 6px;
-  padding: 6px 10px;
-}
-
-.itemThumb {
-  width: 34px;
-  height: 34px;
-  border-radius: 4px;
-  object-fit: cover;
-  border: 1px solid #ebdcc5;
+  justify-content: center;
+  color: var(--admin-gold-bright);
   flex-shrink: 0;
 }
 
-.itemInfo {
-  flex: 1;
-  min-width: 0;
+.adminModalTitleGroup {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  flex: 1;
 }
 
-.itemInfo b {
-  font-size: 11.5px;
-  color: var(--char);
+.adminModalMainTitle {
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 17px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: 0.3px;
+  line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.itemInfo small {
-  font-size: 10px;
-  color: #8c7d76;
-}
-
-.itemQtyControl {
-  width: 48px;
-}
-
-.itemQtyInput {
-  width: 100%;
-  padding: 4px;
-  text-align: center;
-  border: 1px solid #dcd1be;
-  border-radius: 4px;
-  font-size: 11px;
-}
-
-.itemLineTotal {
-  font-weight: 700;
+.adminModalSubtitle {
   font-size: 11.5px;
-  color: var(--maroon);
-  min-width: 55px;
-  text-align: right;
+  color: #ebd3a2;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.itemRemoveBtn {
+.adminModalStepPillTrack {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.28);
+  padding: 4px 10px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  flex-shrink: 0;
+}
+
+.stepPillButton {
   background: transparent;
   border: none;
-  color: #9e8e86;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 16px;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  transition: all 0.15s ease;
+  color: #d1c0b8;
+  font-size: 11.5px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
-.itemRemoveBtn:hover {
-  color: #dc2626;
-  background: #fee2e2;
+.stepPillButton .stepNum {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  font-size: 10px;
+  font-weight: 700;
 }
 
-.noItemsNotice {
-  background: #ffffff;
-  border: 1px dashed #dcd0bc;
-  border-radius: 6px;
-  padding: 14px;
-  text-align: center;
-  color: #8c7d76;
-  font-size: 11px;
+.stepPillButton.active {
+  background: rgba(255, 215, 0, 0.18);
+  color: #ffd700;
+  font-weight: 700;
+  border: 1px solid rgba(255, 215, 0, 0.4);
 }
 
-.noItemsNotice p {
-  margin: 0;
+.stepPillButton.active .stepNum {
+  background: #ffd700;
+  color: #4a050e;
 }
 
-/* Verified Box */
-.verifiedFieldsBox {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  border-radius: 6px;
-  padding: 10px 12px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+.stepPillButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.stepArrowIcon {
+  color: rgba(255, 255, 255, 0.35);
+  flex-shrink: 0;
+}
+
+.adminModalCloseButton {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #f7ede1;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.adminModalCloseButton:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  transform: rotate(90deg);
+}
+
+/* ------------------------------------------------------------ */
+/* ERROR NOTIFICATION BANNER                                    */
+/* ------------------------------------------------------------ */
+.adminModalErrorBanner {
+  display: flex;
+  align-items: center;
   gap: 10px;
+  background: #fef2f2;
+  border-left: 4px solid #dc2626;
+  border-bottom: 1px solid #fee2e2;
+  padding: 10px 18px;
+  color: #991b1b;
+  font-size: 12.5px;
+  font-weight: 500;
+  flex-shrink: 0;
+  width: 100%;
 }
 
-/* Financial Summary */
-.adminOrderSummary {
+.errorBannerIcon {
+  color: #dc2626;
+  flex-shrink: 0;
+}
+
+.errorBannerText {
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.errorDismissBtn {
+  background: transparent;
+  border: none;
+  color: #991b1b;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 6px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.errorDismissBtn:hover {
+  opacity: 1;
+}
+
+/* ------------------------------------------------------------ */
+/* SCROLLABLE FORM BODY & TWO COLUMN GRID                       */
+/* ------------------------------------------------------------ */
+.adminModalScrollBody {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+}
+
+.adminOrderTwoColGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: 18px;
+  align-items: start;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.adminOrderGridCol {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* ------------------------------------------------------------ */
+/* CARD SECTIONS                                                */
+/* ------------------------------------------------------------ */
+.adminCardSection {
   background: #ffffff;
-  border: 1.5px solid #ebdcc5;
+  border: 1px solid var(--admin-border-subtle);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.adminCardSection:hover {
+  border-color: var(--admin-border-medium);
+}
+
+.adminCardSectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid #f2e9dc;
+  padding-bottom: 10px;
+  min-width: 0;
+  width: 100%;
+}
+
+.sectionIconCircle {
+  width: 28px;
+  height: 28px;
   border-radius: 6px;
-  padding: 12px 14px;
+  background: var(--admin-maroon-subtle);
+  color: var(--admin-maroon-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.giftIconCircle {
+  background: #fff0f3;
+  color: #be123c;
+}
+
+.customIconCircle {
+  background: #fefce8;
+  color: #a16207;
+}
+
+.sectionHeaderTitles {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.sectionHeaderTitles h3 {
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--admin-maroon-primary);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sectionHeaderTitles p {
+  font-size: 11px;
+  color: var(--admin-text-muted);
+  margin: 1px 0 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ------------------------------------------------------------ */
+/* INPUT FIELDS, LABELS & ROWS                                  */
+/* ------------------------------------------------------------ */
+.adminFormFieldsStack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+
+.adminFieldGroup {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
+  width: 100%;
 }
 
-.adminOrderSummary .summaryRow {
+.adminFieldLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--admin-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reqStar {
+  color: #dc2626;
+  margin-left: 2px;
+}
+
+.adminInput,
+.adminSelect,
+.adminTextarea {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid #d9cdbd;
+  border-radius: 6px;
+  font-size: 12.5px;
+  background: #ffffff;
+  color: var(--admin-text-main);
+  outline: none;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.adminInput:focus,
+.adminSelect:focus,
+.adminTextarea:focus {
+  border-color: var(--admin-maroon-primary);
+  box-shadow: 0 0 0 3px rgba(92, 6, 18, 0.1);
+  background: #ffffff;
+}
+
+.adminInput::placeholder,
+.adminTextarea::placeholder {
+  color: #a89990;
+}
+
+.adminInputTwoColRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+
+.readonlyField {
+  background: #f8f3eb;
+  color: #55443d;
+  cursor: default;
+}
+
+.adminFieldInlineError {
+  color: #dc2626;
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 2px;
+  word-break: break-word;
+}
+
+/* ------------------------------------------------------------ */
+/* CUSTOMER SEARCH & POPUP RESULTS                              */
+/* ------------------------------------------------------------ */
+.customerSearchBlock {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.customerSearchInputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.searchIconPosition {
+  position: absolute;
+  left: 10px;
+  color: #8c7a72;
+  pointer-events: none;
+}
+
+.customSearchField {
+  padding-left: 32px !important;
+  padding-right: 32px !important;
+  border-color: #c9b9a4;
+  background: #fcfaf6;
+}
+
+.customSearchField:focus {
+  background: #ffffff;
+}
+
+.searchSpinPosition {
+  position: absolute;
+  right: 10px;
+  color: var(--admin-gold-primary);
+}
+
+.clearSelectedCustomerBtn {
+  position: absolute;
+  right: 8px;
+  background: #ebd8c8;
+  border: none;
+  color: #5c0612;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.customerDropdownPopover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #d4c3ab;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 100;
+  margin-top: 4px;
+}
+
+.dropdownHeaderTitle {
+  padding: 6px 12px;
+  background: #f8f3eb;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #7a655b;
+  text-transform: uppercase;
+  border-bottom: 1px solid #ebdcc6;
+}
+
+.customerSearchResultRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-bottom: 1px solid #f4ecdf;
+  cursor: pointer;
+  transition: background 0.15s;
+  min-width: 0;
+}
+
+.customerSearchResultRow:hover {
+  background: #fdf6ec;
+}
+
+.customerAvatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--admin-maroon-primary);
+  color: #ffd700;
+  font-weight: 700;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.customerResultInfo {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.customerNameText {
+  font-weight: 600;
+  font-size: 12.5px;
+  color: #2b1f1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.customerContactText {
+  font-size: 11px;
+  color: #78655c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.customerTypeTag {
+  font-size: 10px;
+  font-weight: 600;
+  background: #f5ebe0;
+  color: #6a5246;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+/* Saved Addresses Quick-Pills */
+.savedAddressesChipBox {
+  background: #fcf8f0;
+  border: 1px dashed #decbb6;
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-top: 2px;
+  width: 100%;
+  min-width: 0;
+}
+
+.savedAddressesHeading {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #6b554b;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.savedAddressChipsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+}
+
+.savedAddressPillBtn {
+  background: #ffffff;
+  border: 1px solid #d4c4af;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  color: #493b35;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.savedAddressPillBtn:hover {
+  border-color: var(--admin-maroon-primary);
+  color: var(--admin-maroon-primary);
+  background: #fdf6ec;
+}
+
+/* ------------------------------------------------------------ */
+/* PIN CODE & VERIFIED SHIPPING                                 */
+/* ------------------------------------------------------------ */
+.pinFieldContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.pinInputField {
+  font-family: monospace;
+  font-size: 13.5px;
+  letter-spacing: 1.5px;
+  font-weight: 600;
+}
+
+.pinSpinPosition {
+  position: absolute;
+  right: 10px;
+  color: var(--admin-gold-primary);
+}
+
+.locationVerifiedPill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 11.5px;
+  color: #166534;
+  width: 100%;
+  min-width: 0;
+}
+
+.verifiedCheckIcon {
+  color: #16a34a;
+  flex-shrink: 0;
+}
+
+.studioTag {
+  color: var(--admin-maroon-primary);
+  font-weight: 700;
+  background: #fef3c7;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-left: 6px;
+  white-space: nowrap;
+}
+
+.pinPromptBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8f3eb;
+  border: 1px dashed #d5c3b1;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 11.5px;
+  color: #6e5c54;
+  width: 100%;
+}
+
+.shippingOptionsGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+
+.shippingRadioCard {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #ffffff;
+  border: 1px solid #dcd1be;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-width: 0;
+}
+
+.shippingRadioCard:hover {
+  border-color: var(--admin-maroon-primary);
+  background: #fdfaf5;
+}
+
+.shippingRadioCard.selected {
+  background: #fdf6ec;
+  border-color: var(--admin-gold-primary);
+  box-shadow: 0 0 0 1px var(--admin-gold-primary);
+}
+
+.shippingRadioCircle {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #b8a695;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.shippingRadioCard.selected .shippingRadioCircle {
+  border-color: var(--admin-maroon-primary);
+}
+
+.shippingRadioDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--admin-maroon-primary);
+}
+
+.shippingRadioInfo {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 12px;
+  min-width: 0;
+  gap: 4px;
+}
+
+.shippingRadioTitle {
+  font-weight: 600;
+  color: #3b2820;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shippingRadioPrice {
+  font-weight: 700;
+  color: var(--admin-maroon-primary);
+  flex-shrink: 0;
+}
+
+/* ------------------------------------------------------------ */
+/* ACCORDION / TOGGLE CARDS (GIFT & CUSTOMIZATION)              */
+/* ------------------------------------------------------------ */
+.collapsibleCard {
+  transition: all 0.2s ease;
+}
+
+.activeGiftCard {
+  background: #fdf7f8;
+  border-color: #f7ced7;
+}
+
+.activeCustomCard {
+  background: #fdfbf5;
+  border-color: #ebd7a2;
+}
+
+.cardAccordionHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+  width: 100%;
+}
+
+.accordionHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.accordionBodyContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px dashed #ebdcc6;
+  animation: fadeIn 0.2s ease-out;
+  width: 100%;
+  min-width: 0;
+}
+
+.activeGiftCard .accordionBodyContainer {
+  border-top-color: #f5c2cd;
+}
+
+.activeCustomCard .accordionBodyContainer {
+  border-top-color: #edd9a6;
+}
+
+/* Custom Toggle Switch */
+.adminCustomToggle {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 20px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.adminCustomToggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggleSlider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #d1c5b4;
+  transition: 0.25s;
+  border-radius: 20px;
+}
+
+.toggleSlider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.25s;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+input:checked + .toggleSlider {
+  background-color: var(--admin-maroon-primary);
+}
+
+input:checked + .toggleSlider:before {
+  transform: translateX(18px);
+}
+
+/* Gift Sub-Options */
+.giftSubOptionCard {
+  background: #ffffff;
+  border: 1px solid #ebd8dc;
+  border-radius: 6px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.giftWrapHighlight {
+  background: #fff3f5;
+  border-color: #fbcfe8;
+}
+
+.checkboxLabelRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.checkboxLabelTitle {
   font-size: 12px;
-  color: #6a5952;
+  font-weight: 600;
+  color: #3b2820;
 }
 
-.adminOrderSummary .summaryRow b {
-  color: var(--char);
+.checkboxTitleWithBadge {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
 }
 
-.adminOrderSummary .summaryDivider {
+.giftWrapBadgeText {
+  font-size: 10.5px;
+  color: #9f1239;
+  font-weight: 500;
+}
+
+/* Customization Image Upload */
+.customImageUploadRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.uploadControlFlex {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.adminUploadActionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #ffffff;
+  border: 1px solid #d4c3ab;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--admin-maroon-primary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.adminUploadActionBtn:hover {
+  background: #fdf6ec;
+  border-color: var(--admin-maroon-primary);
+}
+
+.attachedPhotoBadge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #eef8f1;
+  border: 1px solid #bbf0cb;
+  border-radius: 5px;
+  padding: 3px 8px;
+  font-size: 11px;
+  color: #15803d;
+}
+
+.attachedThumbImg {
+  width: 24px;
+  height: 24px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.attachedThumbLabel {
+  font-weight: 600;
+}
+
+.removeAttachedImgBtn {
+  background: transparent;
+  border: none;
+  color: #991b1b;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0 2px;
+}
+
+/* ------------------------------------------------------------ */
+/* PRODUCT SECTION & DYNAMIC CONFIGURATOR                       */
+/* ------------------------------------------------------------ */
+.orderItemsMainSection {
+  border: 1px solid #decbb6;
+  min-width: 0;
+  width: 100%;
+}
+
+.productSectionHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.productHeaderLeftBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.adminAddProductPillBtn {
+  background: linear-gradient(135deg, #c59b27 0%, #b8860b 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 11.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(184, 134, 11, 0.25);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.adminAddProductPillBtn:hover {
+  background: linear-gradient(135deg, #d4a72d 0%, #c9920d 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(184, 134, 11, 0.35);
+}
+
+/* Product Picker Sub-Card */
+.productPickerSubCard {
+  background: #fdfaf4;
+  border: 1px solid #ebd8bd;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.02);
+  animation: fadeIn 0.2s ease-out;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.pickerSubCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #ebdcc6;
+  padding-bottom: 8px;
+  width: 100%;
+}
+
+.pickerHeaderTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pickerHeaderTitleGroup h4 {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--admin-maroon-primary);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.goldTextIcon {
+  color: var(--admin-gold-primary);
+  flex-shrink: 0;
+}
+
+.pickerCloseIconBtn {
+  background: transparent;
+  border: none;
+  color: #7a6a62;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.pickerCloseIconBtn:hover {
+  color: #991b1b;
+  background: #fee2e2;
+}
+
+.pickerCatalogSearchStack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.pickerSearchInputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.pickerSearchIcon {
+  position: absolute;
+  left: 10px;
+  color: #8c7a72;
+  pointer-events: none;
+}
+
+.pickerSearchField {
+  padding-left: 30px !important;
+  padding-right: 28px !important;
+  font-size: 12px;
+  background: #ffffff;
+  width: 100%;
+}
+
+.pickerSearchClearBtn {
+  position: absolute;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: #8c7a72;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.pickerCategoryChipsScroll {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  width: 100%;
+  max-width: 100%;
+  scrollbar-width: thin;
+  scrollbar-color: #d6c4a8 transparent;
+}
+
+.pickerCategoryChipsScroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.pickerCategoryChipsScroll::-webkit-scrollbar-thumb {
+  background: #d6c4a8;
+  border-radius: 4px;
+}
+
+.categoryFilterChip {
+  background: #ffffff;
+  border: 1px solid #d8cab7;
+  border-radius: 14px;
+  padding: 3px 10px;
+  font-size: 11px;
+  color: #55443d;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.categoryFilterChip.active {
+  background: var(--admin-maroon-primary);
+  color: #ffffff;
+  border-color: var(--admin-maroon-primary);
+  font-weight: 600;
+}
+
+/* Visual Product Selection Cards List */
+.pickerProductCardsScrollList {
+  max-height: 240px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding-right: 2px;
+  scrollbar-width: thin;
+}
+
+.pickerCatalogItemCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: #ffffff;
+  border: 1px solid #ebdcc6;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: 100%;
+  min-width: 0;
+}
+
+.pickerCatalogItemCard:hover:not(.isOutOfStockCard) {
+  border-color: var(--admin-maroon-primary);
+  background: #fdf6ec;
+  transform: translateX(2px);
+}
+
+.pickerCatalogItemCard.isOutOfStockCard {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: #fcf6f6;
+}
+
+.catalogItemThumb {
+  width: 42px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: 5px;
+  flex-shrink: 0;
+  border: 1px solid #e0d1bc;
+  background: #ffffff;
+}
+
+.catalogItemMeta {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.catalogItemTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: #2b1f1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.catalogItemPriceRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+  flex-wrap: wrap;
+}
+
+.catalogItemPrice {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--admin-maroon-primary);
+}
+
+.catalogItemCategoryTag {
+  font-size: 9.5px;
+  background: #f4ecdf;
+  color: #6b554b;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.catalogItemStockCol {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.stockIndicatorTag {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.stockIndicatorTag.inStock {
+  background: #e6f4ea;
+  color: #137333;
+}
+
+.stockIndicatorTag.lowStock {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.stockIndicatorTag.outOfStock {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.selectProductActionBtn {
+  background: var(--admin-maroon-primary);
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 10.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.selectProductActionBtn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.pickerNoResultsNotice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 24px 12px;
+  text-align: center;
+  color: #8c7a72;
+  font-size: 12px;
+  background: #ffffff;
+  border: 1px dashed #decbb6;
+  border-radius: 6px;
+}
+
+/* Active Product Configuration Box */
+.pickerActiveProductBox {
+  background: #ffffff;
+  border: 1px solid #ebdcc6;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.pickerProductHeroRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid #f1e7d9;
+  padding-bottom: 10px;
+  width: 100%;
+  min-width: 0;
+}
+
+.pickerHeroThumb {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #dfd1bd;
+  background: #ffffff;
+  flex-shrink: 0;
+}
+
+.pickerHeroMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.pickerHeroTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #33231c;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pickerHeroPriceRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pickerHeroPrice {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--admin-maroon-primary);
+}
+
+.pickerStockBadge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.pickerStockBadge.inStock {
+  background: #e6f4ea;
+  color: #137333;
+}
+
+.pickerStockBadge.outOfStock {
+  background: #fce8e6;
+  color: #c5221f;
+}
+
+.changeProductBackBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #fdf6ec;
+  border: 1px solid #dcc8b0;
+  color: var(--admin-maroon-primary);
+  border-radius: 5px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.changeProductBackBtn:hover {
+  background: #faeedd;
+  border-color: var(--admin-maroon-primary);
+}
+
+/* Dynamic Parameters in Picker */
+.pickerParamsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #fcf9f2;
+  border: 1px solid #edd9be;
+  border-radius: 6px;
+  padding: 10px;
+  width: 100%;
+  min-width: 0;
+}
+
+.paramsContainerTitle {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6e584f;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.paramOptionCard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+}
+
+.paramCardHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.paramNameText {
+  font-size: 11px;
+  font-weight: 700;
+  color: #4b3d37;
+}
+
+.paramActiveValText {
+  font-size: 11px;
+  font-weight: 600;
+  color: #854d0e;
+  background: #fef3c7;
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+.paramOptionPillsFlex {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+}
+
+.paramPillButton {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #ffffff;
+  border: 1px solid #d8ccb9;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 11.5px;
+  color: #42352f;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.paramPillButton:hover:not(:disabled) {
+  border-color: var(--admin-maroon-primary);
+  background: #fef6ee;
+}
+
+.paramPillButton.selected {
+  background: var(--admin-maroon-primary);
+  border-color: var(--admin-maroon-primary);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.paramPillButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: #f4efe8;
+}
+
+/* Color Swatches */
+.paramColorSwatchesGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+}
+
+.colorSwatchPillBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #ffffff;
+  border: 1px solid #d8ccb9;
+  border-radius: 16px;
+  padding: 3px 9px;
+  font-size: 11px;
+  color: #42352f;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.colorSwatchPillBtn.selected {
+  border-color: var(--admin-maroon-primary);
+  background: #fbf0f2;
+  color: var(--admin-maroon-primary);
+  font-weight: 700;
+}
+
+.swatchColorCircle {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+/* Custom Text / Engraving */
+.paramCustomTextWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.paramTypeIcon {
+  position: absolute;
+  left: 10px;
+  color: #8c7a72;
+}
+
+.paramCustomInput {
+  padding-left: 30px !important;
+  padding-right: 28px !important;
+  width: 100%;
+}
+
+.clearCustomTextIconBtn {
+  position: absolute;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: #88746c;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+/* Quantity & Confirm Footer in Picker */
+.pickerConfirmFooterRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 1px solid #ebdcc6;
+  padding-top: 10px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.pickerQtyControlGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qtyLabelText {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #55443d;
+}
+
+.qtyStepperBox {
+  display: flex;
+  align-items: center;
+  border: 1px solid #cfc1ab;
+  border-radius: 5px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.stepperActionBtn {
+  background: #f8f3ec;
+  border: none;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #44342d;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.stepperActionBtn:hover:not(:disabled) {
+  background: #ebd8c2;
+}
+
+.stepperActionBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.stepperValueNum {
+  width: 32px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #33231c;
+}
+
+.adminGoldPrimaryBtn {
+  background: linear-gradient(135deg, #c59b27 0%, #a87905 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 12.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(168, 121, 5, 0.25);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.adminGoldPrimaryBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #d4a72d 0%, #b8860b 100%);
+  box-shadow: 0 4px 12px rgba(168, 121, 5, 0.35);
+  transform: translateY(-1px);
+}
+
+.adminGoldPrimaryBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ------------------------------------------------------------ */
+/* SELECTED ITEMS LIST                                          */
+/* ------------------------------------------------------------ */
+.selectedItemsScrollContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 230px;
+  overflow-y: auto;
+  padding-right: 4px;
+  width: 100%;
+}
+
+.selectedItemCardRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid #e7ddca;
+  border-radius: 6px;
+  padding: 8px 10px;
+  transition: border-color 0.15s;
+  width: 100%;
+  min-width: 0;
+}
+
+.selectedItemCardRow:hover {
+  border-color: #d0c0a8;
+}
+
+.selectedItemThumb {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 5px;
+  border: 1px solid #dfd1bd;
+  flex-shrink: 0;
+}
+
+.selectedItemMainInfo {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.selectedItemTitle {
+  font-weight: 600;
+  font-size: 12px;
+  color: #2b1f1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.selectedItemPriceUnit {
+  font-size: 11px;
+  color: #7b6960;
+}
+
+.selectedItemParamsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 3px;
+}
+
+.paramBadgePill {
+  font-size: 9.5px;
+  background: #f4ecdf;
+  border: 1px solid #e0d1bc;
+  border-radius: 3px;
+  padding: 1px 5px;
+  color: #55443d;
+  max-width: 100%;
+  word-break: break-word;
+}
+
+.paramBadgePill.customTextBadge {
+  background: #fef3c7;
+  border-color: #fde68a;
+  color: #92400e;
+}
+
+.selectedItemQtyStepper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f8f3ec;
+  border: 1px solid #d8cab7;
+  border-radius: 4px;
+  padding: 2px 4px;
+  flex-shrink: 0;
+}
+
+.itemStepBtn {
+  background: transparent;
+  border: none;
+  width: 18px;
+  height: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #4b3930;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.itemStepBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.itemQtyText {
+  font-size: 11.5px;
+  font-weight: 700;
+  min-width: 14px;
+  text-align: center;
+}
+
+.selectedItemTotal {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--admin-maroon-primary);
+  min-width: 50px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.itemDeleteIconBtn {
+  background: transparent;
+  border: none;
+  color: #dc2626;
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.itemDeleteIconBtn:hover {
+  background: #fee2e2;
+}
+
+/* Empty State Card */
+.emptyOrderItemsCard {
+  text-align: center;
+  padding: 24px 16px;
+  color: #7b685f;
+  background: #fcf9f4;
+  border: 1px dashed #decbb6;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.emptyIconCircle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #f4ecdf;
+  color: #927e74;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emptyOrderItemsCard h4 {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #4a3830;
+  margin: 0;
+}
+
+.emptyOrderItemsCard p {
+  margin: 0;
+  font-size: 11.5px;
+  max-width: 320px;
+  line-height: 1.4;
+}
+
+.emptyAddBtn {
+  margin-top: 4px;
+  padding: 7px 18px;
+}
+
+/* ------------------------------------------------------------ */
+/* COUPONS & PROMO CODES                                        */
+/* ------------------------------------------------------------ */
+.couponInputRow {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.couponInputField {
+  font-family: monospace;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  flex: 1;
+  font-weight: 600;
+  min-width: 0;
+}
+
+.adminOutlineBtn {
+  background: #ffffff;
+  border: 1px solid #d4c4af;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #493b35;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.adminOutlineBtn.dangerOutline {
+  color: #dc2626;
+  border-color: #fca5a5;
+  background: #fff5f5;
+}
+
+.adminOutlineBtn.dangerOutline:hover {
+  background: #fee2e2;
+}
+
+.couponSuccessPill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 4px;
+  padding: 5px 10px;
+  font-size: 11.5px;
+  color: #065f46;
+  width: 100%;
+}
+
+/* ------------------------------------------------------------ */
+/* PAYMENT STATUS CONTROLS                                      */
+/* ------------------------------------------------------------ */
+.verifiedPaymentInputsCard {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  padding: 10px;
+  animation: fadeIn 0.2s ease-out;
+  width: 100%;
+}
+
+/* ------------------------------------------------------------ */
+/* LIVE FINANCIAL SUMMARY                                       */
+/* ------------------------------------------------------------ */
+.adminLivePricingCard {
+  background: #fcf8f0;
+  border: 1px solid #ebdcc6;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.pricingLineRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #55443d;
+}
+
+.discountHighlightRow {
+  color: #15803d;
+}
+
+.pricingDividerLine {
   height: 1px;
-  background: #ebdcc5;
+  background: #e5d5be;
+  margin: 3px 0;
+}
+
+.grandTotalHighlightRow {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #2b1f1a;
+}
+
+.grandTotalMaroonVal {
+  color: var(--admin-maroon-primary);
+  font-size: 17px;
+}
+
+/* ------------------------------------------------------------ */
+/* MODAL FOOTER ACTION BAR                                      */
+/* ------------------------------------------------------------ */
+.adminModalFooterActionBar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 2px;
+  width: 100%;
+}
+
+.adminCancelActionBtn {
+  background: #ffffff;
+  border: 1px solid #dcd1be;
+  border-radius: 6px;
+  padding: 8px 18px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #55443d;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.adminCancelActionBtn:hover {
+  background: #f5ebe0;
+}
+
+.proceedReviewActionBtn {
+  padding: 9px 22px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+/* ============================================================ */
+/* STEP 2: REVIEW SUMMARY SCREEN                                */
+/* ============================================================ */
+.adminReviewContainerScroll {
+  padding: 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--admin-ivory-bg);
+  width: 100%;
+}
+
+.reviewBannerPrompt {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fdfaf2;
+  border: 1px solid #ebdcc6;
+  border-left: 4px solid var(--admin-gold-primary);
+  border-radius: 8px;
+  padding: 12px 18px;
+  color: #5c4b44;
+  width: 100%;
+}
+
+.reviewShieldGoldIcon {
+  color: var(--admin-gold-primary);
+  flex-shrink: 0;
+}
+
+.reviewBannerPrompt h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--admin-maroon-primary);
+  margin: 0;
+}
+
+.reviewBannerPrompt p {
+  font-size: 12px;
+  margin: 2px 0 0 0;
+  color: #7b6960;
+}
+
+.reviewCardsTwoColGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  width: 100%;
+}
+
+.reviewSummaryCardBox {
+  background: #ffffff;
+  border: 1px solid #ebdcc6;
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  min-width: 0;
+  width: 100%;
+}
+
+.reviewSummaryCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--admin-maroon-primary);
+  border-bottom: 1px solid #ebdcc6;
+  padding-bottom: 6px;
+}
+
+.reviewSummaryCardHeader h5 {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--admin-maroon-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.reviewSummaryCardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.reviewDataRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.reviewDataLabel {
+  color: #7a6a62;
+  white-space: nowrap;
+}
+
+.reviewDataValue {
+  color: #2b1f1a;
+  word-break: break-word;
+  text-align: right;
+}
+
+.reviewGiftCalloutBox {
+  background: #fff0f3;
+  border: 1px solid #fad2dc;
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-top: 4px;
+}
+
+.giftBadgeTag {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #9f1239;
+}
+
+.giftRecipientInfo {
+  margin: 3px 0 0 0;
+  font-size: 11.5px;
+  color: #2b1f1a;
+}
+
+.giftNoteQuote {
+  margin: 4px 0 0 0;
+  font-size: 11.5px;
+  color: #831843;
+}
+
+.reviewAddressParagraph {
+  margin: 0;
+  color: #2b1f1a;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.reviewCityPincodeText {
+  margin: 0;
+  font-size: 11.5px;
+  color: #6b554b;
+}
+
+/* Itemized Table in Step 2 */
+.reviewTableContainerBox {
+  background: #ffffff;
+  border: 1px solid #ebdcc6;
+  border-radius: 8px;
+  padding: 14px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  width: 100%;
+  min-width: 0;
+}
+
+.reviewTableHeading {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--admin-maroon-primary);
+  margin: 0 0 10px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.reviewTableScrollWrapper {
+  overflow-x: auto;
+  border-radius: 6px;
+  border: 1px solid #ebdcc6;
+  width: 100%;
+}
+
+.reviewItemsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.reviewItemsTable th {
+  background: #fbf7ee;
+  border-bottom: 1px solid #ebdcc6;
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  color: #5c4b44;
+  text-transform: uppercase;
+}
+
+.reviewItemsTable td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1e7d9;
+  vertical-align: middle;
+}
+
+.reviewItemsTable tr:last-child td {
+  border-bottom: none;
+}
+
+.tableProductCellFlex {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tableProdImg {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #dfd1bd;
+  flex-shrink: 0;
+}
+
+.tableProdName {
+  font-weight: 600;
+  color: #2b1f1a;
+  word-break: break-word;
+}
+
+.tableParamsBadgeFlex {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tableParamTag {
+  font-size: 10px;
+  background: #f4ecdf;
+  border: 1px solid #decbb6;
+  border-radius: 3px;
+  padding: 2px 6px;
+  color: #4b3930;
+}
+
+.tableNoParamsText {
+  color: #9c8a81;
+  font-style: italic;
+}
+
+/* Customization Review Box */
+.reviewCustomizationCallout {
+  background: #fcf9f2;
+  border: 1px solid #ebdcc6;
+  border-radius: 6px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.customCalloutHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--admin-maroon-primary);
+}
+
+.customCalloutDetails {
+  margin: 0;
+  font-size: 12px;
+  color: #3b2b24;
+  word-break: break-word;
+}
+
+.customCalloutPhotoBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: #15803d;
+}
+
+.customCalloutPhotoBadge img {
+  width: 38px;
+  height: 38px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #bbf0cb;
+}
+
+/* Final Totals & Actions in Step 2 */
+.reviewFinalTotalsGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  width: 100%;
+}
+
+.reviewStatusCard {
+  background: #ffffff;
+  border: 1px solid #ebdcc6;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  min-width: 0;
+}
+
+.reviewStatusItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.paymentStatusBadgePill {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.paymentStatusBadgePill.verified {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.paymentStatusBadgePill.pending {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.paymentStatusBadgePill.verification_pending {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.reviewFinancialSummaryCard {
+  background: #fdfaf4;
+  border: 1px solid #ebdcc6;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.reviewSummaryLine {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #4b3d37;
+}
+
+.reviewSummaryLine.discountText {
+  color: #15803d;
+}
+
+.reviewSummaryDivider {
+  height: 1px;
+  background: #ebdcc6;
   margin: 4px 0;
 }
 
-.adminOrderSummary .grandTotalRow {
+.reviewSummaryLine.grandTotalLine {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #2b1f1a;
+}
+
+.reviewGrandTotalVal {
+  font-size: 18px;
+  color: var(--admin-maroon-primary);
+}
+
+.reviewFooterActionBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+  width: 100%;
+}
+
+.adminBackEditBtn {
+  background: #ffffff;
+  border: 1px solid #dcd1be;
+  border-radius: 6px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #55443d;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s;
+}
+
+.adminBackEditBtn:hover {
+  background: #f5ebe0;
+}
+
+.finalSubmitCreateBtn {
+  padding: 12px 28px;
   font-size: 13.5px;
   font-weight: 700;
-  color: var(--char);
-  padding-top: 2px;
+  letter-spacing: 0.4px;
 }
 
-.adminOrderSummary .totalAmount {
-  font-family: var(--font-serif);
-  font-size: 17px;
-  color: var(--maroon);
+/* ------------------------------------------------------------ */
+/* ANIMATIONS                                                   */
+/* ------------------------------------------------------------ */
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-@media (max-width: 768px) {
-  .createOrderGrid {
+@keyframes modalSlideUp {
+  from { opacity: 0; transform: translateY(12px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.spinAnimation {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ------------------------------------------------------------ */
+/* RESPONSIVE MEDIA QUERIES (MOBILE, TABLET, DESKTOP)           */
+/* ------------------------------------------------------------ */
+
+/* Large Tablets & Medium Laptops (<= 1024px) */
+@media (max-width: 1024px) {
+  .adminOrderTwoColGrid {
     grid-template-columns: 1fr;
     gap: 16px;
   }
 
-  .formRow {
+  .reviewCardsTwoColGrid,
+  .reviewFinalTotalsGrid {
     grid-template-columns: 1fr;
-  }
-
-  .verifiedFieldsBox {
-    grid-template-columns: 1fr;
+    gap: 12px;
   }
 }
 
-@media (max-width: 600px) {
-  .createOrderModalContainer {
-    width: 100% !important;
-    max-width: 100% !important;
-    height: 100vh;
+/* Tablets (<= 768px) */
+@media (max-width: 768px) {
+  .adminOrderModalOverlay {
+    padding: 8px;
+  }
+
+  .adminOrderModalDialog {
+    max-height: 98vh;
+    height: 98vh;
+    border-radius: 10px;
+  }
+
+  .adminOrderModalHeader {
+    padding: 12px 14px;
+  }
+
+  .adminModalStepPillTrack .stepLabel {
+    display: none;
+  }
+
+  .adminModalStepPillTrack {
+    padding: 4px 6px;
+  }
+
+  .adminModalScrollBody {
+    padding: 12px;
+  }
+
+  .adminCardSection {
+    padding: 12px;
+  }
+
+  .sectionHeaderTitles h3 {
+    font-size: 12.5px;
+  }
+
+  .productSectionHeaderRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .adminAddProductPillBtn {
+    justify-content: center;
+    width: 100%;
+  }
+}
+
+/* Mobile Screens (<= 640px) */
+@media (max-width: 640px) {
+  .adminOrderModalOverlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .adminOrderModalDialog {
     max-height: 100vh;
+    height: 100vh;
     border-radius: 0;
     border: none;
   }
 
-  .createOrderForm {
-    padding: 14px 16px;
-    gap: 14px;
-    max-height: calc(100vh - 65px);
+  .adminOrderModalHeader {
+    padding: 10px 12px;
   }
 
-  .formColumn {
-    padding: 12px;
+  .adminModalMainTitle {
+    font-size: 15px;
   }
 
-  .modalActions {
+  .adminModalSubtitle {
+    display: none;
+  }
+
+  .adminInputTwoColRow {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .shippingOptionsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .pickerConfirmFooterRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .pickerQtyControlGroup {
+    justify-content: space-between;
+  }
+
+  .addProductConfirmBtn {
+    width: 100%;
+  }
+
+  .adminModalFooterActionBar {
     flex-direction: column-reverse;
   }
 
-  .modalActions button {
+  .adminCancelActionBtn,
+  .proceedReviewActionBtn {
     width: 100%;
-    height: 42px;
+    justify-content: center;
+  }
+
+  .reviewFooterActionBar {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+
+  .adminBackEditBtn,
+  .finalSubmitCreateBtn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .reviewItemsTable th,
+  .reviewItemsTable td {
+    padding: 8px 6px;
+    font-size: 11px;
+  }
+}
+
+/* Ultra-compact Mobile Screens (<= 380px) */
+@media (max-width: 380px) {
+  .adminModalIconBadge {
+    display: none;
+  }
+
+  .adminOrderModalHeader {
+    padding: 8px 10px;
+  }
+
+  .adminModalMainTitle {
+    font-size: 14px;
+  }
+
+  .couponInputRow {
+    flex-direction: column;
+  }
+
+  .couponApplyBtn,
+  .adminOutlineBtn.dangerOutline {
+    width: 100%;
   }
 }
