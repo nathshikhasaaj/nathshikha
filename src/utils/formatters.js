@@ -184,3 +184,20 @@ export function formatWhatsAppPhone(phone) {
 
   return digits;
 }
+
+/**
+ * Safely escape all special characters for secure HTML injection (XSS Prevention)
+ * Converts &, <, >, ", and ' to safe HTML entities.
+ * @param {string|number|null|undefined} str
+ * @returns {string}
+ */
+export function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+

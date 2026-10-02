@@ -333,7 +333,7 @@ router.post('/submit', async (req, res) => {
       return res.status(400).json({ error: 'Order ID and Product ID are required.' });
     }
 
-    const order = await Order.findById(finalOrderId);
+    const order = await Order.findOne({ _id: finalOrderId, isDeleted: { $ne: true } });
     if (!order) {
       return res.status(404).json({ error: 'Order not found.' });
     }

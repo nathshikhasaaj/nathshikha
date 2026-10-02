@@ -20,7 +20,8 @@ import {
   formatOrderStatus,
   formatOrderDate,
   formatWhatsAppPhone,
-  copyToClipboard
+  copyToClipboard,
+  escapeHtml
 } from '../../utils/formatters';
 import { getParameterEntries } from '../../utils/parameterHelpers';
 import { generateInvoicePdfFile, downloadInvoicePdf } from '../../utils/pdfGenerator';
@@ -273,7 +274,7 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
                 ${params
                   .map(
                     (p) =>
-                      `<span style="font-size:10px;background:#fcf7ef;border:1px solid #ebdcc5;padding:1px 5px;border-radius:3px;color:#5c4e47;">${p.name}: <b>${p.value}</b></span>`
+                      `<span style="font-size:10px;background:#fcf7ef;border:1px solid #ebdcc5;padding:1px 5px;border-radius:3px;color:#5c4e47;">${escapeHtml(p.name)}: <b>${escapeHtml(p.value)}</b></span>`
                   )
                   .join('')}
               </div>`
@@ -283,10 +284,10 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
           <tr>
             <td style="text-align:center;padding:8px 10px;border-bottom:1px solid #ebdcc5;font-size:11px;">${idx + 1}</td>
             <td style="padding:8px 10px;border-bottom:1px solid #ebdcc5;">
-              <div style="font-weight:700;font-size:12px;color:#1f1410;">${itemName}</div>
+              <div style="font-weight:700;font-size:12px;color:#1f1410;">${escapeHtml(itemName)}</div>
               ${paramsHtml}
             </td>
-            <td style="padding:8px 10px;border-bottom:1px solid #ebdcc5;font-family:monospace;font-size:11px;color:#5c4e47;">${prdCode}</td>
+            <td style="padding:8px 10px;border-bottom:1px solid #ebdcc5;font-family:monospace;font-size:11px;color:#5c4e47;">${escapeHtml(prdCode)}</td>
             <td style="text-align:right;padding:8px 10px;border-bottom:1px solid #ebdcc5;font-size:11.5px;">${money(unitPrice)}</td>
             <td style="text-align:center;padding:8px 10px;border-bottom:1px solid #ebdcc5;font-size:11.5px;">${qty}</td>
             <td style="text-align:right;padding:8px 10px;border-bottom:1px solid #ebdcc5;font-size:11.5px;font-weight:700;color:#1f1410;">${money(rowTotal)}</td>
@@ -295,11 +296,33 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
       })
       .join('');
 
+    const safeOrderNo = escapeHtml(orderNo);
+    const safeFormattedDate = escapeHtml(formattedDate);
+    const safeStatus = escapeHtml(formatOrderStatus(order.order_status || order.orderStatus));
+    const safeCustomerName = escapeHtml(customerName);
+    const safeCustomerPhone = escapeHtml(customerPhone);
+    const safeCustomerEmail = customerEmail ? escapeHtml(customerEmail) : null;
+    const safeFullAddress = escapeHtml(fullAddress);
+    const safeRecipientName = escapeHtml(recipientName);
+    const safeRecipientPhone = escapeHtml(order.recipient_phone || order.recipientPhone || customerPhone);
+    const safePincode = pincode ? escapeHtml(pincode) : null;
+    const safeCity = city ? escapeHtml(city) : null;
+    const safeState = state ? escapeHtml(state) : null;
+    const safeCityStatePin = [safeCity, safeState, safePincode ? `PIN: ${safePincode}` : ''].filter(Boolean).join(', ');
+    const safePaymentMethod = escapeHtml(paymentMethod);
+    const safePaymentTx = paymentTx ? escapeHtml(paymentTx) : null;
+    const safeShipmentPartner = shipmentPartner ? escapeHtml(shipmentPartner) : null;
+    const safeTrackingId = trackingId ? escapeHtml(trackingId) : null;
+    const safeHandwrittenNote = handwrittenNote ? escapeHtml(handwrittenNote) : null;
+    const safeCustomDetails = customObj?.details ? escapeHtml(customObj.details) : null;
+    const safeShippingMethod = escapeHtml(order.shipping_method || order.shippingMethod || 'Standard Delivery');
+    const safeCouponCode = couponCode ? escapeHtml(couponCode) : null;
+
     return `<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Nathshikha_Invoice_${order.order_no}</title>
+    <title>Nathshikha_Invoice_${safeOrderNo}</title>
     <style>
       @page {
         size: A4 portrait;
@@ -519,19 +542,19 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
             <table class="meta-table">
               <tr>
                 <td style="color:#7d6e64;">Invoice No:</td>
-                <td><b>INV-${order.order_no}</b></td>
+                <td><b>INV-${safeOrderNo}</b></td>
               </tr>
               <tr>
                 <td style="color:#7d6e64;">Order ID:</td>
-                <td><b>#${order.order_no}</b></td>
+                <td><b>#${safeOrderNo}</b></td>
               </tr>
               <tr>
                 <td style="color:#7d6e64;">Date:</td>
-                <td>${formattedDate}</td>
+                <td>${safeFormattedDate}</td>
               </tr>
               <tr>
                 <td style="color:#7d6e64;">Status:</td>
-                <td><b>${formatOrderStatus(order.order_status)}</b></td>
+                <td><b>${safeStatus}</b></td>
               </tr>
             </table>
           </td>
@@ -544,17 +567,17 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
         <tr>
           <td class="party-card">
             <div class="party-head">Billed To (Buyer)</div>
-            <div style="font-weight:700;font-size:12px;color:#1f1410;">${customerName}</div>
-            <div style="font-size:11px;color:#5c4e47;margin-top:2px;">Phone: ${customerPhone}</div>
-            ${customerEmail ? `<div style="font-size:11px;color:#5c4e47;">Email: ${customerEmail}</div>` : ''}
-            <div style="font-size:10.5px;color:#4a3b34;margin-top:4px;">${fullAddress}</div>
+            <div style="font-weight:700;font-size:12px;color:#1f1410;">${safeCustomerName}</div>
+            <div style="font-size:11px;color:#5c4e47;margin-top:2px;">Phone: ${safeCustomerPhone}</div>
+            ${safeCustomerEmail ? `<div style="font-size:11px;color:#5c4e47;">Email: ${safeCustomerEmail}</div>` : ''}
+            <div style="font-size:10.5px;color:#4a3b34;margin-top:4px;">${safeFullAddress}</div>
           </td>
           <td class="party-card">
             <div class="party-head">Delivery & Shipping Address ${isGift ? '<span style="font-size:9.5px;background:#fce7f3;color:#9d174d;padding:1px 5px;border-radius:3px;margin-left:6px;">🎁 Gift</span>' : ''}</div>
-            <div style="font-weight:700;font-size:12px;color:#1f1410;">${recipientName}</div>
-            <div style="font-size:11px;color:#5c4e47;margin-top:2px;">Phone: ${order.recipient_phone || order.recipientPhone || customerPhone}</div>
-            <div style="font-size:10.5px;color:#4a3b34;margin-top:4px;">${fullAddress}</div>
-            ${city || state || pincode ? `<div style="font-size:10.5px;font-weight:600;color:#2b1d16;margin-top:2px;">${[city, state, pincode ? `PIN: ${pincode}` : ''].filter(Boolean).join(', ')}</div>` : ''}
+            <div style="font-weight:700;font-size:12px;color:#1f1410;">${safeRecipientName}</div>
+            <div style="font-size:11px;color:#5c4e47;margin-top:2px;">Phone: ${safeRecipientPhone}</div>
+            <div style="font-size:10.5px;color:#4a3b34;margin-top:4px;">${safeFullAddress}</div>
+            ${safeCityStatePin ? `<div style="font-size:10.5px;font-weight:600;color:#2b1d16;margin-top:2px;">${safeCityStatePin}</div>` : ''}
           </td>
         </tr>
       </table>
@@ -562,28 +585,28 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
       <div class="meta-strip">
         <div class="meta-strip-item">
           <span class="meta-strip-label">Payment Mode</span>
-          <span class="meta-strip-val">${paymentMethod}</span>
+          <span class="meta-strip-val">${safePaymentMethod}</span>
         </div>
         <div class="meta-strip-item">
           <span class="meta-strip-label">Payment Status</span>
           <span class="meta-strip-val" style="color:${isVerified ? '#15803d' : '#b45309'};">${isVerified ? 'VERIFIED & PAID ✓' : 'VERIFICATION PENDING'}</span>
         </div>
-        ${paymentTx ? `
+        ${safePaymentTx ? `
           <div class="meta-strip-item">
             <span class="meta-strip-label">Transaction / UTR</span>
-            <span class="meta-strip-val" style="font-family:monospace;">${paymentTx}</span>
+            <span class="meta-strip-val" style="font-family:monospace;">${safePaymentTx}</span>
           </div>
         ` : ''}
-        ${shipmentPartner ? `
+        ${safeShipmentPartner ? `
           <div class="meta-strip-item">
             <span class="meta-strip-label">Shipment Partner</span>
-            <span class="meta-strip-val">${shipmentPartner}</span>
+            <span class="meta-strip-val">${safeShipmentPartner}</span>
           </div>
         ` : ''}
-        ${trackingId ? `
+        ${safeTrackingId ? `
           <div class="meta-strip-item">
             <span class="meta-strip-label">Tracking ID</span>
-            <span class="meta-strip-val" style="font-family:monospace;">${trackingId}</span>
+            <span class="meta-strip-val" style="font-family:monospace;">${safeTrackingId}</span>
           </div>
         ` : ''}
       </div>
@@ -607,11 +630,11 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
       <table class="totals-table">
         <tr>
           <td class="totals-side" style="padding-right:10px;">
-            ${handwrittenNote ? `
+            ${safeHandwrittenNote ? `
               <div style="background:#fdf2f8;border:1.5px solid #fbcfe8;border-radius:5px;padding:9px 12px;margin-bottom:8px;">
                 <div style="font-size:11px;font-weight:700;color:#9d174d;margin-bottom:4px;">📝 Handwritten Note for Recipient</div>
                 <div style="font-size:10.5px;color:#831843;font-style:italic;line-height:1.45;">
-                  "${handwrittenNote}"
+                  "${safeHandwrittenNote}"
                 </div>
               </div>
             ` : ''}
@@ -619,13 +642,13 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
               <div style="background:#fffdf8;border:1.5px solid #d4af37;border-radius:5px;padding:9px 12px;margin-bottom:8px;">
                 <div style="font-size:11px;font-weight:700;color:#5b1420;margin-bottom:4px;">🎨 Customization Requirement</div>
                 <div style="font-size:10.5px;color:#2b1d16;font-style:italic;line-height:1.45;">
-                  "${customObj?.details || 'Reference design photo attached to order'}"
+                  "${safeCustomDetails || 'Reference design photo attached to order'}"
                 </div>
                 ${(customObj?.referenceImage || customObj?.reference_image) ? `
                   <div style="font-size:10px;font-weight:700;color:#92400e;margin-top:4px;">📷 Reference Design Attached</div>
                 ` : ''}
               </div>
-            ` : (!handwrittenNote ? `
+            ` : (!safeHandwrittenNote ? `
               <div style="background:#fdfaf3;border:1px dashed #ebdcc5;border-radius:5px;padding:10px 12px;">
                 <div style="font-size:11px;font-weight:700;color:#5b1420;margin-bottom:4px;">✨ Authenticity & Craftsmanship Assurance</div>
                 <div style="font-size:10px;color:#6b5c53;line-height:1.45;">
@@ -643,12 +666,12 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
               </div>
               ${discount > 0 ? `
                 <div class="calc-row" style="color:#15803d;">
-                  <span>Coupon Discount ${couponCode ? `(${couponCode})` : ''}:</span>
+                  <span>Coupon Discount ${safeCouponCode ? `(${safeCouponCode})` : ''}:</span>
                   <b>-${money(discount)}</b>
                 </div>
               ` : ''}
               <div class="calc-row">
-                <span style="color:#5c4e47;">Shipping (${order.shipping_method || order.shippingMethod || 'Standard Delivery'}):</span>
+                <span style="color:#5c4e47;">Shipping (${safeShippingMethod}):</span>
                 <b>${shippingCharge === 0 ? '<span style="color:#16a34a;">FREE</span>' : money(shippingCharge)}</b>
               </div>
               ${hasGiftWrap ? `

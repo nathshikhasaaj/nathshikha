@@ -18,7 +18,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ShieldCheck,
-  X
+  X,
+  Trash2
 } from 'lucide-react';
 
 export default function AdminSidebar({
@@ -79,6 +80,11 @@ export default function AdminSidebar({
           id: 'shipments',
           label: 'Shipments',
           icon: Truck
+        },
+        {
+          id: 'trash',
+          label: 'Deleted Orders / Trash',
+          icon: Trash2
         }
       ]
     },
@@ -113,7 +119,7 @@ export default function AdminSidebar({
           icon: Tag,
           badge: analytics.activeCouponsCount > 0 ? (
             <span className="navBadge goldBadge" title={`${analytics.activeCouponsCount} active coupons`}>
-              {analytics.activeCouponsCount} Active
+              {analytics.activeCouponsCount}
             </span>
           ) : null
         }

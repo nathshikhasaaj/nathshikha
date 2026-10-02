@@ -369,6 +369,37 @@ const orderSchema = new mongoose.Schema(
         default: 0
       }
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+      index: true
+    },
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
+    deletedByName: {
+      type: String,
+      default: null,
+      trim: true
+    },
+    deleteReason: {
+      type: String,
+      default: null,
+      maxlength: 500,
+      trim: true
+    },
+    restoreUntil: {
+      type: Date,
+      default: null,
+      index: true
+    },
     editHistory: [
       {
         editedAt: {
@@ -450,6 +481,33 @@ const orderSchema = new mongoose.Schema(
           resend_count: ret.assistedOrder?.resendCount || 0
         };
         ret.assistedOrder = ret.assisted_order;
+        ret.is_deleted = Boolean(ret.isDeleted);
+        ret.isDeleted = Boolean(ret.isDeleted);
+        ret.deleted_at = ret.deletedAt || null;
+        ret.deletedAt = ret.deletedAt || null;
+        ret.deleted_by = ret.deletedBy ? ret.deletedBy.toString() : null;
+        ret.deleted_by_name = ret.deletedByName || null;
+        ret.delete_reason = ret.deleteReason || null;
+        ret.deleteReason = ret.deleteReason || null;
+        ret.restore_until = ret.restoreUntil || null;
+        ret.restoreUntil = ret.restoreUntil || null;
+
+        if (ret.isDeleted && ret.restoreUntil) {
+          const now = Date.now();
+          const until = new Date(ret.restoreUntil).getTime();
+          const diffMs = until - now;
+          const daysRemaining = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+          ret.days_remaining = daysRemaining;
+          ret.daysRemaining = daysRemaining;
+          ret.is_expired = diffMs <= 0;
+          ret.isExpired = diffMs <= 0;
+        } else {
+          ret.days_remaining = null;
+          ret.daysRemaining = null;
+          ret.is_expired = false;
+          ret.isExpired = false;
+        }
+
         ret.edit_history = Array.isArray(ret.editHistory)
           ? ret.editHistory.map((h) => ({
               edited_at: h.editedAt || h.edited_at,
@@ -497,6 +555,14 @@ orderSchema.pre('validate', function () {
   if (this.customer_name && !this.customerName) this.customerName = this.customer_name;
   if (this.customer_phone && !this.customerPhone) this.customerPhone = this.customer_phone;
   if (this.customer_email && !this.customerEmail) this.customerEmail = this.customer_email;
+
+  // For new orders, automatically populate customer identity fields if not already populated
+  if (this.isNew) {
+    if (!this.customerName && this.name) this.customerName = this.name;
+    if (!this.customerPhone && this.phone) this.customerPhone = this.phone;
+    if (!this.customerEmail && this.email) this.customerEmail = this.email;
+  }
+
   if (this.customization) {
     if (this.customization.reference_image && !this.customization.referenceImage) {
       this.customization.referenceImage = this.customization.reference_image;
@@ -507,5 +573,39 @@ orderSchema.pre('validate', function () {
   }
 });
 
+// Enforce strict schema-level immutability for buyer identity and orderNo on existing orders
+orderSchema.pre('save', function () {
+  if (!this.isNew) {
+    if (this.isModified('orderNo')) {
+      throw new Error('Order ID (orderNo) cannot be modified after order creation.');
+    }
+    // Protect buyer identity fields if they were previously set and are now modified
+    if (this.isModified('customerEmail') && this._original?.customerEmail && this.customerEmail !== this._original.customerEmail) {
+      throw new Error('Buyer email (customerEmail) cannot be modified after order creation.');
+    }
+    if (this.isModified('customerPhone') && this._original?.customerPhone && this.customerPhone !== this._original.customerPhone) {
+      throw new Error('Buyer phone (customerPhone) cannot be modified after order creation.');
+    }
+    if (this.isModified('customerName') && this._original?.customerName && this.customerName !== this._original.customerName) {
+      throw new Error('Buyer name (customerName) cannot be modified after order creation.');
+    }
+    if (this.isModified('userId') && this._original?.userId && String(this.userId) !== String(this._original.userId)) {
+      throw new Error('Buyer account (userId) cannot be modified after order creation.');
+    }
+  }
+});
+
+// Cache original values on document init for reliable immutability checks
+orderSchema.post('init', function () {
+  this._original = {
+    orderNo: this.orderNo,
+    userId: this.userId,
+    customerName: this.customerName || this.name,
+    customerPhone: this.customerPhone || this.phone,
+    customerEmail: this.customerEmail || this.email
+  };
+});
+
 export const Order = mongoose.model('Order', orderSchema);
+
 

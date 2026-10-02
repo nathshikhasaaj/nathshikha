@@ -154,19 +154,13 @@ export default function AdminOrderEditModal({
   useEffect(() => {
     if (isOpen && order) {
       const isGiftBool = Boolean(order.is_gift || order.isGift);
-      const buyerName = order.customer_name || order.customerName || order.name || '';
-      const buyerPhone = order.customer_phone || order.customerPhone || order.phone || '';
-      const buyerEmail = order.customer_email || order.customerEmail || order.email || '';
-      const recipientName = order.recipient_name || order.recipientName || order.name || '';
-      const recipientPhone = order.recipient_phone || order.recipientPhone || order.phone || '';
+      const recipientName = order.recipient_name || order.recipientName || (isGiftBool ? (order.name || '') : '');
+      const recipientPhone = order.recipient_phone || order.recipientPhone || (isGiftBool ? (order.phone || '') : '');
 
       const noteText = String(order.handwritten_note || order.handwrittenNote || '').trim();
       const wrapBool = Boolean(order.gift_wrap || order.giftWrap || (Number(order.gift_wrap_charge || order.giftWrapCharge) > 0));
 
       setFormData({
-        name: isGiftBool ? recipientName : (order.name || buyerName),
-        phone: isGiftBool ? recipientPhone : (order.phone || buyerPhone),
-        email: buyerEmail,
         address: order.address || '',
         pincode: order.pincode || '',
         city: order.city || '',
@@ -174,9 +168,6 @@ export default function AdminOrderEditModal({
         isGift: isGiftBool,
         recipientName,
         recipientPhone,
-        customerName: buyerName,
-        customerPhone: buyerPhone,
-        customerEmail: buyerEmail,
         customizationDetails: order.customization?.details || '',
         adminEditNotes: ''
       });
@@ -374,25 +365,6 @@ export default function AdminOrderEditModal({
     }
 
     // Client-side validations
-    const cleanName = formData.name.trim();
-    if (!cleanName) {
-      setError('Please enter the customer / recipient name.');
-      return;
-    }
-
-    const cleanPhoneDigits = formData.phone.replace(/\D/g, '');
-    if (!cleanPhoneDigits || cleanPhoneDigits.length < 10) {
-      setError('Please enter a valid 10-digit mobile number.');
-      return;
-    }
-
-    const cleanEmail = formData.email.trim().toLowerCase();
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!cleanEmail || !emailRegex.test(cleanEmail)) {
-      setError('Please enter a valid email address.');
-      return;
-    }
-
     const cleanAddress = formData.address.trim();
     if (!cleanAddress) {
       setError('Please enter the complete delivery address.');
@@ -420,19 +392,17 @@ export default function AdminOrderEditModal({
     setSubmitting(true);
     try {
       const payload = {
-        name: cleanName,
-        phone: cleanPhoneDigits.slice(-10),
-        email: cleanEmail,
         address: cleanAddress,
         pincode: cleanPincode,
         city: formData.city.trim(),
         state: formData.state.trim(),
         isGift: formData.isGift,
-        recipientName: formData.isGift ? formData.recipientName.trim() : cleanName,
-        recipientPhone: formData.isGift ? formData.recipientPhone.replace(/\D/g, '').slice(-10) : cleanPhoneDigits.slice(-10),
-        customerName: formData.isGift ? (formData.customerName.trim() || cleanName) : cleanName,
-        customerPhone: formData.isGift ? (formData.customerPhone.replace(/\D/g, '').slice(-10) || cleanPhoneDigits.slice(-10)) : cleanPhoneDigits.slice(-10),
-        customerEmail: formData.isGift ? (formData.customerEmail.trim().toLowerCase() || cleanEmail) : cleanEmail,
+        recipientName: formData.isGift
+          ? formData.recipientName.trim()
+          : (formData.recipientName?.trim() || null),
+        recipientPhone: formData.isGift
+          ? (formData.recipientPhone.replace(/\D/g, '').slice(-10) || null)
+          : (formData.recipientPhone?.replace(/\D/g, '').slice(-10) || null),
         customizationDetails: formData.customizationDetails.trim(),
         adminEditNotes: formData.adminEditNotes.trim(),
         // Gift Options
@@ -747,14 +717,53 @@ export default function AdminOrderEditModal({
           </div>
 
           {/* ============================================================ */}
-          {/* SECTION 3: CUSTOMER & DELIVERY ADDRESS (PARTS 1 & 2)         */}
+          {/* SECTION 3: PURCHASER (READ-ONLY) & DELIVERY DETAILS (PART 2) */}
           {/* ============================================================ */}
           <div className="adminEditFormGrid">
-            {/* LEFT COLUMN: Customer & Recipient Details */}
+            {/* LEFT COLUMN: Read-Only Purchaser & Delivery Recipient */}
             <div className="adminEditSectionCard">
-              <div className="adminEditSectionHeader">
-                <User size={16} />
-                <h4>Customer & Buyer Information</h4>
+              {/* READ ONLY PURCHASER CARD */}
+              <div className="adminEditPurchaserCard">
+                <div className="adminEditPurchaserHeader">
+                  <div className="adminEditPurchaserTitle">
+                    <User size={14} color="#6d1b29" />
+                    <span>Purchaser / Buyer</span>
+                  </div>
+                  <span className="adminEditLockedBadge">
+                    <Lock size={11} />
+                    <span>Immutable</span>
+                  </span>
+                </div>
+                <div className="adminEditPurchaserGrid">
+                  <div className="adminEditPurchaserRow">
+                    <span className="adminEditPurchaserLabel">Name:</span>
+                    <span className="adminEditPurchaserValue">
+                      {order.customer_name || order.customerName || order.name || 'Nathshikha Customer'}
+                    </span>
+                  </div>
+                  <div className="adminEditPurchaserRow">
+                    <span className="adminEditPurchaserLabel">Phone:</span>
+                    <span className="adminEditPurchaserValue">
+                      {order.customer_phone || order.customerPhone || order.phone || '—'}
+                    </span>
+                  </div>
+                  <div className="adminEditPurchaserRow">
+                    <span className="adminEditPurchaserLabel">Email:</span>
+                    <span className="adminEditPurchaserValue">
+                      {order.customer_email || order.customerEmail || order.email || '—'}
+                    </span>
+                  </div>
+                </div>
+                <div className="adminEditPurchaserNote">
+                  <Lock size={12} />
+                  <span>🔒 Original purchaser information cannot be changed.</span>
+                </div>
+              </div>
+
+              {/* DELIVERY RECIPIENT SETTINGS */}
+              <div className="adminEditSectionHeader" style={{ marginTop: 2 }}>
+                <Truck size={16} />
+                <h4>Delivery Recipient</h4>
               </div>
 
               {/* Gift Order Toggle */}
@@ -770,82 +779,16 @@ export default function AdminOrderEditModal({
                   <span className="adminEditCheckboxCustom"></span>
                   <span className="adminEditGiftText">
                     <Gift size={14} color="#9d174d" />
-                    <strong>This is a Gift Order (Separate Buyer & Recipient)</strong>
+                    <strong>This is a Gift Order (Separate Recipient)</strong>
                   </span>
                 </label>
               </div>
 
-              {!formData.isGift ? (
-                /* Standard Single Customer Mode */
-                <div className="adminEditFieldsStack">
-                  <div className="adminEditFieldGroup">
-                    <label htmlFor="customerNameInput">
-                      Full Name <span className="reqStar">*</span>
-                    </label>
-                    <div className="adminEditInputWrap">
-                      <User size={15} />
-                      <input
-                        id="customerNameInput"
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        placeholder="Customer Full Name"
-                        required
-                        maxLength={100}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="adminEditFieldGroup">
-                    <label htmlFor="customerPhoneInput">
-                      Mobile Number <span className="reqStar">*</span>
-                    </label>
-                    <div className="adminEditInputWrap">
-                      <Phone size={15} />
-                      <input
-                        id="customerPhoneInput"
-                        type="tel"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                        placeholder="10-digit mobile number (e.g. 9876543210)"
-                        required
-                        maxLength={15}
-                      />
-                    </div>
-                    <small className="adminEditFieldHint">
-                      Used for order status updates, WhatsApp tracking & delivery SMS.
-                    </small>
-                  </div>
-
-                  <div className="adminEditFieldGroup">
-                    <label htmlFor="customerEmailInput">
-                      Email Address <span className="reqStar">*</span>
-                    </label>
-                    <div className="adminEditInputWrap">
-                      <Mail size={15} />
-                      <input
-                        id="customerEmailInput"
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        placeholder="customer@gmail.com"
-                        required
-                        maxLength={120}
-                      />
-                    </div>
-                    <small className="adminEditFieldHint">
-                      Official invoice, confirmations and order tracking emails are sent here.
-                    </small>
-                  </div>
-                </div>
-              ) : (
-                /* Gift Order Mode: Separate Recipient & Buyer */
+              {formData.isGift ? (
+                /* Gift Recipient Fields */
                 <div className="adminEditFieldsStack">
                   <div className="adminEditGiftSubHeader">
-                    <span>🎁 Delivery Recipient (Receives the Parcel)</span>
+                    <span>🎁 Delivery Recipient (Receives Parcel)</span>
                   </div>
 
                   <div className="adminEditFieldGroup">
@@ -884,62 +827,21 @@ export default function AdminOrderEditModal({
                         maxLength={15}
                       />
                     </div>
+                    <small className="adminEditFieldHint">
+                      Delivery SMS, tracking and OTP will be directed to the recipient.
+                    </small>
                   </div>
-
-                  <div className="adminEditGiftSubHeader" style={{ marginTop: 12 }}>
-                    <span>💳 Buyer / Purchaser Details (Who Placed the Order)</span>
+                </div>
+              ) : (
+                /* Direct Delivery to Purchaser Mode */
+                <div className="adminEditFieldsStack">
+                  <div className="adminEditGiftSubHeader">
+                    <span>📦 Direct Delivery to Purchaser</span>
                   </div>
-
-                  <div className="adminEditFieldGroup">
-                    <label htmlFor="buyerNameInput">Buyer Name</label>
-                    <div className="adminEditInputWrap">
-                      <User size={15} />
-                      <input
-                        id="buyerNameInput"
-                        type="text"
-                        name="customerName"
-                        value={formData.customerName}
-                        onChange={handleInputChange}
-                        placeholder="Buyer Full Name"
-                        maxLength={100}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="adminEditFieldGroup">
-                    <label htmlFor="buyerPhoneInput">Buyer Phone</label>
-                    <div className="adminEditInputWrap">
-                      <Phone size={15} />
-                      <input
-                        id="buyerPhoneInput"
-                        type="tel"
-                        name="customerPhone"
-                        value={formData.customerPhone}
-                        onChange={handleInputChange}
-                        placeholder="Buyer Mobile Number"
-                        maxLength={15}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="adminEditFieldGroup">
-                    <label htmlFor="buyerEmailInput">
-                      Buyer Email <span className="reqStar">*</span>
-                    </label>
-                    <div className="adminEditInputWrap">
-                      <Mail size={15} />
-                      <input
-                        id="buyerEmailInput"
-                        type="email"
-                        name="customerEmail"
-                        value={formData.customerEmail}
-                        onChange={handleInputChange}
-                        placeholder="buyer@gmail.com"
-                        required
-                        maxLength={120}
-                      />
-                    </div>
-                  </div>
+                  <p style={{ margin: 0, fontSize: '0.82rem', color: '#64748b', lineHeight: 1.45 }}>
+                    Delivery parcel is addressed directly to <strong>{order.customer_name || order.customerName || order.name}</strong>.
+                    To specify a different recipient name or contact, check <em>"This is a Gift Order"</em> above.
+                  </p>
                 </div>
               )}
             </div>

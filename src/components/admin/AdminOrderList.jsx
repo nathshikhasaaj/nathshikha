@@ -43,7 +43,17 @@ export default function AdminOrderList({
 }) {
   const [sortBy, setSortBy] = useState('newest');
   const [deleteModalOrder, setDeleteModalOrder] = useState(null);
+  const [deleteReasonType, setDeleteReasonType] = useState('Duplicate order');
+  const [customDeleteReason, setCustomDeleteReason] = useState('');
+  const [deleteReasonError, setDeleteReasonError] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const openDeleteModal = (order) => {
+    setDeleteModalOrder(order);
+    setDeleteReasonType('Duplicate order');
+    setCustomDeleteReason('');
+    setDeleteReasonError('');
+  };
 
   const handleStatusChange = (order, newStatus) => {
     if (newStatus === 'shipped') {
@@ -730,8 +740,8 @@ export default function AdminOrderList({
                               <button
                                 type="button"
                                 className="outlineBtn compact deleteOrderBtn"
-                                onClick={() => setDeleteModalOrder(o)}
-                                title={`Delete order #${o.order_no} permanently`}
+                                onClick={() => openDeleteModal(o)}
+                                title={`Move order #${o.order_no} to Deleted Orders`}
                               >
                                 <Trash2 size={13} color="#dc2626" />
                                 <span>Delete</span>
@@ -957,9 +967,9 @@ export default function AdminOrderList({
                           <button
                             type="button"
                             className="outlineBtn compact mobileCardDeleteBtn"
-                            onClick={() => setDeleteModalOrder(o)}
-                            title={`Delete order #${o.order_no}`}
-                            aria-label={`Delete order #${o.order_no}`}
+                            onClick={() => openDeleteModal(o)}
+                            title={`Move order #${o.order_no} to Deleted Orders`}
+                            aria-label={`Move order #${o.order_no} to Deleted Orders`}
                           >
                             <Trash2 size={14} color="#dc2626" />
                           </button>
@@ -1019,7 +1029,7 @@ export default function AdminOrderList({
         )}
       </div>
 
-      {/* Delete Order Confirmation Modal */}
+      {/* Move to Deleted Orders / Trash Confirmation Modal */}
       {deleteModalOrder && (
         <div
           className="adminDeleteModalOverlay"
@@ -1034,24 +1044,97 @@ export default function AdminOrderList({
             <div className="deleteModalIcon">
               <Trash2 size={24} color="#dc2626" />
             </div>
-            <h3>Delete this order?</h3>
+            <h3>Move this order to Deleted Orders?</h3>
             <p>
-              This will permanently remove order <b>#{deleteModalOrder.order_no}</b> from the database. This action cannot be undone.
+              Order <b>#{deleteModalOrder.order_no || deleteModalOrder.orderNo}</b> will be moved to Deleted Orders (Trash). It will not be permanently deleted now and will remain fully recoverable for 30 days.
             </p>
+
             <div className="deleteOrderSummaryPreview">
               <div className="deletePreviewRow">
-                <span>Customer:</span>
-                <b>{deleteModalOrder.name}</b>
+                <span>Order ID:</span>
+                <b>#{deleteModalOrder.order_no || deleteModalOrder.orderNo}</b>
               </div>
               <div className="deletePreviewRow">
-                <span>Amount:</span>
+                <span>Customer / Buyer:</span>
+                <b>{deleteModalOrder.customer_name || deleteModalOrder.customerName || deleteModalOrder.name}</b>
+              </div>
+              <div className="deletePreviewRow">
+                <span>Total Amount:</span>
                 <b>{money(deleteModalOrder.total)}</b>
               </div>
               <div className="deletePreviewRow">
-                <span>Status:</span>
-                <b>{getStatusLabel(deleteModalOrder.order_status)}</b>
+                <span>Current Status:</span>
+                <b>{getStatusLabel(deleteModalOrder.order_status || deleteModalOrder.orderStatus)}</b>
+              </div>
+              <div className="deletePreviewRow" style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px dashed #e2e8f0' }}>
+                <span style={{ color: '#10b981', fontWeight: 600 }}>Recovery Period:</span>
+                <b style={{ color: '#10b981' }}>Order will remain recoverable for 30 days.</b>
               </div>
             </div>
+
+            {/* Deletion Reason Selector */}
+            <div className="deleteReasonForm" style={{ width: '100%', textAlign: 'left', marginTop: '6px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
+                Reason for deletion <span style={{ color: '#dc2626' }}>*</span>
+              </label>
+              <select
+                value={deleteReasonType}
+                onChange={(e) => {
+                  setDeleteReasonType(e.target.value);
+                  setDeleteReasonError('');
+                }}
+                className="deleteReasonSelect"
+                style={{
+                  width: '100%',
+                  padding: '7px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '12.5px',
+                  background: '#f8fafc',
+                  marginBottom: '8px'
+                }}
+              >
+                <option value="Duplicate order">Duplicate order</option>
+                <option value="Created by mistake">Created by mistake</option>
+                <option value="Customer requested cancellation">Customer requested cancellation</option>
+                <option value="Test order">Test order</option>
+                <option value="Other">Other (custom reason)</option>
+              </select>
+
+              <textarea
+                value={customDeleteReason}
+                onChange={(e) => {
+                  setCustomDeleteReason(e.target.value.slice(0, 500));
+                  setDeleteReasonError('');
+                }}
+                placeholder={
+                  deleteReasonType === 'Other'
+                    ? 'Please enter custom deletion reason (required, max 500 chars)...'
+                    : 'Optional additional notes (max 500 chars)...'
+                }
+                maxLength={500}
+                rows={2}
+                style={{
+                  width: '100%',
+                  padding: '7px 10px',
+                  borderRadius: '6px',
+                  border: deleteReasonError ? '1px solid #dc2626' : '1px solid #cbd5e1',
+                  fontSize: '12px',
+                  background: '#ffffff',
+                  boxSizing: 'border-box',
+                  resize: 'vertical'
+                }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
+                {deleteReasonError ? (
+                  <span style={{ color: '#dc2626', fontWeight: 600 }}>{deleteReasonError}</span>
+                ) : (
+                  <span>Maximum 500 characters</span>
+                )}
+                <span>{customDeleteReason.length}/500</span>
+              </div>
+            </div>
+
             <div className="adminDeleteModalActions">
               <button
                 type="button"
@@ -1059,13 +1142,28 @@ export default function AdminOrderList({
                 onClick={() => setDeleteModalOrder(null)}
                 disabled={isDeleting}
               >
-                Cancel
+                CANCEL
               </button>
               <button
                 type="button"
                 className="dangerDeleteBtn"
                 onClick={async () => {
                   if (!onDeleteOrder) return;
+
+                  let finalReason = '';
+                  if (deleteReasonType === 'Other') {
+                    finalReason = customDeleteReason.trim();
+                  } else {
+                    finalReason = customDeleteReason.trim()
+                      ? `${deleteReasonType}: ${customDeleteReason.trim()}`
+                      : deleteReasonType;
+                  }
+
+                  if (!finalReason || !finalReason.trim()) {
+                    setDeleteReasonError('Please provide a valid deletion reason.');
+                    return;
+                  }
+
                   setIsDeleting(true);
                   try {
                     const idToDelete =
@@ -1073,7 +1171,7 @@ export default function AdminOrderList({
                       deleteModalOrder.id ||
                       deleteModalOrder.order_no ||
                       deleteModalOrder.orderNo;
-                    await onDeleteOrder(idToDelete);
+                    await onDeleteOrder(idToDelete, finalReason);
                     setDeleteModalOrder(null);
                   } catch (err) {
                     console.error('Delete order error:', err);
@@ -1086,12 +1184,12 @@ export default function AdminOrderList({
                 {isDeleting ? (
                   <>
                     <Loader2 size={14} className="spinIcon" />
-                    <span>Deleting…</span>
+                    <span>MOVING TO TRASH…</span>
                   </>
                 ) : (
                   <>
                     <Trash2 size={14} />
-                    <span>Delete Order</span>
+                    <span>MOVE TO TRASH</span>
                   </>
                 )}
               </button>

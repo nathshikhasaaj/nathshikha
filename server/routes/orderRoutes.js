@@ -26,6 +26,7 @@ import {
 } from '../middleware/securityMiddleware.js';
 import { uploadSingle, uploadsDir } from '../middleware/uploadMiddleware.js';
 import { sendOrderPlacedEmail } from '../services/emailService.js';
+import { generateOrderNo } from '../services/orderIdService.js';
 
 const router = express.Router();
 
@@ -82,7 +83,7 @@ export function calculateOrderAgeInDays(createdAt) {
  * Active order statuses only. Not shipped, delivered, or cancelled.
  */
 export function isOrderMergeEligible(order) {
-  if (!order) return false;
+  if (!order || order.isDeleted || order.is_deleted) return false;
 
   // 1. Dynamic Order Age rule: strictly <= 15 days
   const age = calculateOrderAgeInDays(order.createdAt || order.created_at);
@@ -180,6 +181,7 @@ router.get('/eligible-merge-orders', optionalAuth, async (req, res) => {
 
     const orders = await Order.find({
       $or: queryConditions,
+      isDeleted: { $ne: true },
       orderStatus: {
         $in: ['placed', 'payment_pending', 'verification_pending', 'confirmed', 'making', 'packing', 'processing']
       },
@@ -491,11 +493,12 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
     if (combineWithOrderId) {
       const cleanCombineId = String(combineWithOrderId).trim();
       if (isValidObjectId(cleanCombineId)) {
-        targetExistingOrder = await Order.findById(cleanCombineId);
+        targetExistingOrder = await Order.findOne({ _id: cleanCombineId, isDeleted: { $ne: true } });
       }
       if (!targetExistingOrder) {
         targetExistingOrder = await Order.findOne({
-          orderNo: new RegExp(`^${escapeRegex(cleanCombineId.replace(/^#/, ''))}$`, 'i')
+          orderNo: new RegExp(`^${escapeRegex(cleanCombineId.replace(/^#/, ''))}$`, 'i'),
+          isDeleted: { $ne: true }
         });
       }
 
@@ -596,7 +599,7 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
       : null;
 
     const total = Math.max(0, subtotal - couponDiscount) + shipping + computedGiftWrapCharge;
-    const orderNo = 'NW' + Date.now().toString().slice(-8);
+    const orderNo = await generateOrderNo();
     const guestToken = crypto.randomBytes(24).toString('hex'); // 48-char high-entropy token
 
     const rawCustomDetails =
@@ -651,6 +654,10 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
           requestedAt: null
         };
 
+    const buyerName = user?.name || name.trim().slice(0, 100);
+    const buyerPhone = user?.phone || phone.trim();
+    const buyerEmail = user?.email || email.trim().toLowerCase();
+
     const order = await Order.create({
       orderNo,
       userId: user?.id && isValidObjectId(user.id) ? user.id : null,
@@ -662,9 +669,9 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
       handwrittenNote: cleanHandwrittenNote,
       recipientName: isGiftOrder ? (recipientName ? String(recipientName).trim().slice(0, 100) : name.trim().slice(0, 100)) : null,
       recipientPhone: isGiftOrder ? (recipientPhone ? String(recipientPhone).trim() : phone.trim()) : null,
-      customerName: isGiftOrder ? (customerName ? String(customerName).trim().slice(0, 100) : (user?.name || name.trim().slice(0, 100))) : null,
-      customerPhone: isGiftOrder ? (customerPhone ? String(customerPhone).trim() : (user?.phone || phone.trim())) : null,
-      customerEmail: isGiftOrder ? (customerEmail ? String(customerEmail).trim().toLowerCase() : (user?.email || email.trim().toLowerCase())) : null,
+      customerName: isGiftOrder ? (customerName ? String(customerName).trim().slice(0, 100) : buyerName) : buyerName,
+      customerPhone: isGiftOrder ? (customerPhone ? String(customerPhone).trim() : buyerPhone) : buyerPhone,
+      customerEmail: isGiftOrder ? (customerEmail ? String(customerEmail).trim().toLowerCase() : buyerEmail) : buyerEmail,
       name: name.trim().slice(0, 100),
       phone: phone.trim(),
       email: email.trim().toLowerCase(),
@@ -757,7 +764,7 @@ router.get('/', auth, async (req, res) => {
       }
     }
 
-    const orders = await Order.find({ $or: conditions })
+    const orders = await Order.find({ $or: conditions, isDeleted: { $ne: true } })
       .sort({ createdAt: -1 })
       .lean();
 
@@ -852,11 +859,12 @@ router.post('/:id/cancel-request', optionalAuth, async (req, res) => {
   try {
     let order = null;
     if (isValidObjectId(id)) {
-      order = await Order.findById(id);
+      order = await Order.findOne({ _id: id, isDeleted: { $ne: true } });
     }
     if (!order) {
       order = await Order.findOne({
-        orderNo: new RegExp(`^${escapeRegex(String(id).trim().replace(/^#/, ''))}$`, 'i')
+        orderNo: new RegExp(`^${escapeRegex(String(id).trim().replace(/^#/, ''))}$`, 'i'),
+        isDeleted: { $ne: true }
       });
     }
 
@@ -951,11 +959,12 @@ router.all(['/:id/address', '/:id/contact-details'], optionalAuth, async (req, r
   try {
     let order = null;
     if (isValidObjectId(id)) {
-      order = await Order.findById(id);
+      order = await Order.findOne({ _id: id, isDeleted: { $ne: true } });
     }
     if (!order) {
       order = await Order.findOne({
-        orderNo: new RegExp(`^${escapeRegex(String(id).trim().replace(/^#/, ''))}$`, 'i')
+        orderNo: new RegExp(`^${escapeRegex(String(id).trim().replace(/^#/, ''))}$`, 'i'),
+        isDeleted: { $ne: true }
       });
     }
 
@@ -991,7 +1000,27 @@ router.all(['/:id/address', '/:id/contact-details'], optionalAuth, async (req, r
       });
     }
 
-    // 3. Strict Allowlist Validation for Customer Order Edit
+    // 3. Immutability Protection: Reject any attempt to modify buyer identity or orderNo
+    if (
+      req.body.customerName !== undefined ||
+      req.body.customer_name !== undefined ||
+      req.body.customerPhone !== undefined ||
+      req.body.customer_phone !== undefined ||
+      req.body.customerEmail !== undefined ||
+      req.body.customer_email !== undefined ||
+      req.body.orderNo !== undefined ||
+      req.body.order_no !== undefined ||
+      req.body.userId !== undefined ||
+      req.body.user_id !== undefined ||
+      req.body.paymentStatus !== undefined ||
+      req.body.orderStatus !== undefined
+    ) {
+      return res.status(400).json({
+        error: 'Buyer identity fields (customerName, customerPhone, customerEmail, userId) and Order ID (orderNo) are immutable after order creation.'
+      });
+    }
+
+    // 4. Strict Allowlist Validation for Customer Order Edit
     const changedFields = [];
 
     // Delivery Address
@@ -1111,11 +1140,12 @@ router.post(['/:id/mark-reviewed', '/:id/view-assisted'], optionalAuth, async (r
   try {
     let order = null;
     if (isValidObjectId(id)) {
-      order = await Order.findById(id);
+      order = await Order.findOne({ _id: id, isDeleted: { $ne: true } });
     }
     if (!order) {
       order = await Order.findOne({
-        orderNo: new RegExp(`^${escapeRegex(String(id).trim().replace(/^#/, ''))}$`, 'i')
+        orderNo: new RegExp(`^${escapeRegex(String(id).trim().replace(/^#/, ''))}$`, 'i'),
+        isDeleted: { $ne: true }
       });
     }
 
@@ -1193,11 +1223,12 @@ router.post(['/:id/claim-payment', '/:id/pay', '/:id/submit-payment'], optionalA
   try {
     let order = null;
     if (isValidObjectId(id)) {
-      order = await Order.findById(id);
+      order = await Order.findOne({ _id: id, isDeleted: { $ne: true } });
     }
     if (!order) {
       order = await Order.findOne({
-        orderNo: new RegExp(`^${escapeRegex(String(id).trim().replace(/^#/, ''))}$`, 'i')
+        orderNo: new RegExp(`^${escapeRegex(String(id).trim().replace(/^#/, ''))}$`, 'i'),
+        isDeleted: { $ne: true }
       });
     }
 
@@ -1305,11 +1336,12 @@ router.post('/:id/customization', optionalAuth, async (req, res) => {
   try {
     let order = null;
     if (isValidObjectId(id)) {
-      order = await Order.findById(id);
+      order = await Order.findOne({ _id: id, isDeleted: { $ne: true } });
     }
     if (!order) {
       order = await Order.findOne({
-        orderNo: new RegExp(`^${escapeRegex(String(id).trim().replace(/^#/, ''))}$`, 'i')
+        orderNo: new RegExp(`^${escapeRegex(String(id).trim().replace(/^#/, ''))}$`, 'i'),
+        isDeleted: { $ne: true }
       });
     }
 
@@ -1406,7 +1438,8 @@ router.post('/track', lookupLimiter, async (req, res) => {
     const cleanId = String(identifier || phone || email || '').trim();
 
     const order = await Order.findOne({
-      orderNo: new RegExp(`^${escapeRegex(cleanOrderNo)}$`, 'i')
+      orderNo: new RegExp(`^${escapeRegex(cleanOrderNo)}$`, 'i'),
+      isDeleted: { $ne: true }
     }).lean();
 
     if (!order) {
@@ -1433,7 +1466,8 @@ router.post('/track', lookupLimiter, async (req, res) => {
     if (order.shipmentGroupCode) {
       const groupOrders = await Order.find({
         shipmentGroupCode: order.shipmentGroupCode,
-        _id: { $ne: order._id }
+        _id: { $ne: order._id },
+        isDeleted: { $ne: true }
       })
         .select('orderNo')
         .lean();
@@ -1557,7 +1591,7 @@ router.post('/lookup-orders', lookupLimiter, async (req, res) => {
       });
     }
 
-    const orders = await Order.find({ $or: queryConditions })
+    const orders = await Order.find({ $or: queryConditions, isDeleted: { $ne: true } })
       .sort({ createdAt: -1 })
       .lean();
 
@@ -1658,7 +1692,8 @@ router.get('/guest/:orderNo', lookupLimiter, async (req, res) => {
     const cleanOrderNo = String(orderNo).trim().replace(/^#/, '');
     const order = await Order.findOne({
       orderNo: new RegExp(`^${escapeRegex(cleanOrderNo)}$`, 'i'),
-      guestToken: token
+      guestToken: token,
+      isDeleted: { $ne: true }
     });
 
     if (!order) {
@@ -1672,11 +1707,27 @@ router.get('/guest/:orderNo', lookupLimiter, async (req, res) => {
   }
 });
 
-// Reusable Admin Delete Handler for order routes
+// Reusable Admin Delete Handler for order routes (Soft-Delete into Trash with configurable retention)
 async function handleOrderRoutesAdminDelete(req, res) {
   const id = req.params.id || req.query.id || req.body?.id || req.body?.orderId;
   if (!id) {
     return res.status(400).json({ error: 'Order ID is required for deletion.' });
+  }
+
+  // 1. Reason Validation (Strict requirement: max 500 characters, trimmed, non-empty)
+  const rawReason = req.body?.reason || req.body?.deleteReason || req.body?.delete_reason || req.query?.reason || '';
+  const validatedReason = String(rawReason).trim();
+
+  if (!validatedReason) {
+    return res.status(400).json({
+      error: 'Please provide a valid deletion reason (up to 500 characters).'
+    });
+  }
+
+  if (validatedReason.length > 500) {
+    return res.status(400).json({
+      error: 'Deletion reason cannot exceed 500 characters.'
+    });
   }
 
   try {
@@ -1685,13 +1736,14 @@ async function handleOrderRoutesAdminDelete(req, res) {
 
     let order = null;
     if (mongoose.Types.ObjectId.isValid(rawId)) {
-      order = await Order.findById(rawId);
+      order = await Order.findOne({ _id: rawId, isDeleted: { $ne: true } });
     }
     if (!order && mongoose.Types.ObjectId.isValid(cleanId)) {
-      order = await Order.findById(cleanId);
+      order = await Order.findOne({ _id: cleanId, isDeleted: { $ne: true } });
     }
     if (!order) {
       order = await Order.findOne({
+        isDeleted: { $ne: true },
         $or: [
           { orderNo: cleanId },
           { orderNo: `#${cleanId}` },
@@ -1707,61 +1759,66 @@ async function handleOrderRoutesAdminDelete(req, res) {
     }
 
     if (!order) {
-      return res.status(404).json({ error: 'Order not found in database.' });
+      return res.status(404).json({ error: 'Order not found or has already been moved to Trash.' });
     }
 
     const orderId = order._id;
     const orderNo = order.orderNo || order.order_no || id;
 
-    // Clean up shipment group association
-    if (order.shipmentGroupId) {
-      try {
-        const group = await ShipmentGroup.findById(order.shipmentGroupId);
-        if (group) {
-          group.orders = (group.orders || []).filter(
-            (oId) => oId.toString() !== orderId.toString()
-          );
-          if (group.orders.length === 0) {
-            await ShipmentGroup.findByIdAndDelete(group._id);
-          } else {
-            await group.save();
+    // 2. Retention calculation (Configurable via ORDER_TRASH_RETENTION_DAYS, defaults to 30 days)
+    const RETENTION_DAYS = parseInt(process.env.ORDER_TRASH_RETENTION_DAYS, 10) || 30;
+    const now = new Date();
+    const restoreUntil = new Date(now.getTime() + RETENTION_DAYS * 24 * 60 * 60 * 1000);
+    const adminId = req.user?._id || req.user?.id || null;
+    const adminName = req.user?.name || req.user?.email || 'Admin';
+
+    // 3. Atomic Soft Delete Operation (Race-Condition Protected)
+    const updatedOrder = await Order.findOneAndUpdate(
+      { _id: orderId, isDeleted: { $ne: true } },
+      {
+        $set: {
+          isDeleted: true,
+          deletedAt: now,
+          deletedBy: adminId,
+          deletedByName: adminName,
+          deleteReason: validatedReason,
+          restoreUntil: restoreUntil
+        },
+        $push: {
+          editHistory: {
+            action: 'order_deleted',
+            timestamp: now,
+            editedAt: now,
+            editedBy: adminName,
+            changedFields: ['Order Moved to Trash (Soft Deleted)'],
+            note: validatedReason,
+            notes: `Soft-deleted by ${adminName}: "${validatedReason}". Recoverable until ${restoreUntil.toLocaleDateString('en-GB')}`
           }
         }
-      } catch (groupErr) {
-        console.warn('Failed to clean up shipment group association:', groupErr.message);
-      }
-    }
+      },
+      { new: true }
+    );
 
-    // Clean up uploaded customization image file if stored locally
-    const customImg = order.customization?.referenceImage || order.customization?.reference_image;
-    if (customImg && typeof customImg === 'string' && customImg.startsWith('/uploads/customization-')) {
-      try {
-        const filePath = path.join(uploadsDir, path.basename(customImg));
-        if (fs.existsSync(filePath)) {
-          await fs.promises.unlink(filePath).catch(() => {});
-        }
-      } catch (fileErr) {
-        console.warn('Failed to delete customization reference file:', fileErr.message);
-      }
+    if (!updatedOrder) {
+      return res.status(409).json({ error: 'Order was already deleted or not found.' });
     }
-
-    // Delete the order document
-    await Order.findByIdAndDelete(orderId);
 
     res.json({
       ok: true,
       success: true,
-      message: `Order #${orderNo} deleted permanently from database.`,
+      message: `Order #${orderNo} moved to Deleted Orders (Trash). Recoverable for ${RETENTION_DAYS} days.`,
+      order: updatedOrder.toJSON(),
       deletedOrderNo: orderNo,
-      deletedOrderId: orderId.toString()
+      deletedOrderId: orderId.toString(),
+      restoreUntil: restoreUntil
     });
   } catch (err) {
-    console.error('Failed to delete order:', err);
-    res.status(500).json({ error: err.message || 'Failed to delete order from database.' });
+    console.error('Failed to soft delete order:', err);
+    res.status(500).json({ error: err.message || 'Failed to soft delete order.' });
   }
 }
 
-// Admin: Delete order permanently (supporting DELETE & POST on /api/orders)
+// Admin: Soft delete order into Trash (supporting DELETE & POST on /api/orders)
 router.delete(['/:id', '/', '/:id/delete', '/delete'], auth, admin, handleOrderRoutesAdminDelete);
 router.post(['/:id/delete', '/delete'], auth, admin, handleOrderRoutesAdminDelete);
 

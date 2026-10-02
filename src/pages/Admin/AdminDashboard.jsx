@@ -54,6 +54,7 @@ import AdminCategoryManager from '../../components/admin/AdminCategoryManager';
 import AdminCancellationModal from '../../components/admin/AdminCancellationModal';
 import AdminOrderEditModal from '../../components/admin/AdminOrderEditModal';
 import AdminCreateAssistedOrderModal from '../../components/admin/AdminCreateAssistedOrderModal';
+import AdminTrashOrders from '../../components/admin/AdminTrashOrders';
 import '../../components/admin/AdminLayout.css';
 import './AdminDashboard.css';
 
@@ -389,30 +390,32 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
     }
   };
 
-  // Handle Permanent Order Deletion (Admin only)
-  const handleDeleteOrder = async (orderId) => {
+  // Handle Soft Order Deletion / Move to Trash (Admin only)
+  const handleDeleteOrder = async (orderId, reason = 'Administrative deletion') => {
     try {
       const rawId = String(orderId || '').trim();
       const cleanId = rawId.replace(/^#/, '').trim();
       const targetId = cleanId || rawId;
 
+      const payload = { reason, deleteReason: reason, id: targetId, orderId: rawId };
       let res;
       try {
-        // Try DELETE /admin/orders/:id
+        // Try DELETE /admin/orders/:id with reason in body
         res = await api(`/admin/orders/${encodeURIComponent(targetId)}`, {
-          method: 'DELETE'
+          method: 'DELETE',
+          body: payload
         });
       } catch (delErr) {
-        // If 404 or proxy error, fallback to POST /admin/orders/:id/delete or /orders/:id/delete
+        // Fallback to POST /admin/orders/:id/delete or /orders/:id/delete
         try {
           res = await api(`/admin/orders/${encodeURIComponent(targetId)}/delete`, {
             method: 'POST',
-            body: { id: targetId, orderId: rawId }
+            body: payload
           });
         } catch (postAdminErr) {
           res = await api(`/orders/${encodeURIComponent(targetId)}/delete`, {
             method: 'POST',
-            body: { id: targetId, orderId: rawId }
+            body: payload
           });
         }
       }
@@ -447,13 +450,33 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
         setDetailsModalOrder(null);
       }
 
-      setToast(res.message || 'Order deleted permanently.');
+      setToast(res?.message || `Order #${cleanId || orderId} moved to Deleted Orders (Trash). Recoverable for 30 days.`);
       return res;
     } catch (err) {
       console.error('Failed to delete order:', err);
-      setToast(err.message || 'Failed to delete order');
+      setToast(err.message || 'Failed to move order to Trash');
       throw err;
     }
+  };
+
+  // Handle order restored from Trash back to active orders
+  const handleOrderRestored = (restoredOrder) => {
+    if (!restoredOrder) return;
+    setOrders((prev) => {
+      const exists = prev.some(
+        (o) =>
+          o._id === restoredOrder._id ||
+          o.id === restoredOrder.id ||
+          o.orderNo === restoredOrder.orderNo ||
+          o.order_no === restoredOrder.order_no
+      );
+      if (exists) {
+        return prev.map((o) =>
+          (o._id === restoredOrder._id || o.orderNo === restoredOrder.orderNo) ? restoredOrder : o
+        );
+      }
+      return [restoredOrder, ...prev];
+    });
   };
 
   // Handle Payment Verification Submission
@@ -1043,6 +1066,13 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
                 }}
                 onViewOrder={(order) => setDetailsModalOrder(order)}
               />
+            </div>
+          )}
+
+          {/* TAB: DELETED ORDERS / TRASH */}
+          {(tab === 'trash' || tab === 'deleted_orders') && (
+            <div className="adminTrashView">
+              <AdminTrashOrders onOrderRestored={handleOrderRestored} />
             </div>
           )}
 

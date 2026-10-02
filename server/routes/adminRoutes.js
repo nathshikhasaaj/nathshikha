@@ -31,6 +31,7 @@ import {
 
 import { uploadSingle, uploadMultiple, uploadsDir } from '../middleware/uploadMiddleware.js';
 import { isValidEmail, isValidPhone, isValidPincode } from '../middleware/securityMiddleware.js';
+import { generateOrderNo } from '../services/orderIdService.js';
 
 const router = express.Router();
 
@@ -340,10 +341,10 @@ router.delete('/products/:id', async (req, res) => {
   }
 });
 
-// Get all orders with shipment group mapping
+// Get all active orders with shipment group mapping (Excludes soft-deleted orders)
 router.get('/orders', async (req, res) => {
   try {
-    const orders = await Order.find().sort({ createdAt: -1, _id: -1 }).lean();
+    const orders = await Order.find({ isDeleted: { $ne: true } }).sort({ createdAt: -1, _id: -1 }).lean();
 
     // Map co-shipped orders for each order with shipmentGroupCode
     const groupCodeMap = new Map();
@@ -468,7 +469,7 @@ router.get('/customers/search', async (req, res) => {
         orderConds.push({ phone: new RegExp(escapeRegexStr(cleanDigits)) }, { customerPhone: new RegExp(escapeRegexStr(cleanDigits)) });
       }
 
-      const pastOrders = await Order.find({ $or: orderConds })
+      const pastOrders = await Order.find({ $or: orderConds, isDeleted: { $ne: true } })
         .sort({ createdAt: -1 })
         .limit(20)
         .lean();
@@ -723,7 +724,7 @@ router.post('/orders/assisted', async (req, res) => {
 
     // 7. Final Total Calculation (Server-Validated)
     const grandTotal = Math.max(0, subtotal - couponDiscount) + shippingCharge + giftWrapCharge;
-    const orderNo = 'NW' + Date.now().toString().slice(-8);
+    const orderNo = await generateOrderNo();
     const guestToken = crypto.randomBytes(24).toString('hex');
 
     // 8. Resolve or Link User Account
@@ -1205,7 +1206,7 @@ router.post('/orders', async (req, res) => {
 
     // 7. Grand Total
     const grandTotal = Math.max(0, subtotal - couponDiscount) + shipping + computedGiftWrapCharge;
-    const orderNo = 'NW' + Date.now().toString().slice(-8);
+    const orderNo = await generateOrderNo();
     const guestToken = crypto.randomBytes(24).toString('hex');
 
     // 8. Resolve Linked Customer User Account
@@ -1303,42 +1304,249 @@ router.post('/orders', async (req, res) => {
   }
 });
 
-// Helper function to find order by MongoDB ObjectId or orderNo (e.g. NW89463805 or #NW89463805)
-async function findOrderByIdOrNo(id) {
+// Retention configuration (default: 30 days)
+const RETENTION_DAYS = parseInt(process.env.ORDER_TRASH_RETENTION_DAYS, 10) || 30;
+
+// Helper function to find order by MongoDB ObjectId or orderNo (e.g. NS-2026-000001, #NS-2026-000001, NW89463805 or #NW89463805)
+async function findOrderByIdOrNo(id, includeDeleted = false) {
   if (!id) return null;
   const rawId = String(id).trim();
   const cleanId = rawId.replace(/^#/, '').trim();
+  const deleteFilter = includeDeleted ? {} : { isDeleted: { $ne: true } };
 
   if (mongoose.Types.ObjectId.isValid(rawId)) {
-    const found = await Order.findById(rawId);
+    const found = await Order.findOne({ _id: rawId, ...deleteFilter });
     if (found) return found;
   }
   if (mongoose.Types.ObjectId.isValid(cleanId)) {
-    const found = await Order.findById(cleanId);
+    const found = await Order.findOne({ _id: cleanId, ...deleteFilter });
     if (found) return found;
   }
 
+  const escapedClean = cleanId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   return await Order.findOne({
-    $or: [
-      { orderNo: cleanId },
-      { orderNo: `#${cleanId}` },
-      { orderNo: rawId },
-      { order_no: cleanId },
-      { order_no: `#${cleanId}` },
-      { order_no: rawId },
-      { orderId: cleanId },
-      { orderId: `#${cleanId}` },
-      { orderId: rawId }
+    $and: [
+      deleteFilter,
+      {
+        $or: [
+          { orderNo: new RegExp(`^#?${escapedClean}$`, 'i') },
+          { order_no: new RegExp(`^#?${escapedClean}$`, 'i') },
+          { orderId: new RegExp(`^#?${escapedClean}$`, 'i') }
+        ]
+      }
     ]
   });
 }
 
-// Get single order by id
+// Get all soft-deleted orders in Trash with search, filters, sorting, and pagination
+router.get(['/orders/trash', '/trash'], async (req, res) => {
+  try {
+    const {
+      q,
+      orderStatus,
+      status,
+      paymentStatus,
+      payment_status,
+      expiringSoon,
+      expiring_soon,
+      isExpired,
+      is_expired,
+      sort = 'recently_deleted',
+      page = 1,
+      limit = 50
+    } = req.query;
+
+    const query = { isDeleted: true };
+    const now = new Date();
+
+    // Text search by orderNo, buyer name, phone, email, recipient
+    if (q && String(q).trim()) {
+      const cleanQ = String(q).trim();
+      const escapedQ = cleanQ.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(escapedQ, 'i');
+      const cleanDigits = cleanQ.replace(/\D/g, '');
+
+      const searchConditions = [
+        { orderNo: regex },
+        { customerName: regex },
+        { name: regex },
+        { customerEmail: regex },
+        { email: regex },
+        { recipientName: regex },
+        { deleteReason: regex }
+      ];
+
+      if (cleanDigits.length >= 3) {
+        searchConditions.push(
+          { customerPhone: new RegExp(cleanDigits) },
+          { phone: new RegExp(cleanDigits) },
+          { recipientPhone: new RegExp(cleanDigits) }
+        );
+      }
+
+      query.$or = searchConditions;
+    }
+
+    // Status filter
+    const activeOrderStatus = orderStatus || status;
+    if (activeOrderStatus && String(activeOrderStatus).trim()) {
+      query.orderStatus = String(activeOrderStatus).trim();
+    }
+
+    // Payment status filter
+    const activePaymentStatus = paymentStatus || payment_status;
+    if (activePaymentStatus && String(activePaymentStatus).trim()) {
+      query.paymentStatus = String(activePaymentStatus).trim();
+    }
+
+    // Expiring soon filter (<= 7 days remaining and not expired)
+    const activeExpiringSoon = expiringSoon === 'true' || expiringSoon === true || expiring_soon === 'true' || expiring_soon === true;
+    if (activeExpiringSoon) {
+      const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      query.restoreUntil = { $lte: sevenDaysFromNow, $gt: now };
+    }
+
+    // Expired filter
+    const activeIsExpired = isExpired === 'true' || isExpired === true || is_expired === 'true' || is_expired === true;
+    if (activeIsExpired) {
+      query.restoreUntil = { $lte: now };
+    }
+
+    // Sorting
+    let sortObj = { deletedAt: -1, _id: -1 };
+    if (sort === 'oldest_deleted') {
+      sortObj = { deletedAt: 1, _id: 1 };
+    } else if (sort === 'expiring_soon') {
+      sortObj = { restoreUntil: 1, _id: 1 };
+    } else if (sort === 'order_date') {
+      sortObj = { createdAt: -1, _id: -1 };
+    }
+
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(200, Math.max(1, parseInt(limit, 10) || 50));
+    const skip = (pageNum - 1) * limitNum;
+
+    const [deletedDocs, totalCount, expiringSoonCount] = await Promise.all([
+      Order.find(query).sort(sortObj).skip(skip).limit(limitNum),
+      Order.countDocuments(query),
+      Order.countDocuments({
+        isDeleted: true,
+        restoreUntil: { $lte: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000), $gt: now }
+      })
+    ]);
+
+    const formattedOrders = deletedDocs.map((doc) => doc.toJSON());
+
+    res.json({
+      ok: true,
+      orders: formattedOrders,
+      totalCount,
+      expiringSoonCount,
+      retentionDays: RETENTION_DAYS,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(totalCount / limitNum) || 1
+    });
+  } catch (err) {
+    console.error('Error fetching trash orders:', err);
+    res.status(500).json({ error: err.message || 'Failed to fetch deleted orders' });
+  }
+});
+
+// Get single deleted order for read-only inspection
+router.get(['/orders/trash/:id', '/trash/:id'], async (req, res) => {
+  const { id } = req.params;
+  try {
+    const order = await findOrderByIdOrNo(id, true);
+    if (!order || !order.isDeleted) {
+      return res.status(404).json({ error: 'Deleted order not found in Trash.' });
+    }
+    res.json(order.toJSON());
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Failed to fetch deleted order' });
+  }
+});
+
+// Restore soft-deleted order from Trash
+router.post('/orders/:id/restore', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const order = await findOrderByIdOrNo(id, true);
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found in database.' });
+    }
+
+    if (!order.isDeleted) {
+      return res.status(400).json({
+        error: `Order #${order.orderNo} is already active and is not in Trash.`,
+        order: order.toJSON()
+      });
+    }
+
+    const now = new Date();
+    if (order.restoreUntil && new Date(order.restoreUntil).getTime() < now.getTime()) {
+      return res.status(410).json({
+        error: `Restore retention period for Order #${order.orderNo} expired on ${new Date(order.restoreUntil).toLocaleDateString('en-IN')}. Expired orders cannot be restored.`
+      });
+    }
+
+    // Atomic restore condition (protects against concurrent restores / race conditions)
+    const restoreQuery = {
+      _id: order._id,
+      isDeleted: true
+    };
+    if (order.restoreUntil) {
+      restoreQuery.restoreUntil = { $gt: now };
+    }
+
+    const restoredOrder = await Order.findOneAndUpdate(
+      restoreQuery,
+      {
+        $set: {
+          isDeleted: false,
+          deletedAt: null,
+          deletedBy: null,
+          deletedByName: null,
+          deleteReason: null,
+          restoreUntil: null
+        },
+        $push: {
+          editHistory: {
+            editedAt: now,
+            editedBy: req.user?.name || req.user?.email || 'Admin',
+            changedFields: ['Order Restored from Trash'],
+            notes: 'Order restored from Trash to active status'
+          }
+        }
+      },
+      { new: true }
+    );
+
+    if (!restoredOrder) {
+      return res.status(400).json({
+        error: `Could not restore Order #${order.orderNo}. The order may have already been restored or its retention period has expired.`
+      });
+    }
+
+    res.json({
+      ok: true,
+      success: true,
+      message: `Order #${restoredOrder.orderNo} restored successfully to active orders.`,
+      order: restoredOrder.toJSON()
+    });
+  } catch (err) {
+    console.error('Error restoring order:', err);
+    res.status(500).json({ error: err.message || 'Failed to restore order from Trash' });
+  }
+});
+
+// Get single active order by id (Excludes soft-deleted orders)
 router.get('/orders/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const order = await findOrderByIdOrNo(id);
+    const order = await findOrderByIdOrNo(id, false);
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
     }
@@ -1448,7 +1656,7 @@ router.post('/orders/:id/ship', async (req, res) => {
       );
 
       // Send Shipped email for all orders in group
-      const groupOrders = await Order.find({ shipmentGroupId: order.shipmentGroupId });
+      const groupOrders = await Order.find({ shipmentGroupId: order.shipmentGroupId, isDeleted: { $ne: true } });
       for (const grpOrder of groupOrders) {
         sendOrderShippedEmail(grpOrder).catch((err) => {
           console.error(`[Admin] Failed to send shipped email for order #${grpOrder.orderNo}:`, err.message);
@@ -1561,38 +1769,9 @@ router.patch(['/orders/:id/payment', '/orders/:id/edit-payment'], async (req, re
   }
 });
 
-// Edit existing order details (Customer Information, Delivery Address, Customization)
+// Edit existing order details (Delivery Address, Recipient Contact, Gift Options, Items, Customization)
 router.patch(['/orders/:id/edit', '/orders/:id/update-details', '/orders/:id'], async (req, res) => {
   const { id } = req.params;
-  const {
-    name,
-    phone,
-    email,
-    address,
-    pincode,
-    city,
-    state,
-    shippingMethod,
-    isGift,
-    giftWrap,
-    gift_wrap,
-    handwrittenNote,
-    handwritten_note,
-    recipientName,
-    recipientPhone,
-    customerName,
-    customerPhone,
-    customerEmail,
-    customizationDetails,
-    customization_details,
-    items,
-    allowProductionOverride,
-    allowProductionEdit,
-    adminEditNotes,
-    adminNotes,
-    notes
-  } = req.body;
-
   const appliedInventoryDeltas = [];
 
   try {
@@ -1601,27 +1780,107 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details', '/orders/:id'], 
       return res.status(404).json({ error: 'Order not found in database.' });
     }
 
+    // Capture original immutable buyer values
+    const origBuyerName = String(order.customerName || order.name || '').trim();
+    const origBuyerPhone = String(order.customerPhone || order.phone || '').trim().replace(/\D/g, '');
+    const origBuyerEmail = String(order.customerEmail || order.email || '').trim().toLowerCase();
+    const origUserId = order.userId ? String(order.userId) : null;
+    const origOrderNo = String(order.orderNo || '').trim().replace(/^#/, '');
+
+    // 1. STRICT IMMUTABILITY VALIDATION: Reject any attempt to modify buyer identity, userId, orderNo or payment/order statuses
+    if (req.body.orderNo !== undefined || req.body.order_no !== undefined) {
+      const incomingOrderNo = String(req.body.orderNo !== undefined ? req.body.orderNo : req.body.order_no).trim().replace(/^#/, '');
+      if (incomingOrderNo !== origOrderNo) {
+        return res.status(400).json({ error: 'Order ID (orderNo) cannot be modified after order creation.' });
+      }
+    }
+
+    if (req.body.userId !== undefined || req.body.user_id !== undefined) {
+      const incomingUserId = req.body.userId !== undefined ? req.body.userId : req.body.user_id;
+      const incomingUserIdStr = incomingUserId ? String(incomingUserId) : null;
+      if (incomingUserIdStr !== origUserId) {
+        return res.status(400).json({ error: 'Buyer account (userId) cannot be modified after order creation.' });
+      }
+    }
+
+    if (req.body.customerName !== undefined || req.body.customer_name !== undefined) {
+      const incomingCustomerName = String(req.body.customerName !== undefined ? req.body.customerName : req.body.customer_name).trim();
+      if (incomingCustomerName && incomingCustomerName !== origBuyerName) {
+        return res.status(400).json({ error: 'Buyer identity fields (customerName, customerPhone, customerEmail) cannot be modified after order creation.' });
+      }
+    }
+
+    if (req.body.customerPhone !== undefined || req.body.customer_phone !== undefined) {
+      const incomingCustomerPhone = String(req.body.customerPhone !== undefined ? req.body.customerPhone : req.body.customer_phone).replace(/\D/g, '');
+      if (incomingCustomerPhone && incomingCustomerPhone !== origBuyerPhone) {
+        return res.status(400).json({ error: 'Buyer identity fields (customerName, customerPhone, customerEmail) cannot be modified after order creation.' });
+      }
+    }
+
+    if (req.body.customerEmail !== undefined || req.body.customer_email !== undefined) {
+      const incomingCustomerEmail = String(req.body.customerEmail !== undefined ? req.body.customerEmail : req.body.customer_email).trim().toLowerCase();
+      if (incomingCustomerEmail && incomingCustomerEmail !== origBuyerEmail) {
+        return res.status(400).json({ error: 'Buyer identity fields (customerName, customerPhone, customerEmail) cannot be modified after order creation.' });
+      }
+    }
+
+    if (req.body.email !== undefined) {
+      const incomingEmail = String(req.body.email).trim().toLowerCase();
+      if (incomingEmail && incomingEmail !== origBuyerEmail) {
+        return res.status(400).json({ error: 'Buyer email cannot be modified after order creation.' });
+      }
+    }
+
+    if (req.body.paymentStatus !== undefined && req.body.paymentStatus !== order.paymentStatus) {
+      return res.status(400).json({ error: 'Payment status cannot be modified via order edit. Please use payment verification workflow.' });
+    }
+
+    if (req.body.orderStatus !== undefined && req.body.orderStatus !== order.orderStatus) {
+      return res.status(400).json({ error: 'Order status cannot be modified via order edit. Please use the status update workflow.' });
+    }
+
+    // Determine Gift Order state
+    const isGiftBool = req.body.isGift !== undefined
+      ? Boolean(req.body.isGift)
+      : (req.body.is_gift !== undefined ? Boolean(req.body.is_gift) : Boolean(order.isGift));
+
+    if (req.body.name !== undefined && !isGiftBool && !req.body.recipientName && !req.body.recipient_name) {
+      const incomingName = String(req.body.name).trim();
+      if (incomingName && incomingName !== origBuyerName) {
+        return res.status(400).json({
+          error: 'Buyer name cannot be modified after order creation. To specify a different delivery recipient, please use the Gift/Recipient options.'
+        });
+      }
+    }
+
+    // 2. STRICT ALLOWLIST EXTRACTION
+    const {
+      address,
+      pincode,
+      city,
+      state,
+      shippingMethod,
+      giftWrap,
+      gift_wrap,
+      handwrittenNote,
+      handwritten_note,
+      recipientName,
+      recipient_name,
+      recipientPhone,
+      recipient_phone,
+      customizationDetails,
+      customization_details,
+      items,
+      allowProductionOverride,
+      allowProductionEdit,
+      adminEditNotes,
+      adminNotes,
+      notes
+    } = req.body;
+
     const changedFieldLabels = [];
 
-    // 1. Validate Customer / Recipient contact fields
-    const rawName = String(name !== undefined ? name : (order.name || '')).trim().slice(0, 100);
-    if (!rawName) {
-      return res.status(400).json({ error: 'Customer / Recipient name is required.' });
-    }
-
-    const rawPhone = String(phone !== undefined ? phone : (order.phone || '')).trim();
-    const cleanPhoneDigits = rawPhone.replace(/\D/g, '');
-    if (!cleanPhoneDigits || cleanPhoneDigits.length < 10) {
-      return res.status(400).json({ error: 'Please enter a valid 10-digit mobile number.' });
-    }
-    const cleanPhone = cleanPhoneDigits.length === 10 ? cleanPhoneDigits : cleanPhoneDigits.slice(-10);
-
-    const rawEmail = String(email !== undefined ? email : (order.email || '')).trim().toLowerCase().slice(0, 120);
-    if (!rawEmail || !isValidEmail(rawEmail)) {
-      return res.status(400).json({ error: 'Please enter a valid email address.' });
-    }
-
-    // 2. Validate Delivery Address
+    // 3. Validate Delivery Address
     const rawAddress = String(address !== undefined ? address : (order.address || '')).trim().slice(0, 500);
     if (!rawAddress) {
       return res.status(400).json({ error: 'Delivery address is required.' });
@@ -1638,7 +1897,26 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details', '/orders/:id'], 
       ? String(shippingMethod).trim().slice(0, 100)
       : order.shippingMethod;
 
-    const isGiftBool = isGift !== undefined ? Boolean(isGift) : Boolean(order.isGift);
+    // 4. Validate Delivery Recipient Contact Details
+    const rawRecName = recipientName !== undefined ? recipientName : (recipient_name !== undefined ? recipient_name : (isGiftBool ? req.body.name : null));
+    const cleanRecipientName = rawRecName ? String(rawRecName).trim().slice(0, 100) : null;
+
+    const rawRecPhone = recipientPhone !== undefined ? recipientPhone : (recipient_phone !== undefined ? recipient_phone : (isGiftBool ? req.body.phone : null));
+    let cleanRecipientPhone = null;
+    if (rawRecPhone !== undefined && rawRecPhone !== null) {
+      const recDigits = String(rawRecPhone).replace(/\D/g, '');
+      if (recDigits.length >= 10) {
+        cleanRecipientPhone = recDigits.slice(-10);
+      } else if (recDigits.length > 0) {
+        return res.status(400).json({ error: 'Please enter a valid 10-digit mobile number for the recipient.' });
+      }
+    }
+
+    if (isGiftBool && !cleanRecipientName && !order.recipientName) {
+      return res.status(400).json({ error: 'Recipient name is required for gift orders.' });
+    }
+
+    // 5. Validate Gift Options
     const isGiftWrapBool = isGiftBool && (
       giftWrap !== undefined
         ? Boolean(giftWrap)
@@ -1652,43 +1930,18 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details', '/orders/:id'], 
       ? rawHandwrittenNote.trim().slice(0, 1000)
       : null;
 
-    const cleanRecipientName = isGiftBool
-      ? (recipientName ? String(recipientName).trim().slice(0, 100) : rawName)
-      : null;
-    const cleanRecipientPhone = isGiftBool
-      ? (recipientPhone ? String(recipientPhone).trim().replace(/\D/g, '').slice(-10) : cleanPhone)
-      : null;
-    const cleanCustomerName = isGiftBool
-      ? (customerName ? String(customerName).trim().slice(0, 100) : (order.customerName || rawName))
-      : rawName;
-    const cleanCustomerPhone = isGiftBool
-      ? (customerPhone ? String(customerPhone).trim().replace(/\D/g, '').slice(-10) : (order.customerPhone || cleanPhone))
-      : cleanPhone;
-    const cleanCustomerEmail = isGiftBool
-      ? (customerEmail ? String(customerEmail).trim().toLowerCase().slice(0, 120) : (order.customerEmail || rawEmail))
-      : rawEmail;
-
-    // Detect contact & address changes
-    if (order.name !== rawName) changedFieldLabels.push('Name');
-    if (order.phone !== cleanPhone) changedFieldLabels.push('Phone');
-    if (order.email !== rawEmail) changedFieldLabels.push('Email');
-    if (order.address !== rawAddress) changedFieldLabels.push('Address');
+    // Detect delivery & gift changes
+    if (order.address !== rawAddress) changedFieldLabels.push('Delivery Address');
     if (rawPincode && order.pincode !== rawPincode) changedFieldLabels.push('PIN Code');
     if (cleanCity && order.city !== cleanCity) changedFieldLabels.push('City');
     if (cleanState && order.state !== cleanState) changedFieldLabels.push('State');
-    if (Boolean(order.isGift) !== isGiftBool) changedFieldLabels.push('Gift Order Status');
+    if (Boolean(order.isGift) !== isGiftBool) changedFieldLabels.push(`Gift Order Status (${isGiftBool ? 'Converted to Gift' : 'Standard Delivery'})`);
     if (Boolean(order.giftWrap) !== isGiftWrapBool) changedFieldLabels.push(`Gift Wrap (${isGiftWrapBool ? 'Added ₹20' : 'Removed'})`);
     if ((order.handwrittenNote || null) !== cleanHandwrittenNote) changedFieldLabels.push('Handwritten Note');
+    if (cleanRecipientName && order.recipientName !== cleanRecipientName) changedFieldLabels.push('Recipient Name');
+    if (cleanRecipientPhone && order.recipientPhone !== cleanRecipientPhone) changedFieldLabels.push('Recipient Phone');
 
-    if (isGiftBool) {
-      if (order.recipientName !== cleanRecipientName) changedFieldLabels.push('Recipient Name');
-      if (order.recipientPhone !== cleanRecipientPhone) changedFieldLabels.push('Recipient Phone');
-      if (order.customerName !== cleanCustomerName) changedFieldLabels.push('Buyer Name');
-      if (order.customerPhone !== cleanCustomerPhone) changedFieldLabels.push('Buyer Phone');
-      if (order.customerEmail !== cleanCustomerEmail) changedFieldLabels.push('Buyer Email');
-    }
-
-    // Customization text update if provided
+    // 6. Customization Details
     const rawCustomDetails = customizationDetails !== undefined ? customizationDetails : customization_details;
     if (rawCustomDetails !== undefined) {
       const cleanCustomDetails = typeof rawCustomDetails === 'string' && rawCustomDetails.trim()
@@ -1708,7 +1961,7 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details', '/orders/:id'], 
       }
     }
 
-    // 3. PRODUCT / ITEMS EDITING & INVENTORY ATOMIC DELTA
+    // 7. PRODUCT / ITEMS EDITING & INVENTORY ATOMIC DELTA
     let normalizedItems = order.items;
     let subtotal = order.subtotal;
     let couponDiscount = order.couponDiscount || 0;
@@ -1733,7 +1986,7 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details', '/orders/:id'], 
       // Validate products against catalog
       const validProductIds = items
         .map((i) => (i.productId || i.id || i._id)?.toString())
-        .filter((id) => id && mongoose.Types.ObjectId.isValid(id));
+        .filter((pid) => pid && mongoose.Types.ObjectId.isValid(pid));
 
       if (validProductIds.length !== items.length) {
         return res.status(400).json({ error: 'One or more items have invalid product IDs.' });
@@ -1773,7 +2026,6 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details', '/orders/:id'], 
           (newItem.selectedParameters && typeof newItem.selectedParameters === 'object' ? newItem.selectedParameters : null) ||
           (newItem.selectedOptions && typeof newItem.selectedOptions === 'object' ? newItem.selectedOptions : {});
 
-        // Historical price preservation: if item was already in order, keep historical item price unless catalog price is explicitly requested
         const existingItemMatch = (order.items || []).find((oldIt) => (oldIt.productId || oldIt.id)?.toString() === pId);
         const itemPrice = newItem.price !== undefined
           ? Number(newItem.price)
@@ -1790,14 +2042,14 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details', '/orders/:id'], 
         });
       }
 
-      // Inventory Delta Pre-check across all affected products
+      // Inventory Delta Pre-check
       const allProductIds = new Set([...oldProductQtyMap.keys(), ...newProductQtyMap.keys()]);
       const deltaPlan = [];
 
       for (const pId of allProductIds) {
         const oldQty = oldProductQtyMap.get(pId) || 0;
         const newQty = newProductQtyMap.get(pId) || 0;
-        const delta = newQty - oldQty; // >0 means need more stock, <0 means release stock
+        const delta = newQty - oldQty;
 
         if (delta !== 0) {
           let prod = catalogMap.get(pId);
@@ -1827,7 +2079,6 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details', '/orders/:id'], 
             { new: true }
           );
           if (!updated) {
-            // Rollback already applied adjustments
             for (const applied of appliedInventoryDeltas) {
               if (applied.delta > 0) {
                 await Product.findByIdAndUpdate(applied.pId, { $inc: { stock: applied.delta } }).catch(() => {});
@@ -1850,7 +2101,6 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details', '/orders/:id'], 
       normalizedItems = tempNormalizedItems;
       subtotal = normalizedItems.reduce((acc, it) => acc + (it.price * it.qty), 0);
 
-      // Revalidate Coupon Discount if coupon was applied
       if (order.couponCode) {
         const coupon = await Coupon.findOne({ code: order.couponCode.toUpperCase() });
         if (coupon && coupon.isActive && !isCouponExpired(coupon.expiryDate) && subtotal >= (coupon.minOrderValue || 0)) {
@@ -1863,7 +2113,7 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details', '/orders/:id'], 
       changedFieldLabels.push(`Order Products (${normalizedItems.length} items, Subtotal: ₹${subtotal})`);
     }
 
-    // 4. Compute Final Total Server-Side
+    // 8. Compute Final Total Server-Side
     const calculatedTotal = Math.max(0, subtotal - couponDiscount) + shipping + computedGiftWrapCharge;
     const prevTotal = order.total;
     const totalDiff = calculatedTotal - prevTotal;
@@ -1872,10 +2122,34 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details', '/orders/:id'], 
       changedFieldLabels.push(`Order Total (₹${prevTotal} → ₹${calculatedTotal})`);
     }
 
-    // Apply updates to Order document
-    order.name = isGiftBool ? (cleanRecipientName || rawName) : rawName;
-    order.phone = isGiftBool ? (cleanRecipientPhone || cleanPhone) : cleanPhone;
-    order.email = isGiftBool ? (cleanCustomerEmail || rawEmail) : rawEmail;
+    // 9. Apply Updates to Order Document: BUYER IDENTITY IS STRICTLY IMMUTABLE
+    order.customerName = origBuyerName;
+    order.customerPhone = origBuyerPhone;
+    order.customerEmail = origBuyerEmail;
+    order.email = origBuyerEmail;
+
+    if (isGiftBool) {
+      order.recipientName = cleanRecipientName || order.recipientName || origBuyerName;
+      order.recipientPhone = cleanRecipientPhone || order.recipientPhone || origBuyerPhone;
+      order.name = order.recipientName;
+      order.phone = order.recipientPhone;
+    } else {
+      if (cleanRecipientName) {
+        order.recipientName = cleanRecipientName;
+        order.name = cleanRecipientName;
+      } else {
+        order.recipientName = null;
+        order.name = origBuyerName;
+      }
+      if (cleanRecipientPhone) {
+        order.recipientPhone = cleanRecipientPhone;
+        order.phone = cleanRecipientPhone;
+      } else {
+        order.recipientPhone = null;
+        order.phone = origBuyerPhone;
+      }
+    }
+
     order.address = rawAddress;
     if (rawPincode) order.pincode = rawPincode;
     if (cleanCity) order.city = cleanCity;
@@ -1886,20 +2160,6 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details', '/orders/:id'], 
     order.giftWrapCharge = computedGiftWrapCharge;
     order.handwrittenNote = cleanHandwrittenNote;
 
-    if (isGiftBool) {
-      order.recipientName = cleanRecipientName;
-      order.recipientPhone = cleanRecipientPhone;
-      order.customerName = cleanCustomerName;
-      order.customerPhone = cleanCustomerPhone;
-      order.customerEmail = cleanCustomerEmail;
-    } else {
-      order.customerName = rawName;
-      order.customerPhone = cleanPhone;
-      order.customerEmail = rawEmail;
-      order.recipientName = null;
-      order.recipientPhone = null;
-    }
-
     if (items !== undefined) {
       order.items = normalizedItems;
       order.subtotal = subtotal;
@@ -1907,14 +2167,12 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details', '/orders/:id'], 
     }
     order.total = calculatedTotal;
 
-    // If order is assisted or payment pending, track lastEditedAt
     if (order.assistedOrder?.isAssisted || order.orderStatus === 'payment_pending') {
       order.assistedOrder = {
         ...(order.assistedOrder || {}),
         isAssisted: true,
         lastEditedAt: new Date()
       };
-      // If total changed after customer submitted payment claim, flag in history
       if (order.assistedOrder?.paymentClaimedAt && totalDiff !== 0) {
         changedFieldLabels.push('Order Total Changed After Customer Payment Claim');
       }
@@ -1951,7 +2209,6 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details', '/orders/:id'], 
   } catch (err) {
     console.error('Failed to edit order:', err);
 
-    // Rollback any executed inventory deltas
     for (const applied of appliedInventoryDeltas) {
       if (applied.delta > 0) {
         await Product.findByIdAndUpdate(applied.pId, { $inc: { stock: applied.delta } }).catch(() => {});
@@ -1972,74 +2229,82 @@ router.put(['/orders/:id/edit', '/orders/:id/update-details', '/orders/:id'], as
   next();
 });
 
-// Reusable Admin Order Deletion Handler
+// Reusable Admin Soft-Delete Order Handler (Moves Order to Trash)
 async function handleAdminDeleteOrder(req, res) {
   const id = req.params.id || req.query.id || req.body?.id || req.body?.orderId;
   if (!id) {
     return res.status(400).json({ error: 'Order ID is required for deletion.' });
   }
 
+  const rawReason = req.body?.reason || req.body?.deleteReason || req.body?.delete_reason || req.query?.reason;
+  const cleanReason = String(rawReason || '').trim().slice(0, 500);
+
+  if (!cleanReason) {
+    return res.status(400).json({
+      error: 'Please provide a valid reason for moving this order to Deleted Orders / Trash.'
+    });
+  }
+
   try {
-    const order = await findOrderByIdOrNo(id);
+    const order = await findOrderByIdOrNo(id, true);
     if (!order) {
       return res.status(404).json({ error: 'Order not found in database.' });
     }
 
+    if (order.isDeleted) {
+      return res.status(400).json({
+        error: `Order #${order.orderNo} is already in Deleted Orders / Trash.`
+      });
+    }
+
     const orderId = order._id;
     const orderNo = order.orderNo || order.order_no || id;
+    const now = new Date();
+    const restoreUntil = new Date(now.getTime() + RETENTION_DAYS * 24 * 60 * 60 * 1000);
 
-    // 1. If part of a shipment group, clean up association safely
-    if (order.shipmentGroupId) {
-      try {
-        const group = await ShipmentGroup.findById(order.shipmentGroupId);
-        if (group) {
-          group.orders = (group.orders || []).filter(
-            (oId) => oId.toString() !== orderId.toString()
-          );
-          if (group.orders.length === 0) {
-            await ShipmentGroup.findByIdAndDelete(group._id);
-          } else {
-            await group.save();
+    // Atomic Soft-Delete Update (Preserves Document & All Data)
+    const updatedOrder = await Order.findOneAndUpdate(
+      { _id: orderId, isDeleted: { $ne: true } },
+      {
+        $set: {
+          isDeleted: true,
+          deletedAt: now,
+          deletedBy: req.user?.id && isValidObjectId(req.user.id) ? req.user.id : null,
+          deletedByName: req.user?.name || req.user?.email || 'Admin',
+          deleteReason: cleanReason,
+          restoreUntil
+        },
+        $push: {
+          editHistory: {
+            editedAt: now,
+            editedBy: req.user?.name || req.user?.email || 'Admin',
+            changedFields: ['Order Moved to Trash / Soft Deleted'],
+            notes: `Reason: ${cleanReason} (Recoverable for ${RETENTION_DAYS} days until ${restoreUntil.toLocaleDateString('en-IN')})`
           }
         }
-      } catch (groupErr) {
-        console.warn('Failed to clean up shipment group association:', groupErr.message);
-      }
-    }
+      },
+      { new: true }
+    );
 
-    // 2. Clean up any unused review tokens created for this order
-    try {
-      await ReviewToken.deleteMany({ orderId });
-    } catch (tokenErr) {
-      console.warn('Failed to clean up review tokens:', tokenErr.message);
+    if (!updatedOrder) {
+      return res.status(400).json({
+        error: `Order #${orderNo} has already been deleted or modified by another session.`
+      });
     }
-
-    // 3. Clean up uploaded customization reference image file if stored locally
-    const customImg = order.customization?.referenceImage || order.customization?.reference_image;
-    if (customImg && typeof customImg === 'string' && customImg.startsWith('/uploads/customization-')) {
-      try {
-        const filePath = path.join(uploadsDir, path.basename(customImg));
-        if (fs.existsSync(filePath)) {
-          await fs.promises.unlink(filePath).catch(() => {});
-        }
-      } catch (fileErr) {
-        console.warn('Failed to delete customization reference file:', fileErr.message);
-      }
-    }
-
-    // 4. Delete the order document permanently from database
-    await Order.findByIdAndDelete(orderId);
 
     res.json({
       ok: true,
       success: true,
-      message: `Order #${orderNo} deleted permanently from database.`,
+      message: `Order #${orderNo} moved to Deleted Orders / Trash. It remains recoverable for ${RETENTION_DAYS} days.`,
       deletedOrderNo: orderNo,
-      deletedOrderId: orderId.toString()
+      deletedOrderId: orderId.toString(),
+      retentionDays: RETENTION_DAYS,
+      restoreUntil,
+      order: updatedOrder.toJSON()
     });
   } catch (err) {
-    console.error('Failed to delete order:', err);
-    res.status(500).json({ error: err.message || 'Failed to delete order from database.' });
+    console.error('Failed to soft-delete order:', err);
+    res.status(500).json({ error: err.message || 'Failed to move order to Trash.' });
   }
 }
 
@@ -2661,7 +2926,7 @@ router.post('/orders/:orderId/products/:productId/review-link', async (req, res)
   const { orderId, productId } = req.params;
 
   try {
-    const order = await Order.findById(orderId);
+    const order = await Order.findOne({ _id: orderId, isDeleted: { $ne: true } });
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
     }
