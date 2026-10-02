@@ -315,6 +315,7 @@ export default function AdminTrashOrders({ onOrderRestored }) {
                 const daysRemaining = order.days_remaining !== undefined ? order.days_remaining : calculateDaysRemaining(restoreUntil);
                 const isExpired = order.is_expired !== undefined ? order.is_expired : daysRemaining <= 0;
                 const isExpiringSoon = daysRemaining > 0 && daysRemaining <= 7;
+                const { dateStr: orderDateStr, timeStr: orderTimeStr, fullStr: orderFullDateStr } = formatOrderDate(order.created_at || order.createdAt);
 
                 return (
                   <tr key={order._id || order.id || orderNo} className={isExpired ? 'rowExpired' : ''}>
@@ -332,8 +333,13 @@ export default function AdminTrashOrders({ onOrderRestored }) {
                     </td>
 
                     {/* Order Date */}
-                    <td className="cellDate">
-                      {formatOrderDate(order.created_at || order.createdAt)}
+                    <td className="cellDate" title={orderFullDateStr}>
+                      <div className="dateCellWrap">
+                        <span className="orderDateText">{orderDateStr}</span>
+                        {orderTimeStr && (
+                          <small className="orderTimeText" style={{ display: 'block', fontSize: '11px', color: '#64748b' }}>{orderTimeStr}</small>
+                        )}
+                      </div>
                     </td>
 
                     {/* Total */}
@@ -717,7 +723,7 @@ export default function AdminTrashOrders({ onOrderRestored }) {
               </div>
               <div className="summaryRow">
                 <span>Order Date:</span>
-                <b>{formatOrderDate(restoreModalOrder.created_at || restoreModalOrder.createdAt)}</b>
+                <b>{formatOrderDate(restoreModalOrder.created_at || restoreModalOrder.createdAt).fullStr}</b>
               </div>
               <div className="summaryRow">
                 <span>Deleted Date:</span>
