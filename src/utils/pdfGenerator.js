@@ -222,6 +222,9 @@ export function buildInvoicePdfBinary(order) {
   const handwrittenNote = String(order.handwritten_note || order.handwrittenNote || '').trim();
 
   const getProductCode = (item, index) => {
+    if (item.itemType === 'free_gift' || item.item_type === 'free_gift' || item.name === 'Free Complimentary Gift') {
+      return 'FREE-GIFT';
+    }
     if (item.productCode) return String(item.productCode);
     if (item.sku) return String(item.sku);
     if (item.product_code) return String(item.product_code);
@@ -399,8 +402,18 @@ export function buildInvoicePdfBinary(order) {
 
   const customObj = order.customization;
   const hasPdfCustom = Boolean(customObj?.requested || customObj?.details || customObj?.referenceImage || customObj?.reference_image);
+  const hasFreeGift = Boolean(order.free_gift?.included || order.freeGift?.included);
 
-  if (handwrittenNote) {
+  if (hasFreeGift) {
+    drawText('* COMPLIMENTARY FREE GIFT INCLUDED', 48, totalsY + 66, 'F2', 8, 157, 23, 77);
+    drawText('This order includes a complimentary gift from Nathshikha.', 48, totalsY + 52, 'F1', 7.5, 31, 20, 16);
+    if (handwrittenNote) {
+      drawText(`Note: "${handwrittenNote.substring(0, 44)}"`, 48, totalsY + 38, 'F1', 7.5, 131, 24, 67);
+    } else if (hasPdfCustom) {
+      const customTxt = customObj?.details || 'Reference design attached';
+      drawText(`Custom: "${customTxt.substring(0, 44)}"`, 48, totalsY + 38, 'F1', 7.5, 91, 20, 32);
+    }
+  } else if (handwrittenNote) {
     drawText('* HANDWRITTEN NOTE FOR RECIPIENT', 48, totalsY + 66, 'F2', 8, 157, 23, 77);
     const noteTxt = handwrittenNote.substring(0, 48);
     drawText(`"${noteTxt}"`, 48, totalsY + 52, 'F1', 7.5, 131, 24, 67);

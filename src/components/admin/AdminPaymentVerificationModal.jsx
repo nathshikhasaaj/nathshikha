@@ -23,6 +23,7 @@ export default function AdminPaymentVerificationModal({
   const [transactionId, setTransactionId] = useState('');
   const [paymentApp, setPaymentApp] = useState('Google Pay');
   const [customApp, setCustomApp] = useState('');
+  const [freeGiftIncluded, setFreeGiftIncluded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -31,6 +32,7 @@ export default function AdminPaymentVerificationModal({
   useEffect(() => {
     if (order) {
       setTransactionId(order.payment_transaction_id || order.upi_utr || '');
+      setFreeGiftIncluded(Boolean(order.free_gift?.included || order.freeGift?.included));
       const currentApp = order.payment_app || order.paymentApp || 'Google Pay';
       if (PAYMENT_APP_OPTIONS.includes(currentApp)) {
         setPaymentApp(currentApp);
@@ -69,12 +71,14 @@ export default function AdminPaymentVerificationModal({
       if (isEditMode && onSaveEdit) {
         await onSaveEdit(order.id || order._id, {
           transactionId: cleanTxId,
-          paymentApp: cleanApp
+          paymentApp: cleanApp,
+          freeGiftIncluded
         });
       } else if (onVerify) {
         await onVerify(order.id || order._id, {
           transactionId: cleanTxId,
-          paymentApp: cleanApp
+          paymentApp: cleanApp,
+          freeGiftIncluded
         });
       }
       onClose();
@@ -207,6 +211,23 @@ export default function AdminPaymentVerificationModal({
               />
             </div>
           )}
+
+          {/* 3. Free Gift Included Checkbox */}
+          <div className="formGroup freeGiftFormGroup">
+            <label className="freeGiftCheckboxLabel" htmlFor="verifyFreeGiftCheckbox">
+              <input
+                id="verifyFreeGiftCheckbox"
+                type="checkbox"
+                checked={freeGiftIncluded}
+                onChange={(e) => setFreeGiftIncluded(e.target.checked)}
+                className="freeGiftCheckboxInput"
+              />
+              <span className="freeGiftCheckboxContent">
+                <span className="freeGiftMainTitle">🎁 <b>Free Gift Included</b></span>
+                <small className="freeGiftSubtext">Complimentary gift will be added to this customer parcel.</small>
+              </span>
+            </label>
+          </div>
 
           {/* Notice Banner */}
           <div className="autoConfirmNotice">

@@ -416,9 +416,20 @@ export async function sendPasswordResetEmail(user, rawToken, originUrl = null) {
  * Helper to build Item rows in Order Email HTML
  */
 function renderOrderItemsTable(order) {
-  const items = order.items || [];
+  let items = order.items || [];
+  const isGiftItem = (i) => i && (i.itemType === 'free_gift' || i.item_type === 'free_gift' || i.name === 'Free Complimentary Gift');
+  if (Boolean(order.free_gift?.included || order.freeGift?.included) && !items.some(isGiftItem)) {
+    items = [...items, {
+      name: 'Free Complimentary Gift',
+      price: 0,
+      qty: 1,
+      itemType: 'free_gift'
+    }];
+  }
+
   const itemsRows = items
     .map((item) => {
+      const isFreeGift = isGiftItem(item);
       const paramsMap =
         (item.selectedParameters && typeof item.selectedParameters === 'object' ? item.selectedParameters : null) ||
         (item.selectedOptions && typeof item.selectedOptions === 'object' ? item.selectedOptions : {});
@@ -442,12 +453,13 @@ function renderOrderItemsTable(order) {
       return `
     <tr>
       <td>
-        <strong>${item.name}</strong>
+        <strong>${isFreeGift ? '🎁 ' : ''}${item.name}</strong>
+        ${isFreeGift ? '<br><small style="color:#9d174d; font-weight:600;">Complimentary Gift from Nathshikha</small>' : ''}
         ${item.tag ? `<br><small style="color:#c69a59; font-weight:600;">${item.tag}</small>` : ''}
         ${badgesHtml ? `<br>${badgesHtml}` : ''}
       </td>
       <td style="text-align:center;">${item.qty || 1}</td>
-      <td style="text-align:right;">₹${Number(item.price || 0).toLocaleString('en-IN')}</td>
+      <td style="text-align:right;">${isFreeGift ? '₹0' : `₹${Number(item.price || 0).toLocaleString('en-IN')}`}</td>
     </tr>
   `;
     })
@@ -570,14 +582,31 @@ export async function sendOrderConfirmedEmail(order) {
   const recipientName = order.customer_name || order.customerName || order.name || 'Valued Customer';
   const orderNo = order.order_no || order.orderNo;
 
+  const expectedDateText = (order.expected_delivery_date || order.expectedDeliveryDate)
+    ? new Date(order.expected_delivery_date || order.expectedDeliveryDate).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      })
+    : (order.confirmed_at || order.confirmedAt)
+    ? new Date(new Date(order.confirmed_at || order.confirmedAt).getTime() + 20 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      })
+    : 'Within 20 days of order confirmation';
+
   const contentHtml = `
     <h2 style="margin:0 0 14px 0; font-size: 20px;">Order Confirmed ✓</h2>
     <p>Dear <strong>${recipientName}</strong>,</p>
     <p>Great news! Your payment has been verified and your order <strong>#${orderNo}</strong> is now officially <strong>Confirmed</strong>.</p>
     
     <div class="notice-card" style="border-left-color: #15803d; background-color: #f0fdf4;">
-      <p style="margin:0; font-size:13.5px; color:#166534;">
+      <p style="margin:0 0 8px 0; font-size:13.5px; color:#166534;">
         ✨ <strong>Handcrafted With Love:</strong> Since each piece is handmade by our skilled artisans, our crafting process takes approximately <strong>10–15 days</strong>. We appreciate your patience while we craft your beautiful jewellery with devotion and care. ❤️
+      </p>
+      <p style="margin:0; font-size:13px; color:#166534;">
+        📅 <strong>Expected Delivery:</strong> <strong>${expectedDateText}</strong> <small style="display:block; color:#15803d; font-size:11px; margin-top:2px;">* Maximum expected delivery date. Your jewellery may be completed earlier and delivered before this date.</small>
       </p>
     </div>
 
@@ -602,7 +631,7 @@ export async function sendOrderConfirmedEmail(order) {
       ctaText: 'View My Order',
       ctaUrl: orderUrl
     }),
-    text: `Your payment has been verified and your Nathshikha Order #${orderNo} is confirmed! View at: ${orderUrl}`,
+    text: `Your payment has been verified and your Nathshikha Order #${orderNo} is confirmed! Expected Delivery: ${expectedDateText}. View at: ${orderUrl}`,
     emailType: 'ORDER_CONFIRMED',
     orderId,
     userId: order.userId || order.user_id

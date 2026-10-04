@@ -480,10 +480,10 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
   };
 
   // Handle Payment Verification Submission
-  const handleVerifyPayment = async (orderId, { transactionId, paymentApp }) => {
+  const handleVerifyPayment = async (orderId, { transactionId, paymentApp, freeGiftIncluded }) => {
     const result = await api(`/admin/orders/${orderId}/verify-payment`, {
       method: 'POST',
-      body: JSON.stringify({ transactionId, paymentApp })
+      body: JSON.stringify({ transactionId, paymentApp, freeGiftIncluded })
     });
 
     const updatedOrder = result.order;
@@ -507,6 +507,12 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
               paymentApp: paymentApp,
               verified_at: new Date().toISOString(),
               verifiedAt: new Date(),
+              confirmed_at: updatedOrder.confirmed_at || updatedOrder.confirmedAt || new Date().toISOString(),
+              confirmedAt: updatedOrder.confirmed_at || updatedOrder.confirmedAt || new Date(),
+              expected_delivery_date: updatedOrder.expected_delivery_date || updatedOrder.expectedDeliveryDate,
+              expectedDeliveryDate: updatedOrder.expected_delivery_date || updatedOrder.expectedDeliveryDate,
+              free_gift: { included: Boolean(freeGiftIncluded) },
+              freeGift: { included: Boolean(freeGiftIncluded) },
               verified_by: adminUser?.name || 'Admin',
               verifiedBy: adminUser?.name || 'Admin'
             }
@@ -517,6 +523,7 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
     if (detailsModalOrder && detailsModalOrder.id === orderId) {
       setDetailsModalOrder((prev) => ({
         ...prev,
+        ...updatedOrder,
         payment_status: 'verified',
         paymentStatus: 'verified',
         order_status: 'confirmed',
@@ -524,6 +531,10 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
         payment_transaction_id: transactionId,
         payment_app: paymentApp,
         verified_at: new Date().toISOString(),
+        confirmed_at: updatedOrder.confirmed_at || updatedOrder.confirmedAt || new Date().toISOString(),
+        expected_delivery_date: updatedOrder.expected_delivery_date || updatedOrder.expectedDeliveryDate,
+        free_gift: { included: Boolean(freeGiftIncluded) },
+        freeGift: { included: Boolean(freeGiftIncluded) },
         verified_by: adminUser?.name || 'Admin'
       }));
     }
@@ -531,12 +542,12 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
     setToast('✓ Payment verified! Order automatically updated to Confirmed.');
   };
 
-  // Handle Editing Existing Payment Details (Transaction ID, Payment Mode)
-  const handleSavePaymentEdit = async (orderId, { transactionId, paymentApp }) => {
+  // Handle Editing Existing Payment Details (Transaction ID, Payment Mode, Free Gift)
+  const handleSavePaymentEdit = async (orderId, { transactionId, paymentApp, freeGiftIncluded }) => {
     try {
       const result = await api(`/admin/orders/${orderId}/payment`, {
         method: 'PATCH',
-        body: JSON.stringify({ transactionId, paymentApp })
+        body: JSON.stringify({ transactionId, paymentApp, freeGiftIncluded })
       });
 
       const updatedOrder = result.order || result;
@@ -553,7 +564,9 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
                 upi_utr: transactionId,
                 upiUtr: transactionId,
                 payment_app: paymentApp,
-                paymentApp: paymentApp
+                paymentApp: paymentApp,
+                free_gift: { included: Boolean(freeGiftIncluded) },
+                freeGift: { included: Boolean(freeGiftIncluded) }
               }
             : o
         )

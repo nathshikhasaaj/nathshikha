@@ -453,3 +453,106 @@
     font-size: 12px;
   }
 }
+
+/* ============================================================ */
+/* SUCCESS FREE GIFT & TIMELINE STYLES                          */
+/* ============================================================ */
+.successFreeGiftCard {
+  background: linear-gradient(135deg, #fffcf4 0%, #fcf5e5 100%);
+  border: 1.5px solid #d4af37;
+  border-left: 4px solid var(--maroon, #6d1b29);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 16px 0;
+  text-align: left;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.1);
+}
+
+.successFreeGiftHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--maroon, #6d1b29);
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.successFreeGiftText {
+  font-size: 12.5px;
+  color: #63534b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.successTimelineCard {
+  background: linear-gradient(135deg, #fdfbf7 0%, #f9f4eb 100%);
+  border: 1.5px solid #dfcfb2;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 16px 0;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.successTimelineHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--maroon, #6d1b29);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px dashed #dcd0bc;
+  padding-bottom: 6px;
+}
+
+.successTimelineGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.successTimelineItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: #ffffff;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ebdcc5;
+}
+
+.successTimelineItem.highlightTimeline {
+  border-color: #dfc793;
+  background: #fffdf9;
+}
+
+.successTimelineLabel {
+  font-size: 11px;
+  color: #786963;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.successTimelineVal {
+  font-size: 13px;
+  color: var(--char, #2b1f1d);
+  font-weight: 700;
+}
+
+.successTimelineItem.highlightTimeline .successTimelineVal {
+  color: var(--maroon, #6d1b29);
+}
+
+.successTimelineDisclaimer {
+  font-size: 11.5px;
+  color: #7a6b65;
+  line-height: 1.4;
+  margin: 0;
+  font-style: italic;
+}
+

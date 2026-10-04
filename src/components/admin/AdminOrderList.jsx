@@ -794,9 +794,12 @@ export default function AdminOrderList({
                       <div className="mobileCardPrimaryInfo">
                         <span className="mobileCardOrderNo">#{o.order_no}</span>
                         <span className="mobileCardDate">{dateStr}</span>
-                        {isPriority && (
-                          <span className="mobilePriorityTag">🔴 {formatOrderAge(orderAgeDays)} old</span>
-                        )}
+                        <span
+                          className={`mobileOrderAgeBadge ${isPriority ? 'priorityAgeBadge' : 'normalAgeBadge'}`}
+                          title={`Order Age: ${formatOrderAge(orderAgeDays)}${isPriority ? ' — Priority Order' : ''}`}
+                        >
+                          {isPriority ? `🔴 Age: ${formatOrderAge(orderAgeDays)}` : `Age: ${formatOrderAge(orderAgeDays)}`}
+                        </span>
                         {(o.assisted_order?.is_assisted || o.assistedOrder?.isAssisted || o.order_status === 'payment_pending' || o.orderStatus === 'payment_pending') && (
                           <span className="adminAssistedOrderBadge">✦ Assisted</span>
                         )}

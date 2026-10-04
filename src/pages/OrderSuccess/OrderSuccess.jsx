@@ -146,6 +146,75 @@ export default function OrderSuccess() {
           </div>
         </div>
 
+        {/* Free Gift Card if included */}
+        {(order?.free_gift?.included || order?.freeGift?.included) && (
+          <div className="successFreeGiftCard">
+            <div className="successFreeGiftHeader">
+              <Gift size={16} color="var(--maroon, #6d1b29)" />
+              <strong>🎁 Free Gift Included</strong>
+            </div>
+            <p className="successFreeGiftText">
+              Your order includes a complimentary free gift from Nathshikha.
+            </p>
+          </div>
+        )}
+
+        {/* Handmade Order Timeline */}
+        <div className="successTimelineCard">
+          <div className="successTimelineHeader">
+            <Sparkles size={15} color="#d4af37" />
+            <span>✨ Handmade Order Timeline</span>
+          </div>
+          <div className="successTimelineGrid">
+            <div className="successTimelineItem">
+              <span className="successTimelineLabel">Making Time:</span>
+              <b className="successTimelineVal">15 days</b>
+            </div>
+            {(order?.confirmed_at || order?.confirmedAt) ? (
+              <>
+                <div className="successTimelineItem">
+                  <span className="successTimelineLabel">Order Confirmed:</span>
+                  <b className="successTimelineVal">
+                    {new Date(order.confirmed_at || order.confirmedAt).toLocaleDateString('en-IN', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric'
+                    })}
+                  </b>
+                </div>
+                <div className="successTimelineItem highlightTimeline">
+                  <span className="successTimelineLabel">Expected Delivery:</span>
+                  <b className="successTimelineVal">
+                    {new Date(
+                      order.expected_delivery_date ||
+                      order.expectedDeliveryDate ||
+                      new Date(new Date(order.confirmed_at || order.confirmedAt).getTime() + 20 * 24 * 60 * 60 * 1000)
+                    ).toLocaleDateString('en-IN', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric'
+                    })}
+                  </b>
+                  <small style={{ display: 'block', fontSize: 10, color: 'var(--text-muted, #7a6b63)', marginTop: 2, fontWeight: 500 }}>
+                    Maximum expected delivery date
+                  </small>
+                </div>
+              </>
+            ) : (
+              <div className="successTimelineItem highlightTimeline">
+                <span className="successTimelineLabel">Expected Delivery:</span>
+                <b className="successTimelineVal">Within 20 days of order confirmation</b>
+                <small style={{ display: 'block', fontSize: 10, color: 'var(--text-muted, #7a6b63)', marginTop: 2, fontWeight: 500 }}>
+                  Maximum expected delivery date
+                </small>
+              </div>
+            )}
+          </div>
+          <small className="successTimelineDisclaimer">
+            ✦ Please note: This is the maximum expected delivery date. Your jewellery may be completed earlier and delivered before this date.
+          </small>
+        </div>
+
         {/* Customization Request Summary Banner if Present */}
         {hasCustomization && (
           <div className="customizationSummaryBanner">

@@ -135,7 +135,8 @@ router.get(['/shipping/lookup/:pincode', '/lookup/:pincode'], async (req, res) =
       });
     }
 
-    const options = getShippingOptionsForLocation(location);
+    const subtotal = Math.max(0, Number(req.query.subtotal || req.query.productSubtotal || 0));
+    const options = getShippingOptionsForLocation(location, subtotal);
     return res.json({
       valid: true,
       pincode: location.pincode,
@@ -482,8 +483,8 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
       appliedCoupon = updatedCoupon || coupon;
     }
 
-    // Server-side dynamic shipping calculation based on PIN code & method
-    const shippingDetails = await calculateShippingCharge(pincode, shippingMethod);
+    // Server-side dynamic shipping calculation based on PIN code & method (Free shipping if subtotal >= 1500)
+    const shippingDetails = await calculateShippingCharge(pincode, shippingMethod, subtotal);
     const user = req.user;
     let shipping = shippingDetails.shippingCharge;
     let targetExistingOrder = null;
@@ -688,6 +689,9 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
       paymentMethod: 'upi',
       paymentStatus: 'verification_pending',
       orderStatus: 'placed',
+      freeGift: { included: false },
+      confirmedAt: null,
+      expectedDeliveryDate: null,
       acceptedTerms: true,
       guestToken,
       customization: customizationObj,
@@ -783,6 +787,21 @@ router.get('/', auth, async (req, res) => {
         const coOrders = o.shipmentGroupCode
           ? (groupCodeMap.get(o.shipmentGroupCode) || []).filter((no) => no !== o.orderNo)
           : [];
+        const isGiftItem = (i) => i && (i.itemType === 'free_gift' || i.item_type === 'free_gift' || i.name === 'Free Complimentary Gift');
+        let orderItems = Array.isArray(o.items) ? o.items.map((i) => ({ ...i, item_type: i.itemType || 'product', itemType: i.itemType || 'product' })) : [];
+        if (Boolean(o.freeGift?.included) && !orderItems.some(isGiftItem)) {
+          orderItems = [...orderItems, {
+            name: 'Free Complimentary Gift',
+            price: 0,
+            qty: 1,
+            img: '',
+            itemType: 'free_gift',
+            item_type: 'free_gift',
+            selectedParameters: {},
+            selectedOptions: {}
+          }];
+        }
+
         return {
           ...o,
           id: o._id.toString(),
@@ -790,6 +809,7 @@ router.get('/', auth, async (req, res) => {
           shipment_group_id: o.shipmentGroupId ? o.shipmentGroupId.toString() : null,
           shipment_group_code: o.shipmentGroupCode || null,
           co_shipped_orders: coOrders,
+          items: orderItems,
           is_gift: Boolean(o.isGift || o.is_gift),
           gift_wrap: Boolean(o.giftWrap || o.gift_wrap),
           gift_wrap_charge: o.giftWrapCharge || o.gift_wrap_charge || 0,
@@ -836,6 +856,10 @@ router.get('/', auth, async (req, res) => {
           payment_app: o.paymentApp,
           verified_at: o.verifiedAt,
           verified_by: o.verifiedBy,
+          confirmed_at: o.confirmedAt || (o.orderStatus === 'confirmed' || o.paymentStatus === 'verified' ? o.verifiedAt : null),
+          expected_delivery_date: o.expectedDeliveryDate || (o.confirmedAt || o.verifiedAt ? new Date(new Date(o.confirmedAt || o.verifiedAt).getTime() + 20 * 24 * 60 * 60 * 1000).toISOString() : null),
+          free_gift: { included: Boolean(o.freeGift?.included) },
+          freeGift: { included: Boolean(o.freeGift?.included) },
           created_at: o.createdAt
         };
       })
@@ -1089,7 +1113,8 @@ router.all(['/:id/address', '/:id/contact-details'], optionalAuth, async (req, r
     // If PIN Code changed and order is in payment_pending stage, recalculate shipping charge server-side
     if (changedFields.includes('Pincode') && order.orderStatus === 'payment_pending') {
       try {
-        const shippingDetails = await calculateShippingCharge(order.pincode, order.shippingMethod);
+        const sub = order.subtotal || 0;
+        const shippingDetails = await calculateShippingCharge(order.pincode, order.shippingMethod, sub);
         if (shippingDetails && shippingDetails.shippingCharge !== undefined) {
           const oldShipping = order.shipping || 0;
           order.shipping = shippingDetails.shippingCharge;
@@ -1545,16 +1570,39 @@ router.post('/track', lookupLimiter, async (req, res) => {
         courier_portal_url: courierPortalUrl,
         shipped_at: order.shippedAt,
         delivered_at: order.deliveredAt,
+        confirmed_at: order.confirmedAt || (order.orderStatus === 'confirmed' || order.paymentStatus === 'verified' ? order.verifiedAt : null),
+        expected_delivery_date: order.expectedDeliveryDate || (order.confirmedAt || order.verifiedAt ? new Date(new Date(order.confirmedAt || order.verifiedAt).getTime() + 20 * 24 * 60 * 60 * 1000).toISOString() : null),
+        free_gift: { included: Boolean(order.freeGift?.included) },
+        freeGift: { included: Boolean(order.freeGift?.included) },
         created_at: order.createdAt,
-        items: (order.items || []).map((item) => ({
-          id: item.productId?.toString() || item._id?.toString(),
-          name: item.name,
-          price: item.price,
-          qty: item.qty,
-          img: item.img,
-          selectedParameters: item.selectedParameters || item.selectedOptions || {},
-          selectedOptions: item.selectedOptions || item.selectedParameters || {}
-        }))
+        items: (() => {
+          const isGiftItem = (i) => i && (i.itemType === 'free_gift' || i.item_type === 'free_gift' || i.name === 'Free Complimentary Gift');
+          let mapped = (order.items || []).map((item) => ({
+            id: item.productId?.toString() || item._id?.toString() || null,
+            name: item.name,
+            price: item.price,
+            qty: item.qty,
+            img: item.img || '',
+            itemType: item.itemType || item.item_type || 'product',
+            item_type: item.itemType || item.item_type || 'product',
+            selectedParameters: item.selectedParameters || item.selectedOptions || {},
+            selectedOptions: item.selectedOptions || item.selectedParameters || {}
+          }));
+          if (Boolean(order.freeGift?.included) && !mapped.some(isGiftItem)) {
+            mapped.push({
+              id: null,
+              name: 'Free Complimentary Gift',
+              price: 0,
+              qty: 1,
+              img: '',
+              itemType: 'free_gift',
+              item_type: 'free_gift',
+              selectedParameters: {},
+              selectedOptions: {}
+            });
+          }
+          return mapped;
+        })()
       }
     });
   } catch (err) {
@@ -1616,6 +1664,21 @@ router.post('/lookup-orders', lookupLimiter, async (req, res) => {
         const coOrders = o.shipmentGroupCode
           ? (groupCodeMap.get(o.shipmentGroupCode) || []).filter((no) => no !== o.orderNo)
           : [];
+        const isGiftItem = (i) => i && (i.itemType === 'free_gift' || i.item_type === 'free_gift' || i.name === 'Free Complimentary Gift');
+        let orderItems = Array.isArray(o.items) ? o.items.map((i) => ({ ...i, item_type: i.itemType || 'product', itemType: i.itemType || 'product' })) : [];
+        if (Boolean(o.freeGift?.included) && !orderItems.some(isGiftItem)) {
+          orderItems = [...orderItems, {
+            name: 'Free Complimentary Gift',
+            price: 0,
+            qty: 1,
+            img: '',
+            itemType: 'free_gift',
+            item_type: 'free_gift',
+            selectedParameters: {},
+            selectedOptions: {}
+          }];
+        }
+
         return {
           ...o,
           id: o._id.toString(),
@@ -1623,6 +1686,7 @@ router.post('/lookup-orders', lookupLimiter, async (req, res) => {
           shipment_group_id: o.shipmentGroupId ? o.shipmentGroupId.toString() : null,
           shipment_group_code: o.shipmentGroupCode || null,
           co_shipped_orders: coOrders,
+          items: orderItems,
           is_gift: Boolean(o.isGift || o.is_gift),
           gift_wrap: Boolean(o.giftWrap || o.gift_wrap),
           gift_wrap_charge: o.giftWrapCharge || o.gift_wrap_charge || 0,
@@ -1669,6 +1733,10 @@ router.post('/lookup-orders', lookupLimiter, async (req, res) => {
           payment_app: o.paymentApp,
           verified_at: o.verifiedAt,
           verified_by: o.verifiedBy,
+          confirmed_at: o.confirmedAt || (o.orderStatus === 'confirmed' || o.paymentStatus === 'verified' ? o.verifiedAt : null),
+          expected_delivery_date: o.expectedDeliveryDate || (o.confirmedAt || o.verifiedAt ? new Date(new Date(o.confirmedAt || o.verifiedAt).getTime() + 20 * 24 * 60 * 60 * 1000).toISOString() : null),
+          free_gift: { included: Boolean(o.freeGift?.included) },
+          freeGift: { included: Boolean(o.freeGift?.included) },
           created_at: o.createdAt
         };
       })

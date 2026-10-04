@@ -32,8 +32,10 @@ export function calculateCouponDiscount(coupon, subtotal) {
 }
 
 // Validate coupon against cart items & calculate discount
-router.post('/validate', async (req, res) => {
-  const { code, items } = req.body;
+router.all('/validate', async (req, res) => {
+  const code = req.body?.code || req.query?.code;
+  const items = req.body?.items;
+  const directOrderTotal = req.body?.subtotal !== undefined ? req.body.subtotal : req.query?.orderTotal;
 
   if (!code || !String(code).trim()) {
     return res.status(400).json({
@@ -97,6 +99,8 @@ router.post('/validate', async (req, res) => {
           subtotal += p.price * qty;
         }
       }
+    } else if (directOrderTotal !== undefined) {
+      subtotal = Math.max(0, Number(directOrderTotal) || 0);
     }
 
     // Validate Minimum Order Value
@@ -122,12 +126,121 @@ router.post('/validate', async (req, res) => {
       minOrderValue: coupon.minOrderValue,
       subtotal,
       finalSubtotal,
+      coupon: {
+        code: coupon.code,
+        discountType: coupon.discountType,
+        discountValue: coupon.discountValue,
+        discount,
+        minOrderValue: coupon.minOrderValue
+      },
       message: `${coupon.code} applied ✓`
     });
   } catch (err) {
     return res.status(500).json({
       valid: false,
       error: err.message || 'Failed to validate coupon.'
+    });
+  }
+});
+
+// Fetch Available & Eligible Coupons for cart/order
+router.all(['/available', '/eligible'], async (req, res) => {
+  try {
+    const items = req.body?.items || req.query?.items;
+    const directSubtotal = req.body?.subtotal !== undefined ? req.body.subtotal : req.query?.subtotal;
+
+    let subtotal = 0;
+    if (Array.isArray(items) && items.length > 0) {
+      const validProductIds = items
+        .map((i) => i.id || i.productId)
+        .filter((id) => mongoose.Types.ObjectId.isValid(id));
+
+      if (validProductIds.length > 0) {
+        const products = await Product.find({
+          _id: { $in: validProductIds },
+          active: 1
+        });
+        const productMap = new Map(products.map((p) => [p._id.toString(), p]));
+
+        for (const item of items) {
+          const pId = String(item.id || item.productId);
+          const p = productMap.get(pId);
+          if (!p) continue;
+          const qty = Math.max(1, Number(item.qty) || 1);
+          subtotal += p.price * qty;
+        }
+      }
+    } else if (directSubtotal !== undefined) {
+      subtotal = Math.max(0, Number(directSubtotal) || 0);
+    }
+
+    // Fetch all active coupons from DB
+    const coupons = await Coupon.find({ isActive: true }).sort({ minOrderValue: 1, createdAt: -1 });
+
+    const available = [];
+    const unavailable = [];
+
+    for (const c of coupons) {
+      const isExpired = isCouponExpired(c.expiryDate);
+      const isLimitReached = Boolean(c.usageLimit && c.usageCount >= c.usageLimit);
+      const isMinMet = subtotal >= (c.minOrderValue || 0);
+
+      const discountAmount = calculateCouponDiscount(c, subtotal);
+      const label = c.discountType === 'percent' ? `${c.discountValue}% OFF` : `₹${c.discountValue.toLocaleString('en-IN')} OFF`;
+      const minOrderLabel = c.minOrderValue > 0
+        ? `Minimum order ₹${c.minOrderValue.toLocaleString('en-IN')}`
+        : 'No minimum order';
+
+      if (!isExpired && !isLimitReached && isMinMet) {
+        available.push({
+          id: c._id.toString(),
+          code: c.code,
+          discountType: c.discountType,
+          discountValue: c.discountValue,
+          discount: discountAmount,
+          potentialDiscount: discountAmount,
+          minOrderValue: c.minOrderValue || 0,
+          description: c.description || '',
+          expiryDate: c.expiryDate,
+          label,
+          minOrderLabel
+        });
+      } else {
+        let reason = 'Coupon not applicable';
+        if (isExpired) {
+          reason = 'Coupon expired';
+        } else if (isLimitReached) {
+          reason = 'Usage limit reached';
+        } else if (!isMinMet) {
+          const needed = (c.minOrderValue || 0) - subtotal;
+          reason = `Add ₹${needed.toLocaleString('en-IN')} more to unlock (Min. ₹${c.minOrderValue.toLocaleString('en-IN')})`;
+        }
+
+        unavailable.push({
+          id: c._id.toString(),
+          code: c.code,
+          discountType: c.discountType,
+          discountValue: c.discountValue,
+          minOrderValue: c.minOrderValue || 0,
+          description: c.description || '',
+          expiryDate: c.expiryDate,
+          label,
+          minOrderLabel,
+          reason
+        });
+      }
+    }
+
+    return res.json({
+      ok: true,
+      subtotal,
+      available,
+      unavailable,
+      count: available.length
+    });
+  } catch (err) {
+    return res.status(500).json({
+      error: err.message || 'Failed to fetch available coupons.'
     });
   }
 });

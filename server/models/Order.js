@@ -4,7 +4,8 @@ const orderItemSchema = new mongoose.Schema(
   {
     productId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Product'
+      ref: 'Product',
+      default: null
     },
     name: {
       type: String,
@@ -12,7 +13,8 @@ const orderItemSchema = new mongoose.Schema(
     },
     price: {
       type: Number,
-      required: true
+      required: true,
+      min: 0
     },
     qty: {
       type: Number,
@@ -21,7 +23,11 @@ const orderItemSchema = new mongoose.Schema(
     },
     img: {
       type: String,
-      required: true
+      default: ''
+    },
+    itemType: {
+      type: String,
+      default: 'product'
     },
     selectedParameters: {
       type: mongoose.Schema.Types.Mixed,
@@ -272,6 +278,20 @@ const orderSchema = new mongoose.Schema(
     verifiedBy: {
       type: String,
       default: null
+    },
+    confirmedAt: {
+      type: Date,
+      default: null
+    },
+    expectedDeliveryDate: {
+      type: Date,
+      default: null
+    },
+    freeGift: {
+      included: {
+        type: Boolean,
+        default: false
+      }
     },
     guestToken: {
       type: String,
@@ -530,6 +550,36 @@ const orderSchema = new mongoose.Schema(
         ret.payment_app = ret.paymentApp;
         ret.verified_at = ret.verifiedAt;
         ret.verified_by = ret.verifiedBy;
+        ret.confirmed_at = ret.confirmedAt || (ret.orderStatus === 'confirmed' || ret.paymentStatus === 'verified' ? ret.verifiedAt : null);
+        ret.confirmedAt = ret.confirmed_at;
+
+        if (ret.expectedDeliveryDate) {
+          ret.expected_delivery_date = ret.expectedDeliveryDate;
+        } else if (ret.confirmed_at) {
+          const confTime = new Date(ret.confirmed_at).getTime();
+          if (!isNaN(confTime)) {
+            ret.expected_delivery_date = new Date(confTime + 20 * 24 * 60 * 60 * 1000).toISOString();
+          } else {
+            ret.expected_delivery_date = null;
+          }
+        } else {
+          ret.expected_delivery_date = null;
+        }
+        ret.expectedDeliveryDate = ret.expected_delivery_date;
+
+        ret.free_gift = {
+          included: Boolean(ret.freeGift?.included)
+        };
+        ret.freeGift = ret.free_gift;
+
+        if (Array.isArray(ret.items)) {
+          ret.items = ret.items.map((item) => ({
+            ...item,
+            item_type: item.itemType || 'product',
+            itemType: item.itemType || 'product'
+          }));
+        }
+
         ret.shipment_partner = ret.shipmentPartner;
         ret.tracking_id = ret.trackingId;
         ret.shipped_at = ret.shippedAt;
@@ -555,6 +605,44 @@ orderSchema.pre('validate', function () {
   if (this.customer_name && !this.customerName) this.customerName = this.customer_name;
   if (this.customer_phone && !this.customerPhone) this.customerPhone = this.customer_phone;
   if (this.customer_email && !this.customerEmail) this.customerEmail = this.customer_email;
+
+  if (this.free_gift !== undefined && this.freeGift === undefined) {
+    this.freeGift = typeof this.free_gift === 'object' && this.free_gift !== null
+      ? { included: Boolean(this.free_gift.included) }
+      : { included: Boolean(this.free_gift) };
+  } else if (this.freeGift && typeof this.freeGift === 'object' && this.freeGift.included === undefined) {
+    this.freeGift = { included: Boolean(this.freeGift) };
+  }
+
+  // Synchronize Free Gift line item in items array when freeGift is explicitly managed
+  if (this.freeGift && this.freeGift.included === true) {
+    const isGiftItem = (i) => i && (i.itemType === 'free_gift' || i.item_type === 'free_gift' || i.name === 'Free Complimentary Gift');
+    if (!this.items.some(isGiftItem)) {
+      this.items.push({
+        name: 'Free Complimentary Gift',
+        price: 0,
+        qty: 1,
+        img: '',
+        itemType: 'free_gift',
+        selectedParameters: {},
+        selectedOptions: {}
+      });
+    }
+  } else if (this.freeGift && this.freeGift.included === false) {
+    const isGiftItem = (i) => i && (i.itemType === 'free_gift' || i.item_type === 'free_gift' || i.name === 'Free Complimentary Gift');
+    if (Array.isArray(this.items) && this.items.some(isGiftItem)) {
+      this.items = this.items.filter((i) => !isGiftItem(i));
+    }
+  }
+
+  if (this.confirmed_at && !this.confirmedAt) this.confirmedAt = this.confirmed_at;
+  if (this.expected_delivery_date && !this.expectedDeliveryDate) this.expectedDeliveryDate = this.expected_delivery_date;
+
+  if (this.confirmedAt && !this.expectedDeliveryDate) {
+    const d = new Date(this.confirmedAt);
+    d.setDate(d.getDate() + 20);
+    this.expectedDeliveryDate = d;
+  }
 
   // For new orders, automatically populate customer identity fields if not already populated
   if (this.isNew) {

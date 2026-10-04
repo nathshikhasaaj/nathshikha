@@ -87,6 +87,9 @@ export default function AdminOrderDetailsModal({
     order.customization?.referenceImage || order.customization?.reference_image || null;
 
   const getProductCode = (item, index) => {
+    if (item.itemType === 'free_gift' || item.item_type === 'free_gift' || item.name === 'Free Complimentary Gift') {
+      return 'FREE-GIFT';
+    }
     if (item.productId) {
       return `PRD-${String(item.productId).slice(-6).toUpperCase()}`;
     }
@@ -267,6 +270,15 @@ export default function AdminOrderDetailsModal({
                 )}
               </b>
             </div>
+
+            {Boolean(order.free_gift?.included || order.freeGift?.included) && (
+              <div className="bannerStatusItem">
+                <span>Special Privilege:</span>
+                <b className="freeGiftBannerTag" style={{ color: '#9d174d', background: '#fdf2f8', border: '1px solid #fbcfe8', padding: '2px 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  🎁 FREE GIFT INCLUDED
+                </b>
+              </div>
+            )}
 
             {!isVerified && onVerifyPaymentClick && (
               <button
@@ -942,6 +954,15 @@ export default function AdminOrderDetailsModal({
                     </span>
                   </div>
                 )}
+
+                {Boolean(order.free_gift?.included || order.freeGift?.included) && (
+                  <div className="infoItem" style={{ background: '#fdf2f8', border: '1px dashed #fbcfe8', borderRadius: 4, padding: '4px 8px', marginTop: 4 }}>
+                    <span className="infoLabel" style={{ color: '#9d174d' }}>Complimentary Gift</span>
+                    <span className="infoVal">
+                      <b style={{ color: '#9d174d' }}>🎁 Included with Order</b>
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -950,7 +971,7 @@ export default function AdminOrderDetailsModal({
               <div className="sectionHeader" style={{ justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <PackageCheck size={16} />
-                  <h3>Shipment Information</h3>
+                  <h3>Shipment & Timeline</h3>
                 </div>
                 {onEditShipmentClick && (
                   <button
@@ -977,6 +998,43 @@ export default function AdminOrderDetailsModal({
                     )}
                   </span>
                 </div>
+
+                {(order.confirmed_at || order.confirmedAt) && (
+                  <div className="infoItem">
+                    <span className="infoLabel">Order Confirmed</span>
+                    <span className="infoVal">
+                      <b>
+                        {new Date(order.confirmed_at || order.confirmedAt).toLocaleDateString('en-IN', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </b>
+                    </span>
+                  </div>
+                )}
+
+                {(order.expected_delivery_date || order.expectedDeliveryDate || order.confirmed_at || order.confirmedAt) && (
+                  <div className="infoItem">
+                    <span className="infoLabel">Expected Delivery</span>
+                    <span className="infoVal">
+                      <b style={{ color: '#15803d' }}>
+                        {new Date(
+                          order.expected_delivery_date ||
+                          order.expectedDeliveryDate ||
+                          new Date(new Date(order.confirmed_at || order.confirmedAt).getTime() + 20 * 24 * 60 * 60 * 1000)
+                        ).toLocaleDateString('en-IN', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </b>
+                      <small style={{ display: 'block', fontSize: 10, color: '#8c7d76', marginTop: 1 }}>
+                        * 20 days max from order confirmation
+                      </small>
+                    </span>
+                  </div>
+                )}
 
                 {isShipped && (
                   <>

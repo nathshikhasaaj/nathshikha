@@ -10,7 +10,7 @@ import Breadcrumbs from '../../components/common/Breadcrumbs';
 import CheckoutSteps from '../../components/common/CheckoutSteps';
 import './Cart.css';
 
-const FREE_SHIPPING_THRESHOLD = 2999;
+const FREE_SHIPPING_THRESHOLD = 1500;
 
 export default function Cart() {
   const { cart, updateCartQty, removeFromCart, subtotal, shipping, total } = useCart();

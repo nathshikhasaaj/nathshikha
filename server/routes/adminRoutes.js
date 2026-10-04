@@ -360,6 +360,21 @@ router.get('/orders', async (req, res) => {
     res.json(
       orders.map((o) => {
         const coOrders = o.shipmentGroupCode ? (groupCodeMap.get(o.shipmentGroupCode) || []).filter((no) => no !== o.orderNo) : [];
+        const isGiftItem = (i) => i && (i.itemType === 'free_gift' || i.item_type === 'free_gift' || i.name === 'Free Complimentary Gift');
+        let orderItems = Array.isArray(o.items) ? o.items.map((i) => ({ ...i, item_type: i.itemType || 'product', itemType: i.itemType || 'product' })) : [];
+        if (Boolean(o.freeGift?.included) && !orderItems.some(isGiftItem)) {
+          orderItems = [...orderItems, {
+            name: 'Free Complimentary Gift',
+            price: 0,
+            qty: 1,
+            img: '',
+            itemType: 'free_gift',
+            item_type: 'free_gift',
+            selectedParameters: {},
+            selectedOptions: {}
+          }];
+        }
+
         return {
           ...o,
           id: o._id.toString(),
@@ -367,6 +382,7 @@ router.get('/orders', async (req, res) => {
           shipment_group_id: o.shipmentGroupId ? o.shipmentGroupId.toString() : null,
           shipment_group_code: o.shipmentGroupCode || null,
           co_shipped_orders: coOrders,
+          items: orderItems,
           pincode: o.pincode,
           city: o.city,
           state: o.state,
@@ -404,6 +420,12 @@ router.get('/orders', async (req, res) => {
           payment_app: o.paymentApp,
           verified_at: o.verifiedAt,
           verified_by: o.verifiedBy,
+          confirmed_at: o.confirmedAt || (o.orderStatus === 'confirmed' || o.paymentStatus === 'verified' ? o.verifiedAt : null),
+          confirmedAt: o.confirmedAt || (o.orderStatus === 'confirmed' || o.paymentStatus === 'verified' ? o.verifiedAt : null),
+          expected_delivery_date: o.expectedDeliveryDate || (o.confirmedAt || o.verifiedAt ? new Date(new Date(o.confirmedAt || o.verifiedAt).getTime() + 20 * 24 * 60 * 60 * 1000).toISOString() : null),
+          expectedDeliveryDate: o.expectedDeliveryDate || (o.confirmedAt || o.verifiedAt ? new Date(new Date(o.confirmedAt || o.verifiedAt).getTime() + 20 * 24 * 60 * 60 * 1000).toISOString() : null),
+          free_gift: { included: Boolean(o.freeGift?.included) },
+          freeGift: { included: Boolean(o.freeGift?.included) },
           created_at: o.createdAt
         };
       })
@@ -699,7 +721,7 @@ router.post('/orders/assisted', async (req, res) => {
     // 5. Server-Side Shipping & Location Calculation
     let shippingDetails;
     try {
-      shippingDetails = await calculateShippingCharge(rawPincode, shippingMethod);
+      shippingDetails = await calculateShippingCharge(rawPincode, shippingMethod, subtotal);
     } catch (shippingErr) {
       throw new Error(shippingErr.message || 'Invalid delivery PIN code or shipping method.');
     }
@@ -1130,7 +1152,7 @@ router.post('/orders', async (req, res) => {
     // 4. Shipping Calculation
     let shippingDetails;
     try {
-      shippingDetails = await calculateShippingCharge(rawPincode, shippingMethod);
+      shippingDetails = await calculateShippingCharge(rawPincode, shippingMethod, subtotal);
     } catch (shippingErr) {
       throw new Error(shippingErr.message || 'Invalid delivery PIN code or shipping method.');
     }
@@ -1251,6 +1273,9 @@ router.post('/orders', async (req, res) => {
       paymentMethod,
       paymentStatus: isPaymentVerified ? 'verified' : (paymentStatus || 'verification_pending'),
       orderStatus: finalOrderStatus,
+      freeGift: { included: Boolean(req.body.freeGiftIncluded || req.body.freeGift?.included || req.body.free_gift?.included) },
+      confirmedAt: (isPaymentVerified || finalOrderStatus === 'confirmed') ? new Date() : null,
+      expectedDeliveryDate: (isPaymentVerified || finalOrderStatus === 'confirmed') ? new Date(Date.now() + 20 * 24 * 60 * 60 * 1000) : null,
       acceptedTerms: true,
       guestToken,
       customization: customizationObj,
@@ -1584,7 +1609,13 @@ router.patch('/orders/:id', async (req, res) => {
     }
 
     const previousStatus = order.orderStatus;
-    if (orderStatus) order.orderStatus = orderStatus;
+    if (orderStatus) {
+      order.orderStatus = orderStatus;
+      if (orderStatus === 'confirmed' && !order.confirmedAt) {
+        order.confirmedAt = new Date();
+        order.expectedDeliveryDate = new Date(order.confirmedAt.getTime() + 20 * 24 * 60 * 60 * 1000);
+      }
+    }
     if (paymentStatus) order.paymentStatus = paymentStatus;
 
     await order.save();
@@ -1686,9 +1717,10 @@ router.post('/orders/:id/ship', async (req, res) => {
 // Verify payment and automatically confirm order
 router.post('/orders/:id/verify-payment', async (req, res) => {
   const { id } = req.params;
-  const { transactionId, paymentApp } = req.body;
+  const { transactionId, paymentTransactionId, upiUtr, paymentApp, freeGiftIncluded } = req.body;
+  const effectiveTxId = transactionId || paymentTransactionId || upiUtr;
 
-  if (!transactionId || !String(transactionId).trim()) {
+  if (!effectiveTxId || !String(effectiveTxId).trim()) {
     return res.status(400).json({ error: 'Transaction ID is required' });
   }
 
@@ -1704,11 +1736,21 @@ router.post('/orders/:id/verify-payment', async (req, res) => {
 
     order.paymentStatus = 'verified';
     order.orderStatus = 'confirmed';
-    order.paymentTransactionId = String(transactionId).trim();
-    order.upiUtr = String(transactionId).trim();
+    order.paymentTransactionId = String(effectiveTxId).trim();
+    order.upiUtr = String(effectiveTxId).trim();
     order.paymentApp = String(paymentApp).trim();
     order.verifiedAt = new Date();
     order.verifiedBy = req.user?.name || req.user?.email || 'Admin';
+
+    order.confirmedAt = order.confirmedAt || new Date();
+    const confTime = new Date(order.confirmedAt).getTime();
+    order.expectedDeliveryDate = new Date(confTime + 20 * 24 * 60 * 60 * 1000);
+
+    if (freeGiftIncluded !== undefined) {
+      order.freeGift = {
+        included: Boolean(freeGiftIncluded)
+      };
+    }
 
     await order.save();
 
@@ -1723,10 +1765,10 @@ router.post('/orders/:id/verify-payment', async (req, res) => {
   }
 });
 
-// Edit existing payment details (Transaction ID, Payment App/Mode)
+// Edit existing payment details (Transaction ID, Payment App/Mode, Free Gift)
 router.patch(['/orders/:id/payment', '/orders/:id/edit-payment'], async (req, res) => {
   const { id } = req.params;
-  const { transactionId, paymentApp } = req.body;
+  const { transactionId, paymentApp, freeGiftIncluded } = req.body;
 
   if (!transactionId || typeof transactionId !== 'string' || !transactionId.trim()) {
     return res.status(400).json({ error: 'Transaction ID is required and cannot be empty.' });
@@ -1741,11 +1783,17 @@ router.patch(['/orders/:id/payment', '/orders/:id/edit-payment'], async (req, re
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    // Explicit allowlist update - only modify payment transaction details
+    // Explicit allowlist update - modify payment transaction details
     order.paymentTransactionId = cleanTxId;
     order.upiUtr = cleanTxId;
     if (cleanApp) {
       order.paymentApp = cleanApp;
+    }
+
+    if (freeGiftIncluded !== undefined) {
+      order.freeGift = {
+        included: Boolean(freeGiftIncluded)
+      };
     }
 
     // Ensure verified status & timestamps are preserved
@@ -1754,6 +1802,10 @@ router.patch(['/orders/:id/payment', '/orders/:id/edit-payment'], async (req, re
     }
     if (!order.verifiedAt) {
       order.verifiedAt = new Date();
+    }
+    if (!order.confirmedAt && (order.orderStatus === 'confirmed' || order.paymentStatus === 'verified')) {
+      order.confirmedAt = order.verifiedAt;
+      order.expectedDeliveryDate = new Date(new Date(order.confirmedAt).getTime() + 20 * 24 * 60 * 60 * 1000);
     }
     order.verifiedBy = req.user?.name || req.user?.email || order.verifiedBy || 'Admin';
 

@@ -53,7 +53,18 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
     order.orderStatus === 'shipped' ||
     Boolean(order.shipment_partner || order.tracking_id);
 
-  const items = Array.isArray(order.items) ? order.items : [];
+  const isGiftItem = (i) => i && (i.itemType === 'free_gift' || i.item_type === 'free_gift' || i.name === 'Free Complimentary Gift');
+  let rawItems = Array.isArray(order.items) ? order.items : [];
+  if (Boolean(order.free_gift?.included || order.freeGift?.included) && !rawItems.some(isGiftItem)) {
+    rawItems = [...rawItems, {
+      name: 'Free Complimentary Gift',
+      price: 0,
+      qty: 1,
+      itemType: 'free_gift',
+      item_type: 'free_gift'
+    }];
+  }
+  const items = rawItems;
 
   const subtotal =
     Number(order.subtotal) ||
@@ -99,6 +110,9 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
   );
 
   const getProductCode = (item, index) => {
+    if (item.itemType === 'free_gift' || item.item_type === 'free_gift' || item.name === 'Free Complimentary Gift') {
+      return 'FREE-GIFT';
+    }
     if (item.productCode) return String(item.productCode);
     if (item.sku) return String(item.sku);
     if (item.product_code) return String(item.product_code);
@@ -142,6 +156,9 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
     msg += `🚚 *Shipping:* ${shippingCharge === 0 ? 'FREE' : money(shippingCharge)} (${order.shipping_method || order.shippingMethod || 'Standard Delivery'})\n`;
     if (hasGiftWrap) {
       msg += `🎁 *Luxury Gift Wrap:* +${money(giftWrapCharge)}\n`;
+    }
+    if (order.free_gift?.included || order.freeGift?.included) {
+      msg += `🎁 *COMPLIMENTARY FREE GIFT:* Included with this order ✨\n`;
     }
     msg += `✨ *GRAND TOTAL:* ${money(grandTotal)}\n`;
     msg += `💳 *Payment Method:* ${paymentMethod}\n`;
@@ -630,6 +647,12 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
       <table class="totals-table">
         <tr>
           <td class="totals-side" style="padding-right:10px;">
+            ${(order.free_gift?.included || order.freeGift?.included) ? `
+              <div style="background:#fffcf4;border:1.5px solid #d4af37;border-left:4px solid #5b1420;border-radius:5px;padding:9px 12px;margin-bottom:8px;">
+                <div style="font-size:11px;font-weight:700;color:#5b1420;margin-bottom:2px;">🎁 Complimentary Free Gift Included</div>
+                <div style="font-size:10px;color:#6b5c53;">This order includes a special free gift from Nathshikha.</div>
+              </div>
+            ` : ''}
             ${safeHandwrittenNote ? `
               <div style="background:#fdf2f8;border:1.5px solid #fbcfe8;border-radius:5px;padding:9px 12px;margin-bottom:8px;">
                 <div style="font-size:11px;font-weight:700;color:#9d174d;margin-bottom:4px;">📝 Handwritten Note for Recipient</div>

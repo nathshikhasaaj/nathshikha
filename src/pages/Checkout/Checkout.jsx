@@ -100,6 +100,10 @@ export default function Checkout() {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState('');
+  const [availableCoupons, setAvailableCoupons] = useState([]);
+  const [unavailableCoupons, setUnavailableCoupons] = useState([]);
+  const [showUnavailableCoupons, setShowUnavailableCoupons] = useState(false);
+  const [couponsLoading, setCouponsLoading] = useState(false);
 
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [termsError, setTermsError] = useState('');
@@ -254,6 +258,42 @@ export default function Checkout() {
     };
   }, [user, form.email, form.phone, buyerForm.email, buyerForm.phone, addressMode]);
 
+  // Fetch available and eligible coupons for current cart
+  useEffect(() => {
+    let isMounted = true;
+    if (!cart || cart.length === 0) {
+      setAvailableCoupons([]);
+      setUnavailableCoupons([]);
+      return;
+    }
+    setCouponsLoading(true);
+    api('/coupons/available', {
+      method: 'POST',
+      body: JSON.stringify({
+        items: cart.map((x) => ({
+          id: x.id,
+          qty: x.qty,
+          selectedOptions: x.selectedOptions || x.selectedParameters || {}
+        })),
+        subtotal
+      })
+    })
+      .then((res) => {
+        if (isMounted && res && res.ok) {
+          setAvailableCoupons(Array.isArray(res.available) ? res.available : []);
+          setUnavailableCoupons(Array.isArray(res.unavailable) ? res.unavailable : []);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (isMounted) setCouponsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [cart, subtotal]);
+
   // Handle PIN Code Lookup when 6 digits are entered (always on destination PIN)
   useEffect(() => {
     const activePin = (addressMode === 'gift_address' ? giftForm.pincode : form.pincode).trim();
@@ -262,7 +302,7 @@ export default function Checkout() {
       setPincodeLoading(true);
       setPincodeError('');
 
-      api(`/shipping/lookup/${activePin}`)
+      api(`/shipping/lookup/${activePin}?subtotal=${subtotal}`)
         .then((data) => {
           if (!isMounted) return;
           if (data && data.valid && Array.isArray(data.options)) {
@@ -300,7 +340,7 @@ export default function Checkout() {
       setPincodeError('');
       setSelectedShippingMethod('');
     }
-  }, [addressMode, form.pincode, giftForm.pincode]);
+  }, [addressMode, form.pincode, giftForm.pincode, subtotal]);
 
   // Compute compatible eligible orders based on destination & shipping method
   const compatibleOrders = (eligibleMergeOrders || []).filter((o) => {
@@ -341,9 +381,10 @@ export default function Checkout() {
   const selectedCombineOrder = compatibleOrders.find((o) => o.id === selectedCombineOrderId);
 
   // Handle Coupon Apply
-  const handleApplyCoupon = async (e) => {
-    e?.preventDefault();
-    if (!couponCode.trim()) {
+  const handleApplyCoupon = async (e, directCode = null) => {
+    e?.preventDefault?.();
+    const codeToApply = (directCode || couponCode).trim().toUpperCase();
+    if (!codeToApply) {
       return setCouponError('Please enter a coupon code.');
     }
     setCouponLoading(true);
@@ -352,15 +393,16 @@ export default function Checkout() {
       const res = await api('/coupons/validate', {
         method: 'POST',
         body: JSON.stringify({
-          code: couponCode.trim(),
-          items: cart.map((x) => ({ id: x.id, qty: x.qty, selectedOptions: x.selectedOptions || {} }))
+          code: codeToApply,
+          items: cart.map((x) => ({ id: x.id, qty: x.qty, selectedOptions: x.selectedOptions || x.selectedParameters || {} }))
         })
       });
 
       if (res.valid) {
         setAppliedCoupon(res);
+        setCouponCode(res.code);
         setCouponError('');
-        setToast(`${res.code} applied successfully!`);
+        setToast(`${res.code} applied successfully! ✨`);
       } else {
         setAppliedCoupon(null);
         setCouponError(res.error || 'Invalid coupon code.');
@@ -371,6 +413,11 @@ export default function Checkout() {
     } finally {
       setCouponLoading(false);
     }
+  };
+
+  const handleSelectCoupon = (code) => {
+    setCouponCode(code);
+    handleApplyCoupon(null, code);
   };
 
   const handleRemoveCoupon = () => {
@@ -1457,7 +1504,7 @@ export default function Checkout() {
               <div className="couponInputForm">
                 <input
                   type="text"
-                  placeholder=""
+                  placeholder="Enter coupon code (e.g. SAVE100)"
                   value={couponCode}
                   onChange={(e) => {
                     setCouponCode(e.target.value.replace(/\s+/g, '').toUpperCase());
@@ -1510,6 +1557,94 @@ export default function Checkout() {
                 <span>{couponError}</span>
               </div>
             )}
+
+            {/* Available Coupons Section */}
+            {availableCoupons.length > 0 && (
+              <div className="availableCouponsBlock">
+                <div className="availableCouponsHeading">
+                  <Sparkles size={14} color="var(--gold)" />
+                  <span>Available Coupons for this Order ({availableCoupons.length})</span>
+                </div>
+                <div className="availableCouponsGrid">
+                  {availableCoupons.map((c) => {
+                    const isSelected = appliedCoupon?.code === c.code;
+                    return (
+                      <div key={c.id || c.code} className={`availableCouponCard ${isSelected ? 'selectedCoupon' : ''}`}>
+                        <div className="couponCardInfo">
+                          <div className="couponCardHeaderRow">
+                            <span className="couponCodeBadge">{c.code}</span>
+                            <span className="couponDiscountTag">{c.label}</span>
+                          </div>
+                          <span className="couponMinOrderLine">{c.minOrderLabel}</span>
+                          {c.description && <p className="couponDescLine">{c.description}</p>}
+                        </div>
+                        <button
+                          type="button"
+                          className={`couponApplyActionBtn ${isSelected ? 'isApplied' : ''}`}
+                          onClick={() => isSelected ? handleRemoveCoupon() : handleSelectCoupon(c.code)}
+                          disabled={couponLoading}
+                        >
+                          {isSelected ? 'APPLIED ✓' : 'APPLY'}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Collapsed Unavailable Coupons Section */}
+            {unavailableCoupons.length > 0 && (
+              <div className="unavailableCouponsBlock">
+                <button
+                  type="button"
+                  className="toggleUnavailableBtn"
+                  onClick={() => setShowUnavailableCoupons((prev) => !prev)}
+                >
+                  <span>Other Coupons ({unavailableCoupons.length})</span>
+                  <span className="toggleArrow">{showUnavailableCoupons ? '▲' : '▼'}</span>
+                </button>
+                {showUnavailableCoupons && (
+                  <div className="unavailableCouponsList">
+                    {unavailableCoupons.map((c) => (
+                      <div key={c.id || c.code} className="unavailableCouponCard">
+                        <div className="unavailableCardInfo">
+                          <div className="couponCardHeaderRow">
+                            <span className="couponCodeBadge muted">{c.code}</span>
+                            <span className="couponDiscountTag muted">{c.label}</span>
+                          </div>
+                          <span className="unavailableReasonLine">✦ {c.reason}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* ✨ Handmade Order Timeline Card */}
+          <div className="checkoutTimelineCard">
+            <div className="checkoutTimelineHeader">
+              <Sparkles size={15} color="var(--gold)" />
+              <span>✨ Handmade Order Timeline</span>
+            </div>
+            <div className="checkoutTimelineGrid">
+              <div className="timelineGridItem">
+                <span className="timelineItemLabel">Making Time:</span>
+                <b className="timelineItemVal">15 days</b>
+              </div>
+              <div className="timelineGridItem highlightItem">
+                <span className="timelineItemLabel">Expected Delivery:</span>
+                <b className="timelineItemVal">Within 20 days of order confirmation</b>
+                <small style={{ display: 'block', fontSize: 10, color: 'var(--text-muted, #7a6b63)', marginTop: 2, fontWeight: 500 }}>
+                  Maximum expected delivery date
+                </small>
+              </div>
+            </div>
+            <p className="timelineDisclaimerText">
+              ✦ Please note: This is the maximum expected delivery date. Your jewellery may be completed earlier and delivered before this date.
+            </p>
           </div>
 
           {/* Dynamic Order Summary Breakdown */}

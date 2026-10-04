@@ -826,6 +826,75 @@ export default function Orders() {
               </div>
             )}
 
+            {/* Free Gift Card if included */}
+            {(trackResult.free_gift?.included || trackResult.freeGift?.included) && (
+              <div className="customerFreeGiftBadgeCard">
+                <div className="customerFreeGiftHeader">
+                  <Gift size={16} color="var(--maroon, #6d1b29)" />
+                  <strong>🎁 Free Gift Included</strong>
+                </div>
+                <p className="customerFreeGiftText">
+                  Your order includes a complimentary free gift from Nathshikha.
+                </p>
+              </div>
+            )}
+
+            {/* Handmade Order Timeline Details */}
+            <div className="customerTimelineDetailsCard">
+              <div className="customerTimelineHeader">
+                <Sparkles size={14} color="var(--gold, #b8860b)" />
+                <strong>✨ Handmade Order Timeline</strong>
+              </div>
+              <div className="customerTimelineGrid">
+                <div className="customerTimelineItem">
+                  <span className="customerTimelineLabel">Making Time:</span>
+                  <b className="customerTimelineVal">15 days</b>
+                </div>
+                {(trackResult.confirmed_at || trackResult.confirmedAt) ? (
+                  <>
+                    <div className="customerTimelineItem">
+                      <span className="customerTimelineLabel">Order Confirmed:</span>
+                      <b className="customerTimelineVal">
+                        {new Date(trackResult.confirmed_at || trackResult.confirmedAt).toLocaleDateString('en-IN', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </b>
+                    </div>
+                    <div className="customerTimelineItem highlightTimeline">
+                      <span className="customerTimelineLabel">Expected Delivery:</span>
+                      <b className="customerTimelineVal">
+                        {new Date(
+                          trackResult.expected_delivery_date ||
+                          trackResult.expectedDeliveryDate ||
+                          new Date(new Date(trackResult.confirmed_at || trackResult.confirmedAt).getTime() + 20 * 24 * 60 * 60 * 1000)
+                        ).toLocaleDateString('en-IN', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </b>
+                      <small style={{ display: 'block', fontSize: 10, color: 'var(--text-muted, #7a6b63)', marginTop: 2, fontWeight: 500 }}>
+                        Maximum expected delivery date
+                      </small>
+                    </div>
+                  </>
+                ) : (
+                  <div className="customerTimelineItem highlightTimeline">
+                    <span className="customerTimelineLabel">Expected Delivery:</span>
+                    <b className="customerTimelineVal">Within 20 days of order confirmation</b>
+                    <small style={{ display: 'block', fontSize: 10, color: 'var(--text-muted, #7a6b63)', marginTop: 2, fontWeight: 500 }}>
+                      Maximum expected delivery date
+                    </small>
+                  </div>
+                )}
+              </div>
+              <small className="customerTimelineDisclaimer">
+                ✦ Please note: This is the maximum expected delivery date. Your jewellery may be completed earlier and delivered before this date.
+              </small>
+            </div>
+
             {/* Delivery Location & Financial Summary */}
             <div className="trackMetaSummaryGrid">
               <div className="metaSummaryCol">
@@ -1386,6 +1455,75 @@ export default function Orders() {
                     </div>
                   </div>
                 )}
+
+                {/* Free Gift Card if included */}
+                {(o.free_gift?.included || o.freeGift?.included) && (
+                  <div className="customerFreeGiftBadgeCard">
+                    <div className="customerFreeGiftHeader">
+                      <Gift size={16} color="var(--maroon, #6d1b29)" />
+                      <strong>🎁 Free Gift Included</strong>
+                    </div>
+                    <p className="customerFreeGiftText">
+                      Your order includes a complimentary free gift from Nathshikha.
+                    </p>
+                  </div>
+                )}
+
+                {/* Handmade Order Timeline Details */}
+                <div className="customerTimelineDetailsCard">
+                  <div className="customerTimelineHeader">
+                    <Sparkles size={14} color="var(--gold, #b8860b)" />
+                    <strong>✨ Handmade Order Timeline</strong>
+                  </div>
+                  <div className="customerTimelineGrid">
+                    <div className="customerTimelineItem">
+                      <span className="customerTimelineLabel">Making Time:</span>
+                      <b className="customerTimelineVal">15 days</b>
+                    </div>
+                    {(o.confirmed_at || o.confirmedAt) ? (
+                      <>
+                        <div className="customerTimelineItem">
+                          <span className="customerTimelineLabel">Order Confirmed:</span>
+                          <b className="customerTimelineVal">
+                            {new Date(o.confirmed_at || o.confirmedAt).toLocaleDateString('en-IN', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric'
+                            })}
+                          </b>
+                        </div>
+                        <div className="customerTimelineItem highlightTimeline">
+                          <span className="customerTimelineLabel">Expected Delivery:</span>
+                          <b className="customerTimelineVal">
+                            {new Date(
+                              o.expected_delivery_date ||
+                              o.expectedDeliveryDate ||
+                              new Date(new Date(o.confirmed_at || o.confirmedAt).getTime() + 20 * 24 * 60 * 60 * 1000)
+                            ).toLocaleDateString('en-IN', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric'
+                            })}
+                          </b>
+                          <small style={{ display: 'block', fontSize: 10, color: 'var(--text-muted, #7a6b63)', marginTop: 2, fontWeight: 500 }}>
+                            Maximum expected delivery date
+                          </small>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="customerTimelineItem highlightTimeline">
+                        <span className="customerTimelineLabel">Expected Delivery:</span>
+                        <b className="customerTimelineVal">Within 20 days of order confirmation</b>
+                        <small style={{ display: 'block', fontSize: 10, color: 'var(--text-muted, #7a6b63)', marginTop: 2, fontWeight: 500 }}>
+                          Maximum expected delivery date
+                        </small>
+                      </div>
+                    )}
+                  </div>
+                  <small className="customerTimelineDisclaimer">
+                    ✦ Please note: This is the maximum expected delivery date. Your jewellery may be completed earlier and delivered before this date.
+                  </small>
+                </div>
 
                 {/* Delivery Address Card with Pre-Shipment Edit & Post-Shipment Lock */}
                 <div className="customerOrderAddressBlock">

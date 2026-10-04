@@ -23,19 +23,19 @@ export default function ShippingPolicy() {
 
         <div className="legalHighlight">
           <Truck style={{ verticalAlign: 'middle', marginRight: 6, color: 'var(--maroon)' }} />
-          <b>Pan-India Insured Delivery:</b> We deliver to over 19,000+ pincodes across India. Free express shipping on all orders of ₹2,999 and above!
+          <b>Pan-India Insured Delivery:</b> We deliver to over 19,000+ pincodes across India. Free delivery on all orders of ₹1,500 and above!
         </div>
 
         <h2>1. Making & Crafting Timelines</h2>
         <div className="legalHighlight" style={{ borderColor: 'var(--gold)' }}>
           <Clock style={{ verticalAlign: 'middle', marginRight: 6, color: 'var(--maroon)' }} />
-          <b>Artisanal Crafting:</b> Because every Nathshikha piece is intricately handmade by master karigars with authentic pearls and antique artisanal polish, our making time is <strong>15 to 20 days</strong>. If your piece is completed earlier, it will be dispatched immediately!
+          <b>Artisanal Crafting:</b> Because every Nathshikha piece is intricately handmade by master karigars with authentic pearls and antique artisanal polish, our making time is <strong>15 days</strong>. Expected delivery is <strong>20 days from order confirmation</strong> (maximum delivery date). If your piece is completed earlier, it will be dispatched immediately!
         </div>
 
         <h2>2. Shipping Rates & Thresholds</h2>
         <ul>
-          <li><strong>Orders ₹2,999 and above:</strong> <span style={{ color: 'var(--status-paid-text)', fontWeight: 700 }}>FREE Express Shipping</span> across India.</li>
-          <li><strong>Orders below ₹2,999:</strong> Flat shipping fee of <strong>₹99</strong> per order.</li>
+          <li><strong>Orders ₹1,500 and above:</strong> <span style={{ color: 'var(--status-paid-text)', fontWeight: 700 }}>FREE Delivery</span> across India.</li>
+          <li><strong>Orders below ₹1,500:</strong> Applicable standard delivery charges apply based on delivery PIN code location (Khopoli: ₹0, Maharashtra: ₹100, Rest of India: ₹120, Store Pickup: ₹0).</li>
         </ul>
 
         <h2>3. Delivery Timelines (After Dispatch)</h2>

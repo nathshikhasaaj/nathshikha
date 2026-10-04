@@ -185,10 +185,12 @@ export async function resolvePincodeLocation(pincode) {
 /**
  * Get available shipping options based on resolved location
  */
-export function getShippingOptionsForLocation(locationResult) {
+export function getShippingOptionsForLocation(locationResult, subtotal = 0) {
   if (!locationResult || !locationResult.valid) {
     return [];
   }
+
+  const isFreeBySubtotal = Number(subtotal || 0) >= 1500;
 
   // Option 1: Self Pickup is always available across all locations
   const options = [
@@ -211,20 +213,26 @@ export function getShippingOptionsForLocation(locationResult) {
       description: 'Free local doorstep delivery within Khopoli City'
     });
   } else if (locationResult.isMaharashtra) {
+    const charge = isFreeBySubtotal ? 0 : 100;
     options.push({
       id: 'maharashtra_delivery',
       name: 'Maharashtra Delivery',
-      charge: 100,
-      badge: '₹100',
-      description: 'Express shipping to anywhere across Maharashtra'
+      charge: charge,
+      badge: charge === 0 ? 'FREE' : '₹100',
+      description: isFreeBySubtotal
+        ? 'Free express shipping on orders above ₹1,500 across Maharashtra'
+        : 'Express shipping to anywhere across Maharashtra'
     });
   } else {
+    const charge = isFreeBySubtotal ? 0 : 120;
     options.push({
       id: 'outside_maharashtra_delivery',
       name: 'Outside Maharashtra Delivery',
-      charge: 120,
-      badge: '₹120',
-      description: 'Standard domestic delivery to states outside Maharashtra'
+      charge: charge,
+      badge: charge === 0 ? 'FREE' : '₹120',
+      description: isFreeBySubtotal
+        ? 'Free standard domestic delivery on orders above ₹1,500'
+        : 'Standard domestic delivery to states outside Maharashtra'
     });
   }
 
@@ -234,13 +242,13 @@ export function getShippingOptionsForLocation(locationResult) {
 /**
  * Calculate and validate final shipping charge server-side
  */
-export async function calculateShippingCharge(pincode, requestedMethodId) {
+export async function calculateShippingCharge(pincode, requestedMethodId, subtotal = 0) {
   const location = await resolvePincodeLocation(pincode);
   if (!location.valid) {
     throw new Error(location.error || 'Invalid PIN code provided.');
   }
 
-  const options = getShippingOptionsForLocation(location);
+  const options = getShippingOptionsForLocation(location, subtotal);
 
   // Match requested method, or default to the delivery option
   let selectedOption = options.find((opt) => opt.id === requestedMethodId);
