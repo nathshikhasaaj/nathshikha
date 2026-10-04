@@ -875,7 +875,7 @@ export default function ProductDetail() {
 
           <div className="productPriceBlock">
             <span className="price">{money(product.price)}</span>
-            <span className="priceTaxNotice">Inclusive of all taxes · Free Pan-India Delivery on ₹2,999+</span>
+            <span className="priceTaxNotice">Inclusive of all taxes • Free Pan-India Delivery on ₹1,500+</span>
           </div>
 
           {/* Live stock and craft readiness badge */}
