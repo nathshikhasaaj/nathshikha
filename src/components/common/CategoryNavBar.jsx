@@ -5,32 +5,16 @@ import { api } from '../../services/api';
 import { useLanguage } from '../../context/LanguageContext';
 import './CategoryNavBar.css';
 
-const DEFAULT_FALLBACK_CATEGORIES = [
-  { name: 'Nath', slug: 'nath' },
-  { name: 'Thushi', slug: 'thushi' },
-  { name: 'Kolhapuri Saaj', slug: 'kolhapuri-saaj' },
-  { name: 'Tanmani', slug: 'tanmani' },
-  { name: 'Pearl', slug: 'pearl' },
-  { name: 'Mangalsutra', slug: 'mangalsutra' },
-  { name: 'Bugadi', slug: 'bugadi' },
-  { name: 'Chinchpeti', slug: 'chinchpeti' },
-  { name: 'Bormal', slug: 'bormal' },
-  { name: 'Earrings', slug: 'earrings' },
-  { name: 'Necklace', slug: 'necklace' },
-  { name: 'Bangles', slug: 'bangles' },
-  { name: 'Accessories', slug: 'accessories' }
-];
-
 export default function CategoryNavBar({ activeCategory }) {
   const location = useLocation();
   const { lang, t } = useLanguage();
-  const [categories, setCategories] = useState(DEFAULT_FALLBACK_CATEGORIES);
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     let isMounted = true;
     api('/categories')
       .then((data) => {
-        if (isMounted && Array.isArray(data) && data.length > 0) {
+        if (isMounted && Array.isArray(data)) {
           setCategories(data);
         }
       })

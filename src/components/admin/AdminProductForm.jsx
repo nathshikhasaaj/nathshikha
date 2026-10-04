@@ -57,7 +57,7 @@ export default function AdminProductForm({
 
     api('/categories/admin/all')
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           setCategoriesList(data.map((c) => c.name));
         }
       })
@@ -65,7 +65,7 @@ export default function AdminProductForm({
         // Fallback to public categories
         api('/categories')
           .then((data) => {
-            if (Array.isArray(data) && data.length > 0) {
+            if (Array.isArray(data)) {
               setCategoriesList(data.map((c) => c.name));
             }
           })
@@ -74,7 +74,7 @@ export default function AdminProductForm({
   }, []);
 
   const effectiveCategories = useMemo(() => {
-    const list = categoriesList.length > 0 ? categoriesList : ALL_CATEGORIES;
+    const list = categoriesList.length > 0 ? categoriesList : (form.category ? [form.category] : []);
     if (form.category && !list.includes(form.category)) {
       return [form.category, ...list];
     }

@@ -11,7 +11,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 max(20px, 3.5vw);
+  padding: 0 clamp(16px, 2.5vw, 40px);
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -77,8 +77,10 @@
   display: flex;
   align-items: stretch;
   height: 100%;
-  gap: clamp(10px, 1.5vw, 24px);
-  margin: 0 16px;
+  gap: clamp(10px, 1.4vw, 24px);
+  margin: 0 clamp(10px, 1.5vw, 24px);
+  flex: 1 1 auto;
+  justify-content: center;
 }
 
 .navItem {
@@ -480,16 +482,16 @@
 }
 
 /* --------------------------------------------------------------------------
-   RESPONSIVE BREAKPOINTS: TABLET / LAPTOP (951px to 1240px)
+   RESPONSIVE BREAKPOINTS: DESKTOP COMPACT (1181px to 1366px)
    -------------------------------------------------------------------------- */
-@media (max-width: 1240px) and (min-width: 951px) {
+@media (max-width: 1366px) and (min-width: 1181px) {
   .header {
-    padding: 0 2vw;
+    padding: 0 16px;
   }
 
   .desktopNav {
     gap: 8px;
-    margin: 0 6px;
+    margin: 0 8px;
   }
 
   .navLink,
@@ -501,14 +503,24 @@
 
   .brandText b {
     font-size: 13.5px;
-    letter-spacing: 1.6px;
+    letter-spacing: 1.5px;
+  }
+
+  .brandText small {
+    font-size: 8px;
+    letter-spacing: 1.1px;
+  }
+
+  .adminPanelNavLink {
+    padding: 4px 9px !important;
+    font-size: 11px !important;
   }
 }
 
 /* --------------------------------------------------------------------------
-   RESPONSIVE BREAKPOINTS: MOBILE VIEWPORT (< 950px)
+   RESPONSIVE BREAKPOINTS: TABLET / MOBILE VIEWPORT (<= 1180px)
    -------------------------------------------------------------------------- */
-@media (max-width: 950px) {
+@media (max-width: 1180px) {
   .header {
     height: 60px;
     padding: 0 12px;

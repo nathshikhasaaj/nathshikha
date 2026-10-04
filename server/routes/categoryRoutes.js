@@ -12,10 +12,18 @@ function escapeRegex(text) {
 
 /**
  * Migration & Initialization Helper:
- * Ensures all existing categories in products and core catalogue exist as Category documents.
+ * Ensures initial starter categories exist ONLY on a fresh/empty database.
+ * Once initialized, categories are managed exclusively by the Admin and
+ * intentionally deleted categories are NEVER automatically recreated on server startup.
  */
 export async function ensureDefaultCategories() {
   try {
+    const existingCount = await Category.countDocuments();
+    if (existingCount > 0) {
+      // Database already initialized. Preserve admin changes & deletions.
+      return;
+    }
+
     const defaultCatalogNames = [
       'Nath',
       'Thushi',
@@ -35,7 +43,7 @@ export async function ensureDefaultCategories() {
       'Other'
     ];
 
-    // Get all distinct category strings currently stored on products
+    // Get any distinct category strings currently stored on products
     const productCategories = await Product.distinct('category');
     const allNamesToEnsure = Array.from(
       new Set(
@@ -45,38 +53,30 @@ export async function ensureDefaultCategories() {
       )
     );
 
-    const existingCategories = await Category.find();
-    const existingNamesLower = new Set(existingCategories.map((c) => c.name.toLowerCase().trim()));
-    const existingSlugs = new Set(existingCategories.map((c) => c.slug.toLowerCase().trim()));
-
-    let nextOrder = existingCategories.length > 0
-      ? Math.max(...existingCategories.map((c) => c.displayOrder || 0)) + 1
-      : 1;
-
     const toInsert = [];
-    for (const name of allNamesToEnsure) {
-      if (!existingNamesLower.has(name.toLowerCase())) {
-        let baseSlug = slugify(name) || 'category';
-        let uniqueSlug = baseSlug;
-        let counter = 1;
-        while (existingSlugs.has(uniqueSlug)) {
-          uniqueSlug = `${baseSlug}-${counter++}`;
-        }
-        existingSlugs.add(uniqueSlug);
-        existingNamesLower.add(name.toLowerCase());
+    const existingSlugs = new Set();
+    let nextOrder = 1;
 
-        toInsert.push({
-          name,
-          slug: uniqueSlug,
-          isActive: true,
-          displayOrder: nextOrder++
-        });
+    for (const name of allNamesToEnsure) {
+      let baseSlug = slugify(name) || 'category';
+      let uniqueSlug = baseSlug;
+      let counter = 1;
+      while (existingSlugs.has(uniqueSlug)) {
+        uniqueSlug = `${baseSlug}-${counter++}`;
       }
+      existingSlugs.add(uniqueSlug);
+
+      toInsert.push({
+        name,
+        slug: uniqueSlug,
+        isActive: true,
+        displayOrder: nextOrder++
+      });
     }
 
     if (toInsert.length > 0) {
       await Category.insertMany(toInsert);
-      console.log(`✓ Synchronized ${toInsert.length} initial categories in database.`);
+      console.log(`✓ Initialized ${toInsert.length} starter categories on empty database.`);
     }
   } catch (err) {
     console.error('Error in ensureDefaultCategories:', err.message);

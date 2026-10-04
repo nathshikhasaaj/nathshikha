@@ -22,16 +22,20 @@ const DEFAULT_CATEGORY_IMAGES = {
 export default function CategoryGrid() {
   const { t } = useLanguage();
   const [categories, setCategories] = useState([]);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
     api('/categories')
       .then((data) => {
-        if (isMounted && Array.isArray(data) && data.length > 0) {
+        if (isMounted && Array.isArray(data)) {
           setCategories(data);
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        if (isMounted) setLoaded(true);
+      });
     return () => {
       isMounted = false;
     };
@@ -45,39 +49,15 @@ export default function CategoryGrid() {
     return '/assets/thushi-category.jpg';
   };
 
-  const displayList = categories.length > 0
-    ? categories.slice(0, 6).map((c) => ({
-        name: c.name,
-        slug: c.slug || c.name,
-        img: getCategoryImage(c.name, c.slug)
-      }))
-    : [
-        {
-          name: t('cat_nath', 'Nath Collection'),
-          slug: 'nath',
-          img: '/assets/nath-category.jpg'
-        },
-        {
-          name: t('cat_pearl', 'Handmade Pearl'),
-          slug: 'pearl',
-          img: '/assets/pearl-category.jpg'
-        },
-        {
-          name: t('cat_traditional', 'Traditional'),
-          slug: 'traditional',
-          img: '/assets/thushi-category.jpg'
-        },
-        {
-          name: t('cat_signature', 'Signature Set'),
-          slug: 'signature',
-          img: '/assets/saaj-category.jpg'
-        },
-        {
-          name: t('cat_accessories', 'Accessories'),
-          slug: 'accessories',
-          img: '/assets/bugadi-product.jpg'
-        }
-      ];
+  const displayList = categories.slice(0, 6).map((c) => ({
+    name: c.name,
+    slug: c.slug || c.name,
+    img: getCategoryImage(c.name, c.slug)
+  }));
+
+  if (loaded && displayList.length === 0) {
+    return null;
+  }
 
   return (
     <div className="catGrid">
