@@ -185,8 +185,9 @@ export default function AdminOrderList({
         const itemMatch = (o.items || []).some((i) =>
           (i.name || '').toLowerCase().includes(q)
         );
+        const emailMatch = (o.customer_email || o.customerEmail || o.email || '').toLowerCase().includes(q);
         const txMatch = (o.payment_transaction_id || o.upi_utr || '').toLowerCase().includes(q);
-        return nameMatch || phoneMatch || orderNoMatch || groupMatch || itemMatch || txMatch;
+        return nameMatch || phoneMatch || emailMatch || orderNoMatch || groupMatch || itemMatch || txMatch;
       }
 
       return true;

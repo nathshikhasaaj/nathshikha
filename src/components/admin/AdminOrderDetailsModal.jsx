@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   User,
@@ -26,12 +26,14 @@ import {
   FileText,
   Sparkles,
   ExternalLink,
-  Gift
+  Gift,
+  RefreshCw
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { money, formatOrderStatus, formatWhatsAppPhone } from '../../utils/formatters';
 import { getParameterEntries } from '../../utils/parameterHelpers';
 import AdminOrderBillModal from './AdminOrderBillModal';
+import AdminEditEmailModal from './AdminEditEmailModal';
 import './AdminOrderDetailsModal.css';
 
 export default function AdminOrderDetailsModal({
@@ -44,12 +46,41 @@ export default function AdminOrderDetailsModal({
   onStatusChange,
   onReviewCancellationClick,
   onEditOrderClick,
-  onResendAssistedOrder
+  onResendAssistedOrder,
+  onOrderUpdated
 }) {
   const [copiedItemIndex, setCopiedItemIndex] = useState(null);
   const [generatingItemIndex, setGeneratingItemIndex] = useState(null);
   const [copyNotice, setCopyNotice] = useState('');
   const [isBillModalOpen, setIsBillModalOpen] = useState(false);
+  const [isEditEmailModalOpen, setIsEditEmailModalOpen] = useState(false);
+  const [emailEvents, setEmailEvents] = useState([]);
+  const [loadingEmails, setLoadingEmails] = useState(false);
+  const [resendingEmail, setResendingEmail] = useState(false);
+  const [emailNotice, setEmailNotice] = useState('');
+
+  const fetchEmailEvents = async () => {
+    if (!order) return;
+    const orderId = order.id || order._id;
+    if (!orderId) return;
+    setLoadingEmails(true);
+    try {
+      const res = await api(`/admin/orders/${orderId}/emails`);
+      if (Array.isArray(res)) {
+        setEmailEvents(res);
+      }
+    } catch (err) {
+      console.error('Failed to fetch order email events:', err);
+    } finally {
+      setLoadingEmails(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && order) {
+      fetchEmailEvents();
+    }
+  }, [isOpen, order?.id, order?._id, order?.email, order?.customer_email, order?.email_delivery_status, order?.emailDeliveryStatus]);
 
   if (!isOpen || !order) return null;
 
@@ -224,6 +255,35 @@ export default function AdminOrderDetailsModal({
 
         {/* Modal Scrollable Body */}
         <div className="orderDetailsBody">
+          {/* Email Delivery Failure Warning Banner */}
+          {(order.email_delivery_status === 'failed' || order.emailDeliveryStatus === 'failed' || (emailEvents.length > 0 && emailEvents[0].status === 'failed')) && (
+            <div className="orderEmailDeliveryFailureBanner">
+              <div className="deliveryFailureIconWrap">
+                <AlertTriangle size={18} />
+              </div>
+              <div className="deliveryFailureContent">
+                <h4>Email delivery failed — please verify the customer's email address</h4>
+                <p>
+                  Failed Recipient: <strong>{order.email_delivery_failed_recipient || order.customer_email || order.email || 'Customer Email'}</strong>
+                  {(order.email_delivery_error || (emailEvents[0]?.error_message || emailEvents[0]?.errorMessage))
+                    ? ` · Reason: ${order.email_delivery_error || emailEvents[0]?.error_message || emailEvents[0]?.errorMessage}`
+                    : ''}
+                </p>
+              </div>
+              <div className="deliveryFailureActions">
+                <button
+                  type="button"
+                  className="goldBtn compact emailFailureEditBtn"
+                  onClick={() => setIsEditEmailModalOpen(true)}
+                  title="Correct customer email address"
+                >
+                  <Edit3 size={12} />
+                  <span>Edit Email</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Status Bar */}
           <div className="orderStatusBanner">
             <div className="bannerStatusItem">
@@ -714,11 +774,26 @@ export default function AdminOrderDetailsModal({
                       <span className="infoVal"><b>{order.customer_name || order.customerName || 'Customer'}</b></span>
                     </div>
 
-                    <div className="infoItem">
+                    <div className="infoItem emailInfoItem">
                       <span className="infoLabel">Buyer Phone & Email</span>
-                      <span className="infoVal" style={{ fontSize: '12px' }}>
-                        {order.customer_phone || order.customerPhone || '—'} · {order.customer_email || order.customerEmail || order.email || '—'}
-                      </span>
+                      <div className="emailValRow">
+                        <span className="infoVal" style={{ fontSize: '12px' }}>
+                          {order.customer_phone || order.customerPhone || '—'} · <b>{order.customer_email || order.customerEmail || order.email || '—'}</b>
+                        </span>
+                        <button
+                          type="button"
+                          className="outlineBtn compact inlineEditEmailBtn"
+                          onClick={() => setIsEditEmailModalOpen(true)}
+                          title="Edit buyer notification email"
+                        >
+                          <Edit3 size={11} /> Edit Email
+                        </button>
+                      </div>
+                      {(order.email_admin_corrected || order.emailAdminCorrected) && (
+                        <div className="adminCorrectedBadge">
+                          <ShieldCheck size={11} /> Corrected by Admin {order.email_admin_corrected_at || order.emailAdminCorrectedAt ? `(${new Date(order.email_admin_corrected_at || order.emailAdminCorrectedAt).toLocaleDateString('en-IN')})` : ''}
+                        </div>
+                      )}
                     </div>
                   </>
                 ) : (
@@ -749,11 +824,26 @@ export default function AdminOrderDetailsModal({
                       </span>
                     </div>
 
-                    <div className="infoItem">
+                    <div className="infoItem emailInfoItem">
                       <span className="infoLabel">Email Address</span>
-                      <span className="infoVal">
-                        <Mail size={13} /> {order.email || 'Not provided'}
-                      </span>
+                      <div className="emailValRow">
+                        <span className="infoVal">
+                          <Mail size={13} /> <b>{order.customer_email || order.customerEmail || order.email || 'Not provided'}</b>
+                        </span>
+                        <button
+                          type="button"
+                          className="outlineBtn compact inlineEditEmailBtn"
+                          onClick={() => setIsEditEmailModalOpen(true)}
+                          title="Edit customer notification email"
+                        >
+                          <Edit3 size={11} /> Edit Email
+                        </button>
+                      </div>
+                      {(order.email_admin_corrected || order.emailAdminCorrected) && (
+                        <div className="adminCorrectedBadge">
+                          <ShieldCheck size={11} /> Corrected by Admin {order.email_admin_corrected_at || order.emailAdminCorrectedAt ? `(${new Date(order.email_admin_corrected_at || order.emailAdminCorrectedAt).toLocaleDateString('en-IN')})` : ''}
+                        </div>
+                      )}
                     </div>
 
                     <div className="infoItem">
@@ -1383,42 +1473,111 @@ export default function AdminOrderDetailsModal({
                     id="resendEmailSelect"
                     defaultValue="ORDER_CONFIRMED"
                     className="adminEmailSelect"
+                    disabled={resendingEmail}
                   >
-                    <option value="ASSISTED_ORDER_SENT">Assisted Order Review & Payment Email</option>
                     <option value="ORDER_PLACED">Order Placed Email</option>
                     <option value="ORDER_CONFIRMED">Order Confirmed Email</option>
                     <option value="ORDER_SHIPPED">Order Shipped Email</option>
                     <option value="ORDER_DELIVERED">Order Delivered Email</option>
                     <option value="CANCELLATION_APPROVED">Cancellation Approved Email</option>
                     <option value="REFUND_COMPLETED">Refund Completed Email</option>
+                    <option value="ASSISTED_ORDER_SENT">Assisted Order Review & Payment Email</option>
                   </select>
                   <button
                     type="button"
                     className="goldBtn compact adminEmailResendBtn"
+                    disabled={resendingEmail}
                     onClick={async () => {
                       const select = document.getElementById('resendEmailSelect');
                       const emailType = select ? select.value : 'ORDER_CONFIRMED';
                       const orderId = order.id || order._id;
+                      setResendingEmail(true);
+                      setEmailNotice('');
                       try {
                         const res = await api(`/admin/orders/${orderId}/resend-email`, {
                           method: 'POST',
                           body: JSON.stringify({ emailType })
                         });
-                        alert(res.message || 'Email resent successfully!');
+                        setEmailNotice(res.message || 'Email resent successfully!');
+                        setTimeout(() => setEmailNotice(''), 4000);
+                        fetchEmailEvents();
                       } catch (err) {
-                        alert(err.message || 'Failed to resend email');
+                        setEmailNotice(`Failed: ${err.message || 'Error resending email'}`);
+                        setTimeout(() => setEmailNotice(''), 5000);
+                      } finally {
+                        setResendingEmail(false);
                       }
                     }}
                   >
-                    Resend Email
+                    {resendingEmail ? (
+                      <>
+                        <Loader2 size={13} className="spinIcon" />
+                        <span>Resending...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Mail size={13} />
+                        <span>Resend Email</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
-              <div className="adminEmailCardFooter">
-                <p>
-                  Recipient: <strong>{order.customer_email || order.email || 'customer@nathshikha.com'}</strong> · All emails are dispatched automatically using Nathshikha business Gmail SMTP.
+
+              {emailNotice && (
+                <div style={{ padding: '6px 12px', background: emailNotice.startsWith('Failed') ? '#fef2f2' : '#f0fdf4', color: emailNotice.startsWith('Failed') ? '#b91c1c' : '#15803d', fontSize: '0.8rem', fontWeight: 600, borderBottom: '1px solid #ebdcc6' }}>
+                  {emailNotice}
+                </div>
+              )}
+
+              <div className="adminEmailCardFooter" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+                <p style={{ margin: 0 }}>
+                  Active Recipient: <strong>{order.customer_email || order.customerEmail || order.email || 'customer@nathshikha.com'}</strong>
                 </p>
+                <button
+                  type="button"
+                  className="outlineBtn compact inlineEditEmailBtn"
+                  onClick={() => setIsEditEmailModalOpen(true)}
+                  style={{ padding: '3px 8px', fontSize: 11 }}
+                >
+                  <Edit3 size={11} /> Edit Email
+                </button>
               </div>
+
+              {/* Email Event Logs */}
+              {emailEvents && emailEvents.length > 0 && (
+                <div className="adminEmailEventsContainer">
+                  <div className="adminEmailEventsHeader">
+                    <span>Recent Email Dispatches ({emailEvents.length})</span>
+                    <button
+                      type="button"
+                      onClick={fetchEmailEvents}
+                      disabled={loadingEmails}
+                      style={{ background: 'none', border: 'none', color: '#6d1b29', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 600 }}
+                    >
+                      <RefreshCw size={11} className={loadingEmails ? 'spinIcon' : ''} /> Refresh Logs
+                    </button>
+                  </div>
+                  <div className="emailEventsList">
+                    {emailEvents.slice(0, 5).map((evt, idx) => (
+                      <div key={idx} className="emailEventRow">
+                        <div className="emailEventMeta">
+                          <span className="emailEventName">{evt.email_type || evt.emailType}</span>
+                          <span className="emailEventRecipient">to: {evt.recipient}</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span className="emailEventDate">
+                            {new Date(evt.created_at || evt.sent_at || evt.createdAt || evt.sentAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                          <span className={`emailEventStatusChip ${evt.status === 'sent' ? 'statusChipSent' : evt.status === 'failed' ? 'statusChipFailed' : 'statusChipSkipped'}`}>
+                            {evt.status === 'sent' ? '✓ Sent' : evt.status === 'failed' ? '✗ Failed' : '⏳ Skipped'}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1505,6 +1664,21 @@ export default function AdminOrderDetailsModal({
           order={order}
           isOpen={isBillModalOpen}
           onClose={() => setIsBillModalOpen(false)}
+        />
+      )}
+
+      {/* Edit Customer Email Modal */}
+      {isEditEmailModalOpen && (
+        <AdminEditEmailModal
+          order={order}
+          isOpen={isEditEmailModalOpen}
+          onClose={() => setIsEditEmailModalOpen(false)}
+          onEmailSaved={(updatedOrder) => {
+            if (onOrderUpdated) {
+              onOrderUpdated(updatedOrder);
+            }
+            fetchEmailEvents();
+          }}
         />
       )}
     </div>

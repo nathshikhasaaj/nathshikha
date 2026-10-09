@@ -1,0 +1,418 @@
+/* ============================================================ */
+/* NATHSHIKHA ADMIN EDIT CUSTOMER EMAIL MODAL                   */
+/* Royal Maroon & Gold Aesthetic, Responsive from 320px to 4K   */
+/* ============================================================ */
+
+.adminEditEmailOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background-color: rgba(27, 18, 16, 0.72);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: adminFadeIn 0.2s ease-out;
+}
+
+.adminEditEmailModal {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1.5px solid #ebdcc6;
+  box-shadow: 0 16px 40px rgba(79, 27, 36, 0.24), 0 2px 8px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: adminSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes adminFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes adminSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Header */
+.adminEditEmailHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #6d1b29 0%, #4a0f1b 100%);
+  color: #fbf5e6;
+  border-bottom: 1px solid #ebdcc6;
+}
+
+.adminEditEmailHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.adminEditEmailIconBadge {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(229, 195, 120, 0.18);
+  border: 1px solid rgba(229, 195, 120, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e5c378;
+  flex-shrink: 0;
+}
+
+.adminEditEmailTitle {
+  margin: 0;
+  font-family: Georgia, 'Playfair Display', serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fbf5e6;
+  letter-spacing: 0.3px;
+}
+
+.adminEditEmailSubtitle {
+  margin: 2px 0 0 0;
+  font-size: 0.8rem;
+  color: #e5c378;
+  opacity: 0.92;
+}
+
+.adminEditEmailCloseBtn {
+  background: transparent;
+  border: none;
+  color: #fbf5e6;
+  opacity: 0.8;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.adminEditEmailCloseBtn:hover:not(:disabled) {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.12);
+  transform: rotate(90deg);
+}
+
+.adminEditEmailCloseBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Body */
+.adminEditEmailBody {
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: #fdfbf7;
+}
+
+/* Alerts */
+.adminEditEmailAlert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.errorAlert {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+
+.successAlert {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+}
+
+/* Form Fields */
+.adminEditEmailFieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.adminEditEmailLabel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #3f332f;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.requiredLabel > span:first-child::after {
+  content: ' *';
+  color: #dc2626;
+}
+
+.labelHint {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #7a6b63;
+  text-transform: none;
+}
+
+.readOnlyBadge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #713f12;
+  background: #fef9c3;
+  border: 1px solid #fde047;
+  padding: 1px 6px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  text-transform: uppercase;
+}
+
+.optionalTag {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #8c7f78;
+  text-transform: none;
+}
+
+/* Inputs */
+.readOnlyInputWrap,
+.inputWithIconWrap,
+.textareaWithIconWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inputFieldIcon {
+  position: absolute;
+  left: 12px;
+  color: #8c7f78;
+  pointer-events: none;
+}
+
+.textareaFieldIcon {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  color: #8c7f78;
+  pointer-events: none;
+}
+
+.adminEditEmailInput {
+  width: 100%;
+  padding: 10px 14px 10px 36px;
+  border: 1.5px solid #ebdcc6;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 0.92rem;
+  color: #2b1f1d;
+  font-family: inherit;
+  transition: all 0.15s ease;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.adminEditEmailInput:focus {
+  border-color: #6d1b29;
+  box-shadow: 0 0 0 3px rgba(109, 27, 41, 0.12);
+}
+
+.adminEditEmailInput.inputError {
+  border-color: #dc2626;
+  background: #fffafa;
+}
+
+.adminEditEmailInput.readOnlyInput {
+  padding-left: 14px;
+  background: #f5f1ea;
+  border-color: #e2d7c5;
+  color: #64748b;
+  cursor: not-allowed;
+  font-family: monospace;
+  font-size: 0.88rem;
+}
+
+.adminEditEmailTextarea {
+  width: 100%;
+  padding: 10px 14px 10px 36px;
+  border: 1.5px solid #ebdcc6;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 0.88rem;
+  color: #2b1f1d;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 56px;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+}
+
+.adminEditEmailTextarea:focus {
+  border-color: #6d1b29;
+  box-shadow: 0 0 0 3px rgba(109, 27, 41, 0.12);
+}
+
+.textareaCharCount {
+  font-size: 0.72rem;
+  color: #8c7f78;
+  text-align: right;
+  margin-top: 2px;
+}
+
+/* Notice Card */
+.adminEditEmailNotice {
+  background: #faf5ee;
+  border: 1px solid #ebdcc6;
+  border-left: 3.5px solid #c69a59;
+  border-radius: 6px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.adminEditEmailNotice .noticeIcon {
+  color: #92400e;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.adminEditEmailNotice p {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #574c47;
+  line-height: 1.45;
+}
+
+/* Footer Actions */
+.adminEditEmailFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 6px;
+  border-top: 1px solid #ebdcc6;
+}
+
+.adminEditEmailFooter .cancelBtn {
+  min-width: 90px;
+  height: 38px;
+  font-weight: 600;
+}
+
+.adminEditEmailFooter .saveBtn {
+  min-width: 130px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.spinIcon {
+  animation: spinEmail 0.8s linear infinite;
+}
+
+@keyframes spinEmail {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================ */
+/* RESPONSIVE BREAKPOINTS (320px, 375px, 390px, 430px, 768px+)  */
+/* ============================================================ */
+
+@media (max-width: 480px) {
+  .adminEditEmailOverlay {
+    padding: 10px;
+  }
+
+  .adminEditEmailModal {
+    border-radius: 10px;
+    max-height: 94vh;
+  }
+
+  .adminEditEmailHeader {
+    padding: 14px 16px;
+  }
+
+  .adminEditEmailTitle {
+    font-size: 1.05rem;
+  }
+
+  .adminEditEmailBody {
+    padding: 14px 16px;
+    gap: 14px;
+  }
+
+  .adminEditEmailInput,
+  .adminEditEmailTextarea {
+    font-size: 0.88rem;
+    padding-top: 9px;
+    padding-bottom: 9px;
+  }
+
+  .adminEditEmailFooter {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .adminEditEmailFooter button {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .adminEditEmailHeaderLeft {
+    gap: 8px;
+  }
+
+  .adminEditEmailIconBadge {
+    width: 30px;
+    height: 30px;
+  }
+
+  .adminEditEmailTitle {
+    font-size: 0.95rem;
+  }
+}

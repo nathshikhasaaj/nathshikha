@@ -1299,6 +1299,16 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
         onReviewCancellationClick={(order) => setCancellationModalOrder(order)}
         onEditOrderClick={(order) => setEditOrderModalOrder(order)}
         onResendAssistedOrder={handleResendAssistedOrder}
+        onOrderUpdated={(updatedOrder) => {
+          setOrders((prev) =>
+            prev.map((o) =>
+              (o.id === updatedOrder.id || o._id === updatedOrder.id || o._id === updatedOrder._id || o.order_no === updatedOrder.order_no || o.orderNo === updatedOrder.orderNo)
+                ? { ...o, ...updatedOrder }
+                : o
+            )
+          );
+          setDetailsModalOrder((prev) => (prev ? { ...prev, ...updatedOrder } : updatedOrder));
+        }}
       />
 
       {/* Admin Edit Order Modal */}

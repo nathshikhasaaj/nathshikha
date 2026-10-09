@@ -2483,6 +2483,84 @@ router.post('/orders/:id/cancellation/process-refund', async (req, res) => {
   }
 });
 
+// Admin Edit / Correct Customer Email for an Order
+async function handleAdminEditEmail(req, res) {
+  const { id } = req.params;
+  const { email, customerEmail, note, notes } = req.body;
+
+  const rawEmail = email !== undefined ? email : customerEmail;
+  if (!rawEmail || typeof rawEmail !== 'string') {
+    return res.status(400).json({ error: 'A valid email address is required.' });
+  }
+
+  const cleanEmail = rawEmail.trim().toLowerCase();
+  if (!isValidEmail(cleanEmail)) {
+    return res.status(400).json({ error: 'Please enter a valid email address (e.g. name@example.com).' });
+  }
+
+  try {
+    const order = await findOrderByIdOrNo(id);
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found.' });
+    }
+
+    const previousEmail = order.customerEmail || order.email || 'Not set';
+
+    // Set permission flag on document for mongoose pre-save hook
+    order._allowEmailCorrection = true;
+    if (order.$locals) {
+      order.$locals.allowEmailCorrection = true;
+    }
+
+    // Update canonical and alias email fields
+    order.email = cleanEmail;
+    order.customerEmail = cleanEmail;
+    order.emailAdminCorrected = true;
+    order.emailAdminCorrectedAt = new Date();
+    order.emailAdminCorrectedBy = req.user?.email || req.user?.name || 'Admin';
+
+    // Reset delivery failure state if previously failed
+    if (order.emailDeliveryStatus === 'failed') {
+      order.emailDeliveryStatus = 'pending';
+      order.emailDeliveryError = null;
+    }
+
+    // Capture sanitized admin audit trail
+    const adminIdentity = req.user?.name ? `${req.user.name} (${req.user.email})` : (req.user?.email || 'Admin');
+    const noteText = typeof note === 'string' && note.trim()
+      ? note.trim().slice(0, 500)
+      : (typeof notes === 'string' && notes.trim() ? notes.trim().slice(0, 500) : null);
+
+    const historyEntry = {
+      editedAt: new Date(),
+      editedBy: adminIdentity,
+      changedFields: [`Email corrected: "${previousEmail}" → "${cleanEmail}"`],
+      notes: noteText ? `[Email Correction] ${noteText}` : `Customer email corrected by ${adminIdentity} from "${previousEmail}" to "${cleanEmail}"`
+    };
+
+    if (!Array.isArray(order.editHistory)) {
+      order.editHistory = [];
+    }
+    order.editHistory.push(historyEntry);
+
+    await order.save();
+
+    res.json({
+      ok: true,
+      message: 'Customer email updated successfully!',
+      order: order.toJSON ? order.toJSON() : order,
+      previousEmail,
+      newEmail: cleanEmail
+    });
+  } catch (err) {
+    console.error('[Admin] Failed to update customer email:', err);
+    res.status(500).json({ error: err.message || 'Failed to update customer email.' });
+  }
+}
+
+router.patch(['/orders/:id/email', '/orders/:id/edit-email'], handleAdminEditEmail);
+router.post(['/orders/:id/email', '/orders/:id/edit-email'], handleAdminEditEmail);
+
 // Get email notification history for an order
 router.get('/orders/:id/emails', async (req, res) => {
   const { id } = req.params;

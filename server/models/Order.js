@@ -442,6 +442,38 @@ const orderSchema = new mongoose.Schema(
         }
       }
     ],
+    emailDeliveryStatus: {
+      type: String,
+      enum: ['none', 'delivered', 'failed', 'pending'],
+      default: 'none'
+    },
+    emailDeliveryError: {
+      type: String,
+      default: null,
+      trim: true
+    },
+    emailDeliveryFailedAt: {
+      type: Date,
+      default: null
+    },
+    emailDeliveryFailedRecipient: {
+      type: String,
+      default: null,
+      trim: true
+    },
+    emailAdminCorrected: {
+      type: Boolean,
+      default: false
+    },
+    emailAdminCorrectedAt: {
+      type: Date,
+      default: null
+    },
+    emailAdminCorrectedBy: {
+      type: String,
+      default: null,
+      trim: true
+    },
     items: [orderItemSchema]
   },
   {
@@ -536,6 +568,21 @@ const orderSchema = new mongoose.Schema(
               notes: h.notes || null
             }))
           : [];
+        ret.email_delivery_status = ret.emailDeliveryStatus || 'none';
+        ret.emailDeliveryStatus = ret.email_delivery_status;
+        ret.email_delivery_error = ret.emailDeliveryError || null;
+        ret.emailDeliveryError = ret.email_delivery_error;
+        ret.email_delivery_failed_at = ret.emailDeliveryFailedAt || null;
+        ret.emailDeliveryFailedAt = ret.email_delivery_failed_at;
+        ret.email_delivery_failed_recipient = ret.emailDeliveryFailedRecipient || null;
+        ret.emailDeliveryFailedRecipient = ret.email_delivery_failed_recipient;
+        ret.email_admin_corrected = Boolean(ret.emailAdminCorrected);
+        ret.emailAdminCorrected = Boolean(ret.emailAdminCorrected);
+        ret.email_admin_corrected_at = ret.emailAdminCorrectedAt || null;
+        ret.emailAdminCorrectedAt = ret.email_admin_corrected_at;
+        ret.email_admin_corrected_by = ret.emailAdminCorrectedBy || null;
+        ret.emailAdminCorrectedBy = ret.email_admin_corrected_by;
+
         ret.customization = {
           requested: Boolean(ret.customization?.requested),
           details: ret.customization?.details || null,
@@ -668,7 +715,8 @@ orderSchema.pre('save', function () {
       throw new Error('Order ID (orderNo) cannot be modified after order creation.');
     }
     // Protect buyer identity fields if they were previously set and are now modified
-    if (this.isModified('customerEmail') && this._original?.customerEmail && this.customerEmail !== this._original.customerEmail) {
+    const allowEmailUpdate = Boolean(this._allowEmailCorrection || this.$locals?.allowEmailCorrection);
+    if (!allowEmailUpdate && this.isModified('customerEmail') && this._original?.customerEmail && this.customerEmail !== this._original.customerEmail) {
       throw new Error('Buyer email (customerEmail) cannot be modified after order creation.');
     }
     if (this.isModified('customerPhone') && this._original?.customerPhone && this.customerPhone !== this._original.customerPhone) {

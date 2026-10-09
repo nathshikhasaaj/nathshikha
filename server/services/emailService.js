@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import crypto from 'node:crypto';
 import { EmailEvent } from '../models/EmailEvent.js';
+import { Order } from '../models/Order.js';
 
 const SMTP_USER = process.env.SMTP_USER || 'nathshikha.saaj@gmail.com';
 const EMAIL_FROM = process.env.EMAIL_FROM || 'nathshikha.saaj@gmail.com';
@@ -262,8 +263,36 @@ async function sendEmailCore({
   userId = null,
   metadata = {}
 }) {
-  if (!to || !to.includes('@')) {
+  if (!to || typeof to !== 'string' || !to.includes('@')) {
     console.warn(`[EmailService] Skipped: invalid recipient "${to}" for ${emailType}`);
+    const invalidRecipient = String(to || 'invalid').toLowerCase().trim();
+    if (orderId) {
+      try {
+        await EmailEvent.create({
+          orderId,
+          userId,
+          emailType,
+          recipient: invalidRecipient,
+          subject,
+          status: 'failed',
+          errorMessage: 'Invalid recipient email format',
+          metadata
+        });
+        await Order.updateOne(
+          { _id: orderId },
+          {
+            $set: {
+              emailDeliveryStatus: 'failed',
+              emailDeliveryError: 'Invalid recipient email format',
+              emailDeliveryFailedAt: new Date(),
+              emailDeliveryFailedRecipient: invalidRecipient
+            }
+          }
+        );
+      } catch (dbErr) {
+        console.error('[EmailService] Failed to record invalid email event on order:', dbErr.message);
+      }
+    }
     return { success: false, skipped: true, error: 'Invalid recipient email' };
   }
 
@@ -314,6 +343,18 @@ async function sendEmailCore({
       metadata: { ...metadata, messageId: info.messageId }
     }).catch((dbErr) => console.error('[EmailService] Failed to log sent event:', dbErr.message));
 
+    if (orderId) {
+      await Order.updateOne(
+        { _id: orderId },
+        {
+          $set: {
+            emailDeliveryStatus: 'delivered',
+            emailDeliveryError: null
+          }
+        }
+      ).catch((dbErr) => console.error('[EmailService] Failed to update order delivery status:', dbErr.message));
+    }
+
     return { success: true, messageId: info.messageId };
   } catch (err) {
     console.error(`✗ [EmailService] Failed to send ${emailType} to ${recipient}:`, err.message);
@@ -328,6 +369,20 @@ async function sendEmailCore({
       errorMessage: err.message,
       metadata
     }).catch((dbErr) => console.error('[EmailService] Failed to log failure event:', dbErr.message));
+
+    if (orderId) {
+      await Order.updateOne(
+        { _id: orderId },
+        {
+          $set: {
+            emailDeliveryStatus: 'failed',
+            emailDeliveryError: err.message,
+            emailDeliveryFailedAt: new Date(),
+            emailDeliveryFailedRecipient: recipient
+          }
+        }
+      ).catch((dbErr) => console.error('[EmailService] Failed to record delivery failure on order:', dbErr.message));
+    }
 
     // Return failure result without throwing so business logic remains 100% resilient
     return { success: false, error: err.message };

@@ -26,6 +26,7 @@ const emailEventSchema = new mongoose.Schema(
         'ORDER_DELIVERED',
         'CANCELLATION_APPROVED',
         'REFUND_COMPLETED',
+        'ASSISTED_ORDER_SENT',
         'ADMIN_TEST'
       ],
       index: true

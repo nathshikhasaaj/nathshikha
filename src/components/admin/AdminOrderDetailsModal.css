@@ -1711,3 +1711,243 @@
   border-color: #b38e22 !important;
 }
 
+/* ============================================================ */
+/* EMAIL DELIVERY FAILURE BANNER & EMAIL EDITING STYLES         */
+/* ============================================================ */
+
+.orderEmailDeliveryFailureBanner {
+  background: #fffbeb;
+  border: 1.5px solid #f59e0b;
+  border-left: 5px solid #d97706;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  animation: adminSlideUp 0.2s ease-out;
+}
+
+.deliveryFailureIconWrap {
+  color: #d97706;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: rgba(217, 119, 6, 0.12);
+}
+
+.deliveryFailureContent {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.deliveryFailureContent h4 {
+  margin: 0 0 3px 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #92400e;
+}
+
+.deliveryFailureContent p {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #78350f;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.deliveryFailureActions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.emailFailureEditBtn {
+  background: #d97706 !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-weight: 700 !important;
+  font-size: 0.8rem !important;
+  padding: 6px 12px !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.25) !important;
+  white-space: nowrap;
+}
+
+.emailFailureEditBtn:hover {
+  background: #b45309 !important;
+}
+
+/* Email Row inside Customer Details */
+.emailValRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.inlineEditEmailBtn {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  color: #6d1b29 !important;
+  border-color: #d4af37 !important;
+  background: #fffdfa !important;
+  border-radius: 4px !important;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.inlineEditEmailBtn:hover {
+  background: #6d1b29 !important;
+  color: #ffffff !important;
+  border-color: #6d1b29 !important;
+}
+
+.adminCorrectedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #15803d;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 4px;
+  width: fit-content;
+}
+
+/* Email Events History Table / Cards */
+.adminEmailEventsContainer {
+  margin-top: 12px;
+  border-top: 1px dashed #ebdcc6;
+  padding-top: 10px;
+}
+
+.adminEmailEventsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #6d1b29;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 8px;
+}
+
+.emailEventsList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.emailEventRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #ffffff;
+  border: 1px solid #ebdcc6;
+  border-radius: 6px;
+  font-size: 0.78rem;
+}
+
+.emailEventMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.emailEventName {
+  font-weight: 700;
+  color: #2b1f1d;
+  white-space: nowrap;
+}
+
+.emailEventRecipient {
+  color: #7a6b63;
+  font-family: monospace;
+  font-size: 0.76rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.emailEventDate {
+  color: #8c7f78;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.emailEventStatusChip {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.statusChipSent {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.statusChipFailed {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.statusChipSkipped {
+  background: #fefce8;
+  color: #a16207;
+  border: 1px solid #fef08a;
+}
+
+@media (max-width: 600px) {
+  .orderEmailDeliveryFailureBanner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .deliveryFailureActions {
+    width: 100%;
+  }
+
+  .deliveryFailureActions button {
+    width: 100% !important;
+  }
+
+  .emailEventRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+
