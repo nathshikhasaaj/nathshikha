@@ -19,6 +19,7 @@ import SearchPanel from './components/product/SearchPanel';
 // Pages
 import Home from './pages/Home/Home';
 import Shop from './pages/Shop/Shop';
+import Search from './pages/Search/Search';
 import Category from './pages/Category/Category';
 import ProductDetail from './pages/Product/ProductDetail';
 import Cart from './pages/Cart/Cart';
@@ -106,6 +107,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home products={products} />} />
           <Route path="/shop" element={<Shop products={products} />} />
+          <Route path="/search" element={<Search />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/category/:cat" element={<Category />} />
           <Route path="/cart" element={<Cart />} />

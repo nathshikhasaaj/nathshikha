@@ -6,7 +6,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { money } from '../../utils/formatters';
 import './ProductCard.css';
 
-export default function ProductCard({ p }) {
+export default function ProductCard({ p, linkState }) {
   const navigate = useNavigate();
   const { addToCart, toggleWishlist, isInWishlist } = useCart();
   const { t } = useLanguage();
@@ -35,7 +35,7 @@ export default function ProductCard({ p }) {
     if (isAdding || isOutOfStock) return;
 
     if (hasOptions) {
-      navigate(`/product/${p.id || p._id}`);
+      navigate(`/product/${p.id || p._id}`, { state: linkState });
       return;
     }
 
@@ -99,7 +99,7 @@ export default function ProductCard({ p }) {
           <Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} />
         </button>
 
-        <Link to={`/product/${p.id}`}>
+        <Link to={`/product/${p.id}`} state={linkState}>
           <img src={primaryImg} alt={p.name} loading="lazy" className="primaryCardImg" />
           {secondaryImg && (
             <img src={secondaryImg} alt={`${p.name} angle 2`} loading="lazy" className="secondaryCardImg" />
@@ -128,7 +128,7 @@ export default function ProductCard({ p }) {
             <span className="noReviewsTag">{t('no_reviews_yet', 'No reviews yet')}</span>
           </div>
         )}
-        <Link to={`/product/${p.id}`}>
+        <Link to={`/product/${p.id}`} state={linkState}>
           <h3>{p.name}</h3>
         </Link>
         <strong>{money(p.price)}</strong>

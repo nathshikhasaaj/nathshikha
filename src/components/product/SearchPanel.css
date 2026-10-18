@@ -123,6 +123,105 @@
   color: var(--maroon, #6d1b29);
 }
 
+.searchSubmitMiniBtn {
+  background: var(--maroon, #7a1c2e);
+  color: #ffffff;
+  border: 1px solid var(--maroon, #7a1c2e);
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.searchSubmitMiniBtn:hover:not(:disabled) {
+  background: #5b1320;
+}
+
+.searchSubmitMiniBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.searchCloseModalBtn {
+  background: transparent;
+  border: none;
+  color: #8c7d76;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.searchCloseModalBtn:hover {
+  background: #f1e9dc;
+  color: var(--maroon, #6d1b29);
+}
+
+.searchViewAllFooter {
+  padding: 10px 0 2px;
+  display: flex;
+  justify-content: center;
+}
+
+.searchViewAllResultsBtn {
+  width: 100%;
+  background: #fdf8ee;
+  border: 1px solid #e2cb9d;
+  color: var(--maroon, #7a1c2e);
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.searchViewAllResultsBtn:hover {
+  background: var(--maroon, #7a1c2e);
+  color: #ffffff;
+  border-color: var(--maroon, #7a1c2e);
+}
+
+.searchEmptyWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 10px;
+}
+
+.searchFullPageBtn {
+  background: transparent;
+  border: 1px solid #d4af37;
+  color: var(--maroon, #7a1c2e);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.searchFullPageBtn:hover {
+  background: var(--maroon, #7a1c2e);
+  color: #ffffff;
+  border-color: var(--maroon, #7a1c2e);
+}
+
 /* Popular Search Tags */
 .popularSearchTags {
   display: flex;

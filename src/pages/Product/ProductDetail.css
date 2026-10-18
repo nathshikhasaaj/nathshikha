@@ -24,6 +24,43 @@
   transform: translateX(-3px);
 }
 
+/* Back to Search Results Banner */
+.productBackToSearchBanner {
+  margin: 4px 0 16px 0;
+  display: flex;
+  align-items: center;
+}
+
+.backToSearchBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fbf7f0;
+  border: 1.5px solid #dfcfb8;
+  color: var(--maroon, #7a1c2e);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 4px rgba(122, 28, 46, 0.04);
+  min-height: 40px;
+}
+
+.backToSearchBtn:hover {
+  background: #ffffff;
+  border-color: var(--gold, #d4af37);
+  transform: translateX(-3px);
+  color: #55121e;
+}
+
+.backToSearchBtn svg {
+  flex-shrink: 0;
+  color: var(--maroon, #7a1c2e);
+}
+
 .productDetail {
   display: grid;
   grid-template-columns: 1.05fr 0.95fr;

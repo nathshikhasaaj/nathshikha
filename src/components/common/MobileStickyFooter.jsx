@@ -28,6 +28,7 @@ export default function MobileStickyFooter({ searchOpen, setSearchOpen }) {
   const isHome = currentPath === '/';
   const isShop = currentPath === '/shop' || currentPath.startsWith('/category');
   const isOrders = currentPath === '/orders' || currentPath === '/track';
+  const isSearch = currentPath === '/search';
   const isCart = currentPath === '/cart';
   const isAccount = currentPath === '/account' || currentPath === '/login';
 
@@ -60,8 +61,18 @@ export default function MobileStickyFooter({ searchOpen, setSearchOpen }) {
       {/* 3. Search */}
       <button
         type="button"
-        className={`mobileFooterTab ${searchOpen ? 'active' : ''}`}
-        onClick={() => setSearchOpen((prev) => !prev)}
+        className={`mobileFooterTab ${searchOpen || isSearch ? 'active' : ''}`}
+        onClick={() => {
+          if (isSearch) {
+            const inputEl = document.getElementById('searchPageInput');
+            if (inputEl) {
+              inputEl.focus();
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              return;
+            }
+          }
+          setSearchOpen((prev) => !prev);
+        }}
         aria-label="Search Catalogue"
       >
         <div className="tabIconWrap">

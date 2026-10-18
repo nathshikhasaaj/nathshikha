@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   ArrowLeft,
   ShieldCheck,
@@ -496,6 +496,7 @@ function ProductZoomLightbox({ images, activeIndex, setActiveIndex, alt, onClose
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { addToCart, toggleWishlist, isInWishlist } = useCart();
   const { setToast } = useToast();
   const { lang, t } = useLanguage();
@@ -503,6 +504,25 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [fullscreenZoom, setFullscreenZoom] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+
+  // Search origin state (when opened from dedicated search results)
+  const fromSearch = location.state?.from === 'search';
+  const searchUrl = location.state?.searchUrl || (location.state?.searchQuery ? `/search?q=${encodeURIComponent(location.state.searchQuery)}` : null);
+  const searchQuery = location.state?.searchQuery || '';
+  const savedScrollPos = location.state?.scrollPos;
+
+  const handleBackToSearch = (e) => {
+    if (e) e.preventDefault();
+    if (searchUrl) {
+      navigate(searchUrl, {
+        state: {
+          restoreScroll: savedScrollPos
+        }
+      });
+    } else {
+      navigate('/shop');
+    }
+  };
   const [qty, setQty] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
@@ -818,9 +838,38 @@ export default function ProductDetail() {
 
   return (
     <main className="productPage">
+      {fromSearch && searchUrl && (
+        <div className="productBackToSearchBanner" role="region" aria-label="Back to search results navigation">
+          <button
+            type="button"
+            className="backToSearchBtn"
+            onClick={handleBackToSearch}
+            aria-label="Back to Search Results"
+          >
+            <ArrowLeft size={16} />
+            <span>
+              {lang === 'mr'
+                ? `← शोध परिणामांकडे परत ${searchQuery ? `("${searchQuery}")` : ''}`
+                : `← Back to Search Results ${searchQuery ? `("${searchQuery}")` : ''}`}
+            </span>
+          </button>
+        </div>
+      )}
+
       <Breadcrumbs
         items={
-          product.category
+          fromSearch && searchUrl
+            ? [
+                { label: t('nav_all_jewellery', 'All Jewellery'), path: '/shop' },
+                {
+                  label: searchQuery
+                    ? `${t('search_title', 'Search')}: "${searchQuery}"`
+                    : (lang === 'mr' ? 'शोध निकाल' : 'Search Results'),
+                  path: searchUrl
+                },
+                { label: product.name }
+              ]
+            : product.category
             ? [
                 { label: t('nav_all_jewellery', 'All Jewellery'), path: '/shop' },
                 {
@@ -834,8 +883,8 @@ export default function ProductDetail() {
                 { label: product.name }
               ]
         }
-        backPath={product.category ? `/category/${encodeURIComponent(product.category)}` : '/shop'}
-        backLabel={t('back_to_collection', 'Back')}
+        backPath={fromSearch && searchUrl ? searchUrl : (product.category ? `/category/${encodeURIComponent(product.category)}` : '/shop')}
+        backLabel={fromSearch && searchUrl ? (lang === 'mr' ? 'शोध निकाल' : 'Back to Search') : t('back_to_collection', 'Back')}
       />
 
       <div className="productDetail">
