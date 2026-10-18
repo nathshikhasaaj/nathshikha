@@ -75,10 +75,10 @@
    -------------------------------------------------------------------------- */
 .desktopNav {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   height: 100%;
-  gap: clamp(10px, 1.4vw, 24px);
-  margin: 0 clamp(10px, 1.5vw, 24px);
+  gap: clamp(6px, 1.1vw, 20px);
+  margin: 0 clamp(8px, 1.2vw, 24px);
   flex: 1 1 auto;
   justify-content: center;
 }
@@ -86,8 +86,8 @@
 .navItem {
   position: relative;
   height: 100%;
-  display: flex;
-  align-items: stretch;
+  display: inline-flex;
+  align-items: center;
 }
 
 /* Nav Links & Button Trigger */
@@ -105,11 +105,14 @@
   cursor: pointer;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
   text-decoration: none;
   position: relative;
   white-space: nowrap;
   height: 100%;
+  line-height: 1;
+  margin: 0;
   box-sizing: border-box;
   transition: color 0.2s ease;
   user-select: none;
@@ -148,6 +151,10 @@
 }
 
 .navChevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 2px;
   transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -205,17 +212,33 @@
 .navDropdown {
   position: absolute;
   top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  min-width: 320px;
+  left: 0;
+  width: 390px;
+  max-width: min(410px, calc(100vw - 32px));
+  max-height: min(380px, calc(100vh - 85px));
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
   background: #ffffff;
   border: 1px solid #ebdcc5;
   border-top: 3px solid var(--gold, #d4af37);
   border-radius: 0 0 10px 10px;
-  box-shadow: 0 18px 40px rgba(45, 10, 18, 0.22), 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 16px 36px rgba(45, 10, 18, 0.2), 0 4px 12px rgba(0, 0, 0, 0.06);
   padding: 0;
   z-index: 1001;
-  animation: dropdownFadeSlide 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: dropdownFadeSlide 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Elegant antique gold scrollbar for dropdown */
+.navDropdown::-webkit-scrollbar {
+  width: 5px;
+}
+.navDropdown::-webkit-scrollbar-track {
+  background: #fdfbf7;
+}
+.navDropdown::-webkit-scrollbar-thumb {
+  background: #d4af37;
+  border-radius: 4px;
 }
 
 /* Invisible Hover Bridge connecting trigger to dropdown */
@@ -227,36 +250,37 @@
   right: 0;
   height: 14px;
   background: transparent;
+  z-index: 1002;
 }
 
 @keyframes dropdownFadeSlide {
   from {
     opacity: 0;
-    transform: translate(-50%, -6px);
+    transform: translateY(-5px);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, 0);
+    transform: translateY(0);
   }
 }
 
 .navDropdownInner {
-  padding: 10px;
+  padding: 10px 12px 12px;
 }
 
 .dropdownHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px 10px;
+  padding: 6px 6px 10px;
   border-bottom: 1px solid #f2e7d5;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .dropdownHeaderTitle {
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 1px;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
   color: var(--maroon, #5b1420);
   display: flex;
@@ -278,22 +302,32 @@
 }
 
 .dropdownGrid {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+}
+
+/* Featured All Jewellery banner item spans both columns */
+.dropdownGrid .dropdownItem:first-child {
+  grid-column: 1 / -1;
+  background: #fdfaf5;
+  border-color: #f2e7d5;
 }
 
 .dropdownItem {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
+  gap: 8px;
+  padding: 7px 9px;
   border-radius: 6px;
   text-decoration: none;
   color: #4a342e;
-  transition: all 0.18s ease;
+  border: 1px solid transparent;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   position: relative;
   background: transparent;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .dropdownItem::after {
@@ -304,46 +338,53 @@
 .dropdownItem.activeItem {
   background: #fbf5eb;
   color: var(--maroon, #5b1420);
-  padding-left: 18px;
+  border-color: #ebdcc5;
 }
 
 .itemIconWrap {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
   background: #f5ede1;
   color: var(--maroon, #5b1420);
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  transition: background 0.18s ease, color 0.18s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
-.dropdownItem:hover .itemIconWrap {
+.dropdownItem:hover .itemIconWrap,
+.dropdownItem.activeItem .itemIconWrap {
   background: var(--maroon, #5b1420);
   color: #ffffff;
 }
 
 .itemTextWrap {
   flex: 1;
+  min-width: 0;
 }
 
 .itemTitle {
-  font-size: 13px;
+  font-size: 11.5px;
   font-weight: 600;
   letter-spacing: 0.2px;
   text-transform: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
 }
 
 .itemBadge {
-  font-size: 9px;
+  font-size: 8.5px;
   font-weight: 800;
-  letter-spacing: 0.6px;
-  padding: 2px 6px;
-  border-radius: 10px;
+  letter-spacing: 0.5px;
+  padding: 2px 5px;
+  border-radius: 8px;
   background: #fee2e2;
   color: #991b1b;
   line-height: 1;
+  flex-shrink: 0;
 }
 
 .dropdownItem:nth-child(2) .itemBadge {
@@ -363,11 +404,13 @@
 
 .itemArrow {
   color: #bfa89b;
-  transition: transform 0.18s ease, color 0.18s ease;
+  flex-shrink: 0;
+  transition: transform 0.15s ease, color 0.15s ease;
 }
 
-.dropdownItem:hover .itemArrow {
-  transform: translateX(3px);
+.dropdownItem:hover .itemArrow,
+.dropdownItem.activeItem .itemArrow {
+  transform: translateX(2px);
   color: var(--maroon, #5b1420);
 }
 
