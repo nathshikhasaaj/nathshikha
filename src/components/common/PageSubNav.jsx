@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShieldCheck, FileText, Truck, RotateCcw, Info, Phone, Lightbulb, Star, Sparkles } from 'lucide-react';
+import { ShieldCheck, FileText, Truck, RotateCcw, Info, Phone, Lightbulb, Sparkles } from 'lucide-react';
 import './PageSubNav.css';
 
 export function LegalSubNav() {
@@ -44,7 +44,6 @@ export function InfoSubNav() {
     { title: 'About Us', path: '/about', icon: Info },
     { title: 'Contact Us', path: '/contact', icon: Phone },
     { title: 'Suggestions', path: '/suggestion', icon: Lightbulb },
-    { title: 'Reviews', path: '/reviews', icon: Star },
     { title: 'Hall of Fame', path: '/hall-of-fame', icon: Sparkles }
   ];
 
@@ -52,7 +51,7 @@ export function InfoSubNav() {
     <nav className="pageSubNavWrapper" aria-label="About & Community Navigation">
       <div className="pageSubNavScroll">
         {links.map((link) => {
-          const isActive = currentPath === link.path || (link.path === '/reviews' && currentPath === '/review');
+          const isActive = currentPath === link.path;
           const Icon = link.icon;
           return (
             <Link
@@ -69,3 +68,4 @@ export function InfoSubNav() {
     </nav>
   );
 }
+
