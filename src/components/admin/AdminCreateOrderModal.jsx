@@ -690,8 +690,12 @@ export default function AdminCreateOrderModal({
       }
     }
 
-    if (!form.email.trim() || !form.email.includes('@')) {
-      return setError('A valid email address is required.');
+    const trimmedEmail = form.email.trim();
+    if (trimmedEmail) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(trimmedEmail) || trimmedEmail.length > 120) {
+        return setError('Please enter a valid email address, or leave it blank.');
+      }
     }
     if (!form.address.trim()) return setError('Delivery address is required.');
     if (!form.pincode.trim() || !/^[1-9][0-9]{5}$/.test(form.pincode.trim())) {
@@ -718,14 +722,18 @@ export default function AdminCreateOrderModal({
         ? customizationDetails.trim().slice(0, 2000)
         : null;
 
+      const cleanEmail = form.email && form.email.trim()
+        ? form.email.trim().toLowerCase()
+        : null;
+
       const payload = {
         userId: selectedCustomer?.userId || null,
         name: isGift ? recipientName.trim() : form.name.trim(),
         phone: isGift ? recipientPhone.trim() : form.phone.trim(),
-        email: form.email.trim().toLowerCase(),
+        email: cleanEmail,
         customerName: form.name.trim(),
         customerPhone: form.phone.trim(),
-        customerEmail: form.email.trim().toLowerCase(),
+        customerEmail: cleanEmail,
         recipientName: isGift ? recipientName.trim() : null,
         recipientPhone: isGift ? recipientPhone.trim() : null,
         address: form.address.trim(),
@@ -967,12 +975,11 @@ export default function AdminCreateOrderModal({
 
                       <div className="adminFieldGroup">
                         <label className="adminFieldLabel">
-                          Email Address <span className="reqStar">*</span>
+                          Email Address <span className="adminOptionalLabel">(Optional)</span>
                         </label>
                         <input
-                          required
                           type="email"
-                          placeholder="customer@email.com"
+                          placeholder="customer@email.com (optional)"
                           value={form.email}
                           onChange={(e) => setForm({ ...form, email: e.target.value })}
                           className="adminInput"
@@ -1921,7 +1928,13 @@ export default function AdminCreateOrderModal({
                   </div>
                   <div className="reviewDataRow">
                     <span className="reviewDataLabel">Buyer Email:</span>
-                    <span className="reviewDataValue">{form.email}</span>
+                    <span className="reviewDataValue">
+                      {form.email && form.email.trim() ? (
+                        form.email.trim()
+                      ) : (
+                        <span className="adminTextMuted">Not provided</span>
+                      )}
+                    </span>
                   </div>
 
                   {isGift && (

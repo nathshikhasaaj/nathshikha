@@ -119,7 +119,7 @@ const orderSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      required: true,
+      default: null,
       trim: true,
       lowercase: true
     },
@@ -495,7 +495,9 @@ const orderSchema = new mongoose.Schema(
         ret.recipient_phone = ret.recipientPhone || ret.phone;
         ret.customer_name = ret.customerName || ret.name;
         ret.customer_phone = ret.customerPhone || ret.phone;
-        ret.customer_email = ret.customerEmail || ret.email;
+        ret.customer_email = ret.customerEmail || ret.email || null;
+        ret.customerEmail = ret.customerEmail || ret.email || null;
+        ret.email = ret.email || ret.customerEmail || null;
         ret.shipment_group_id = ret.shipmentGroupId ? ret.shipmentGroupId.toString() : null;
         ret.shipment_group_code = ret.shipmentGroupCode || null;
         ret.pincode = ret.pincode;
@@ -696,6 +698,7 @@ orderSchema.pre('validate', function () {
     if (!this.customerName && this.name) this.customerName = this.name;
     if (!this.customerPhone && this.phone) this.customerPhone = this.phone;
     if (!this.customerEmail && this.email) this.customerEmail = this.email;
+    if (!this.email && this.customerEmail) this.email = this.customerEmail;
   }
 
   if (this.customization) {
@@ -719,6 +722,9 @@ orderSchema.pre('save', function () {
     if (!allowEmailUpdate && this.isModified('customerEmail') && this._original?.customerEmail && this.customerEmail !== this._original.customerEmail) {
       throw new Error('Buyer email (customerEmail) cannot be modified after order creation.');
     }
+    if (!allowEmailUpdate && this.isModified('email') && this._original?.email && this.email !== this._original.email) {
+      throw new Error('Buyer email cannot be modified after order creation.');
+    }
     if (this.isModified('customerPhone') && this._original?.customerPhone && this.customerPhone !== this._original.customerPhone) {
       throw new Error('Buyer phone (customerPhone) cannot be modified after order creation.');
     }
@@ -738,7 +744,8 @@ orderSchema.post('init', function () {
     userId: this.userId,
     customerName: this.customerName || this.name,
     customerPhone: this.customerPhone || this.phone,
-    customerEmail: this.customerEmail || this.email
+    customerEmail: this.customerEmail || this.email || null,
+    email: this.email || this.customerEmail || null
   };
 });
 

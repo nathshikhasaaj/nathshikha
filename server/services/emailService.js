@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer';
 import crypto from 'node:crypto';
 import { EmailEvent } from '../models/EmailEvent.js';
 import { Order } from '../models/Order.js';
+import { isValidEmail } from '../middleware/securityMiddleware.js';
 
 const SMTP_USER = process.env.SMTP_USER || 'nathshikha.saaj@gmail.com';
 const EMAIL_FROM = process.env.EMAIL_FROM || 'nathshikha.saaj@gmail.com';
@@ -263,16 +264,24 @@ async function sendEmailCore({
   userId = null,
   metadata = {}
 }) {
-  if (!to || typeof to !== 'string' || !to.includes('@')) {
-    console.warn(`[EmailService] Skipped: invalid recipient "${to}" for ${emailType}`);
-    const invalidRecipient = String(to || 'invalid').toLowerCase().trim();
+  // Gracefully skip if recipient is missing, null, or empty string (do not throw or mark failed)
+  if (!to || typeof to !== 'string' || !to.trim()) {
+    console.log(`[EmailService] Skipped: no recipient email provided for ${emailType}${orderId ? ` (Order ID: ${orderId})` : ''}`);
+    return { success: true, skipped: true, reason: 'No recipient email provided' };
+  }
+
+  const recipient = to.toLowerCase().trim();
+
+  // If a recipient is provided but has an invalid format, warn and record delivery failure
+  if (!isValidEmail(recipient)) {
+    console.warn(`[EmailService] Skipped: invalid recipient "${recipient}" for ${emailType}`);
     if (orderId) {
       try {
         await EmailEvent.create({
           orderId,
           userId,
           emailType,
-          recipient: invalidRecipient,
+          recipient,
           subject,
           status: 'failed',
           errorMessage: 'Invalid recipient email format',
@@ -285,7 +294,7 @@ async function sendEmailCore({
               emailDeliveryStatus: 'failed',
               emailDeliveryError: 'Invalid recipient email format',
               emailDeliveryFailedAt: new Date(),
-              emailDeliveryFailedRecipient: invalidRecipient
+              emailDeliveryFailedRecipient: recipient
             }
           }
         );
@@ -295,8 +304,6 @@ async function sendEmailCore({
     }
     return { success: false, skipped: true, error: 'Invalid recipient email' };
   }
-
-  const recipient = to.toLowerCase().trim();
 
   // If password is not configured, record skipped/pending event without throwing
   if (!process.env.SMTP_PASSWORD) {
@@ -567,9 +574,14 @@ function renderOrderItemsTable(order) {
 /* 3. ORDER PLACED EMAIL (PENDING PAYMENT VERIFICATION)         */
 /* ============================================================ */
 export async function sendOrderPlacedEmail(order) {
+  const recipientEmail = order.customer_email || order.customerEmail || order.email;
+  if (!recipientEmail || typeof recipientEmail !== 'string' || !recipientEmail.trim()) {
+    console.log(`[EmailService] Skipped ORDER_PLACED: no customer email on Order #${order.order_no || order.orderNo}`);
+    return { success: true, skipped: true, reason: 'No customer email address on order' };
+  }
+
   const baseUrl = getAppBaseUrl();
   const orderUrl = `${baseUrl}/orders`;
-  const recipientEmail = order.customer_email || order.customerEmail || order.email;
   const recipientName = order.customer_name || order.customerName || order.name || 'Valued Customer';
   const orderNo = order.order_no || order.orderNo;
 
@@ -617,6 +629,12 @@ export async function sendOrderPlacedEmail(order) {
 /* 4. ORDER CONFIRMED EMAIL (PAYMENT VERIFIED)                  */
 /* ============================================================ */
 export async function sendOrderConfirmedEmail(order) {
+  const recipientEmail = order.customer_email || order.customerEmail || order.email;
+  if (!recipientEmail || typeof recipientEmail !== 'string' || !recipientEmail.trim()) {
+    console.log(`[EmailService] Skipped ORDER_CONFIRMED: no customer email on Order #${order.order_no || order.orderNo}`);
+    return { success: true, skipped: true, reason: 'No customer email address on order' };
+  }
+
   const orderId = order._id || order.id;
 
   // STRICT IDEMPOTENCY GUARD: Do NOT send duplicate order confirmed emails
@@ -633,7 +651,6 @@ export async function sendOrderConfirmedEmail(order) {
 
   const baseUrl = getAppBaseUrl();
   const orderUrl = `${baseUrl}/orders`;
-  const recipientEmail = order.customer_email || order.customerEmail || order.email;
   const recipientName = order.customer_name || order.customerName || order.name || 'Valued Customer';
   const orderNo = order.order_no || order.orderNo;
 
@@ -697,9 +714,14 @@ export async function sendOrderConfirmedEmail(order) {
 /* 5. ORDER SHIPPED EMAIL (WITH TRACKING & UNBOXING NOTICE)     */
 /* ============================================================ */
 export async function sendOrderShippedEmail(order) {
+  const recipientEmail = order.customer_email || order.customerEmail || order.email;
+  if (!recipientEmail || typeof recipientEmail !== 'string' || !recipientEmail.trim()) {
+    console.log(`[EmailService] Skipped ORDER_SHIPPED: no customer email on Order #${order.order_no || order.orderNo}`);
+    return { success: true, skipped: true, reason: 'No customer email address on order' };
+  }
+
   const baseUrl = getAppBaseUrl();
   const orderUrl = `${baseUrl}/orders`;
-  const recipientEmail = order.customer_email || order.customerEmail || order.email;
   const recipientName = order.customer_name || order.customerName || order.name || 'Valued Customer';
   const orderNo = order.order_no || order.orderNo;
   const partner = order.shipment_partner || order.shipmentPartner || 'Speed Post';
@@ -767,9 +789,14 @@ export async function sendOrderShippedEmail(order) {
 /* 6. ORDER DELIVERED EMAIL (WITH REVIEW CTA)                   */
 /* ============================================================ */
 export async function sendOrderDeliveredEmail(order) {
+  const recipientEmail = order.customer_email || order.customerEmail || order.email;
+  if (!recipientEmail || typeof recipientEmail !== 'string' || !recipientEmail.trim()) {
+    console.log(`[EmailService] Skipped ORDER_DELIVERED: no customer email on Order #${order.order_no || order.orderNo}`);
+    return { success: true, skipped: true, reason: 'No customer email address on order' };
+  }
+
   const baseUrl = getAppBaseUrl();
   const reviewUrl = `${baseUrl}/orders`;
-  const recipientEmail = order.customer_email || order.customerEmail || order.email;
   const recipientName = order.customer_name || order.customerName || order.name || 'Valued Customer';
   const orderNo = order.order_no || order.orderNo;
 
@@ -809,9 +836,14 @@ export async function sendOrderDeliveredEmail(order) {
 /* 7. CANCELLATION APPROVED EMAIL                              */
 /* ============================================================ */
 export async function sendCancellationApprovedEmail(order) {
+  const recipientEmail = order.customer_email || order.customerEmail || order.email;
+  if (!recipientEmail || typeof recipientEmail !== 'string' || !recipientEmail.trim()) {
+    console.log(`[EmailService] Skipped CANCELLATION_APPROVED: no customer email on Order #${order.order_no || order.orderNo}`);
+    return { success: true, skipped: true, reason: 'No customer email address on order' };
+  }
+
   const baseUrl = getAppBaseUrl();
   const orderUrl = `${baseUrl}/orders`;
-  const recipientEmail = order.customer_email || order.customerEmail || order.email;
   const recipientName = order.customer_name || order.customerName || order.name || 'Valued Customer';
   const orderNo = order.order_no || order.orderNo;
   const refundAmount = order.refund_amount || order.refundAmount || order.total || 0;
@@ -879,9 +911,14 @@ export async function sendCancellationApprovedEmail(order) {
 /* 8. REFUND COMPLETED EMAIL                                   */
 /* ============================================================ */
 export async function sendRefundCompletedEmail(order) {
+  const recipientEmail = order.customer_email || order.customerEmail || order.email;
+  if (!recipientEmail || typeof recipientEmail !== 'string' || !recipientEmail.trim()) {
+    console.log(`[EmailService] Skipped REFUND_COMPLETED: no customer email on Order #${order.order_no || order.orderNo}`);
+    return { success: true, skipped: true, reason: 'No customer email address on order' };
+  }
+
   const baseUrl = getAppBaseUrl();
   const orderUrl = `${baseUrl}/orders`;
-  const recipientEmail = order.customer_email || order.customerEmail || order.email;
   const recipientName = order.customer_name || order.customerName || order.name || 'Valued Customer';
   const orderNo = order.order_no || order.orderNo;
   const refundAmount = order.refund_amount || order.refundAmount || order.total || 0;
@@ -955,9 +992,14 @@ export async function sendAdminTestEmail(targetRecipient) {
 /* 3B. ASSISTED ORDER SENT / UPDATED EMAIL                      */
 /* ============================================================ */
 export async function sendAssistedOrderEmail(order) {
+  const recipientEmail = order.customer_email || order.customerEmail || order.email;
+  if (!recipientEmail || typeof recipientEmail !== 'string' || !recipientEmail.trim()) {
+    console.log(`[EmailService] Skipped ASSISTED_ORDER_SENT: no customer email on Order #${order.order_no || order.orderNo}`);
+    return { success: true, skipped: true, reason: 'No customer email address on order' };
+  }
+
   const baseUrl = getAppBaseUrl();
   const orderUrl = `${baseUrl}/orders`;
-  const recipientEmail = order.customer_email || order.customerEmail || order.email;
   const recipientName = order.customer_name || order.customerName || order.name || 'Valued Customer';
   const orderNo = order.order_no || order.orderNo;
 
@@ -1007,6 +1049,15 @@ export async function sendAssistedOrderEmail(order) {
 /* 10. RESEND ORDER EMAIL HANDLER                               */
 /* ============================================================ */
 export async function resendOrderEmail(order, emailType) {
+  const recipientEmail = order.customer_email || order.customerEmail || order.email;
+  if (!recipientEmail || typeof recipientEmail !== 'string' || !recipientEmail.trim()) {
+    return {
+      success: false,
+      skipped: true,
+      error: 'Cannot resend email: No customer email address associated with this order.'
+    };
+  }
+
   switch (emailType) {
     case 'ASSISTED_ORDER_SENT':
       return sendAssistedOrderEmail(order);

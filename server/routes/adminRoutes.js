@@ -954,9 +954,13 @@ router.post('/orders', async (req, res) => {
 
   const effectiveDeliveryPhone = isGiftOrder ? rawRecipientPhone : cleanCustomerPhone;
 
-  const rawEmail = String(email || customerEmail || req.body.customer_email || 'customer@nathshikha.com').trim().toLowerCase().slice(0, 120);
-  if (!rawEmail || !isValidEmail(rawEmail)) {
-    return res.status(400).json({ error: 'Please enter a valid email address.' });
+  const inputEmail = email !== undefined ? email : (customerEmail !== undefined ? customerEmail : req.body.customer_email);
+  const rawEmail = typeof inputEmail === 'string' && inputEmail.trim()
+    ? inputEmail.trim().toLowerCase().slice(0, 120)
+    : null;
+
+  if (rawEmail && !isValidEmail(rawEmail)) {
+    return res.status(400).json({ error: 'Please enter a valid email address or leave it blank.' });
   }
 
   const rawAddress = String(address || '').trim().slice(0, 500);
@@ -1239,6 +1243,12 @@ router.post('/orders', async (req, res) => {
         linkedUserId = existingUser._id;
       }
     }
+    if (!linkedUserId && cleanCustomerPhone) {
+      const existingUserByPhone = await User.findOne({ phone: cleanCustomerPhone });
+      if (existingUserByPhone) {
+        linkedUserId = existingUserByPhone._id;
+      }
+    }
 
     // 9. Payment Status & Order Status
     const isPaymentVerified = paymentStatus === 'verified' || paymentStatus === 'paid';
@@ -1250,10 +1260,10 @@ router.post('/orders', async (req, res) => {
       userId: linkedUserId,
       name: effectiveDeliveryName,
       phone: effectiveDeliveryPhone,
-      email: rawEmail,
+      email: rawEmail || null,
       customerName: effectiveCustomerName,
       customerPhone: cleanCustomerPhone,
-      customerEmail: rawEmail,
+      customerEmail: rawEmail || null,
       recipientName: isGiftOrder ? (rawRecipientName || effectiveDeliveryName) : null,
       recipientPhone: isGiftOrder ? (rawRecipientPhone || effectiveDeliveryPhone) : null,
       address: rawAddress,
@@ -1296,14 +1306,16 @@ router.post('/orders', async (req, res) => {
     });
 
     // Send Order Notification Email (non-blocking)
-    if (isPaymentVerified) {
-      sendOrderConfirmedEmail(order).catch((mailErr) => {
-        console.error('[Admin] Failed to send order confirmed email:', mailErr.message);
-      });
-    } else {
-      sendOrderPlacedEmail(order).catch((mailErr) => {
-        console.error('[Admin] Failed to send order placed email:', mailErr.message);
-      });
+    if (rawEmail) {
+      if (isPaymentVerified) {
+        sendOrderConfirmedEmail(order).catch((mailErr) => {
+          console.error('[Admin] Failed to send order confirmed email:', mailErr.message);
+        });
+      } else {
+        sendOrderPlacedEmail(order).catch((mailErr) => {
+          console.error('[Admin] Failed to send order placed email:', mailErr.message);
+        });
+      }
     }
 
     res.status(201).json({
@@ -2590,6 +2602,13 @@ router.post('/orders/:id/resend-email', async (req, res) => {
     const order = await findOrderByIdOrNo(id);
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const orderEmail = order.customerEmail || order.email || order.customer_email;
+    if (!orderEmail || !orderEmail.trim()) {
+      return res.status(400).json({
+        error: 'This order does not have a customer email address. Please update the customer email before resending.'
+      });
     }
 
     const result = await resendOrderEmail(order, emailType);

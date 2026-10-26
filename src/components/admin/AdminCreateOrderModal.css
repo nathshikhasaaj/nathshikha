@@ -409,6 +409,20 @@
   margin-left: 2px;
 }
 
+.adminOptionalLabel {
+  color: #8c7e75;
+  font-weight: 400;
+  font-size: 11px;
+  text-transform: none;
+  margin-left: 4px;
+}
+
+.adminTextMuted {
+  color: #8c7e75;
+  font-style: italic;
+  font-weight: 400;
+}
+
 .adminInput,
 .adminSelect,
 .adminTextarea {

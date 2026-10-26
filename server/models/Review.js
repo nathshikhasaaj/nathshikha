@@ -27,7 +27,7 @@ const reviewSchema = new mongoose.Schema(
     },
     customerEmail: {
       type: String,
-      required: true,
+      default: null,
       trim: true,
       lowercase: true
     },
