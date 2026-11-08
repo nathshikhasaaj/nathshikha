@@ -460,7 +460,29 @@ export default function AdminOrderList({
                         {/* 1. Order No */}
                         <td className="orderNoCell">
                           <b>#{o.order_no}</b>
-                          {(o.assisted_order?.is_assisted || o.assistedOrder?.isAssisted || o.order_status === 'payment_pending' || o.orderStatus === 'payment_pending') && (
+                          {(o.order_type === 'custom' || o.orderType === 'custom') && (
+                            <span
+                              className="adminCustomOrderBadge"
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 3,
+                                fontSize: 10,
+                                fontWeight: 800,
+                                color: '#92400e',
+                                background: '#fef3c7',
+                                border: '1px solid #f59e0b',
+                                padding: '1px 6px',
+                                borderRadius: 4,
+                                marginTop: 2,
+                                textTransform: 'uppercase'
+                              }}
+                              title="Custom Handcrafted Order"
+                            >
+                              ✨ Custom Order
+                            </span>
+                          )}
+                        {(o.assisted_order?.is_assisted || o.assistedOrder?.isAssisted || o.order_status === 'payment_pending' || o.orderStatus === 'payment_pending') && (
                             <span className="adminAssistedOrderBadge" title="Assisted order created/corrected by admin">
                               ✦ Assisted Order
                             </span>
@@ -801,6 +823,11 @@ export default function AdminOrderList({
                         >
                           {isPriority ? `🔴 Age: ${formatOrderAge(orderAgeDays)}` : `Age: ${formatOrderAge(orderAgeDays)}`}
                         </span>
+                        {(o.order_type === 'custom' || o.orderType === 'custom') && (
+                          <span className="adminCustomOrderBadge" style={{ fontSize: 10, fontWeight: 800, color: '#92400e', background: '#fef3c7', border: '1px solid #f59e0b', padding: '1px 5px', borderRadius: 4 }}>
+                            ✨ Custom
+                          </span>
+                        )}
                         {(o.assisted_order?.is_assisted || o.assistedOrder?.isAssisted || o.order_status === 'payment_pending' || o.orderStatus === 'payment_pending') && (
                           <span className="adminAssistedOrderBadge">✦ Assisted</span>
                         )}

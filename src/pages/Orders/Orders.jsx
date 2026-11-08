@@ -1095,6 +1095,11 @@ export default function Orders() {
                           ))}
                         </div>
                       )}
+                      {Boolean(item.notes || item.designNotes || item.design_notes) && (
+                        <div style={{ fontSize: '11px', color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 4, padding: '2px 7px', marginTop: 3 }}>
+                          <b>Design Notes:</b> {item.notes || item.designNotes || item.design_notes}
+                        </div>
+                      )}
                       <small>
                         Qty: {item.qty} · {money(item.price)}
                       </small>
@@ -1720,13 +1725,22 @@ export default function Orders() {
                                   </div>
                                 );
                               })()}
+                              {Boolean(item.notes || item.designNotes || item.design_notes) && (
+                                <div style={{ fontSize: 11, color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 4, padding: '2px 7px', marginTop: 3 }}>
+                                  <b>Design Notes:</b> {item.notes || item.designNotes || item.design_notes}
+                                </div>
+                              )}
                               <small className="orderReviewItemMeta">
                                 Qty: {item.qty} · {money(item.price)}
                               </small>
                             </div>
 
                             <div className="orderReviewActionCol">
-                              {existingReview ? (
+                              {(!prodId || item.itemType === 'custom' || item.item_type === 'custom') ? (
+                                <span style={{ fontSize: 11, color: '#92400e', background: '#fef3c7', padding: '3px 8px', borderRadius: 4, fontWeight: 700 }}>
+                                  ✨ Bespoke Design
+                                </span>
+                              ) : existingReview ? (
                                 <div className="existingReviewBadge">
                                   <span className="reviewDonePill">
                                     Review Submitted ✓ ({existingReview.rating}★)

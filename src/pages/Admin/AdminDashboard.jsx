@@ -42,6 +42,8 @@ import AdminOrderList from '../../components/admin/AdminOrderList';
 import AdminPaymentVerificationModal from '../../components/admin/AdminPaymentVerificationModal';
 import AdminOrderDetailsModal from '../../components/admin/AdminOrderDetailsModal';
 import AdminCreateOrderModal from '../../components/admin/AdminCreateOrderModal';
+import AdminOrderTypeChoiceModal from '../../components/admin/AdminOrderTypeChoiceModal';
+import AdminCreateCustomOrderModal from '../../components/admin/AdminCreateCustomOrderModal';
 import AdminShipmentModal from '../../components/admin/AdminShipmentModal';
 import AdminShipmentTable from '../../components/admin/AdminShipmentTable';
 import AdminCouponManager from '../../components/admin/AdminCouponManager';
@@ -102,7 +104,9 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
   const [verifyModalOrder, setVerifyModalOrder] = useState(null);
   const [isEditingPayment, setIsEditingPayment] = useState(false);
   const [detailsModalOrder, setDetailsModalOrder] = useState(null);
+  const [showOrderTypeChoiceModal, setShowOrderTypeChoiceModal] = useState(false);
   const [showCreateOrderModal, setShowCreateOrderModal] = useState(false);
+  const [showCreateCustomOrderModal, setShowCreateCustomOrderModal] = useState(false);
   const [showCreateAssistedOrderModal, setShowCreateAssistedOrderModal] = useState(false);
   const [shipmentModalOrder, setShipmentModalOrder] = useState(null);
   const [isEditingShipment, setIsEditingShipment] = useState(false);
@@ -890,7 +894,7 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
         <AdminHeader
           activeTab={tab}
           onOpenMobileSidebar={() => setMobileSidebarOpen(true)}
-          onOpenCreateOrder={() => setShowCreateOrderModal(true)}
+          onOpenCreateOrder={() => setShowOrderTypeChoiceModal(true)}
           onRefresh={load}
           refreshing={refreshing}
         />
@@ -1320,12 +1324,27 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
         products={allProducts}
       />
 
-      {/* Manual Order Creation Modal */}
+      {/* Order Creation Mode Selection Modal (Choice between Regular and Custom) */}
+      <AdminOrderTypeChoiceModal
+        isOpen={showOrderTypeChoiceModal}
+        onClose={() => setShowOrderTypeChoiceModal(false)}
+        onSelectRegular={() => setShowCreateOrderModal(true)}
+        onSelectCustom={() => setShowCreateCustomOrderModal(true)}
+      />
+
+      {/* Regular Order Creation Modal (100% Preserved Existing Behavior) */}
       <AdminCreateOrderModal
         isOpen={showCreateOrderModal}
         onClose={() => setShowCreateOrderModal(false)}
         onOrderCreated={handleOrderCreated}
         products={allProducts}
+      />
+
+      {/* Custom Order Creation Modal */}
+      <AdminCreateCustomOrderModal
+        isOpen={showCreateCustomOrderModal}
+        onClose={() => setShowCreateCustomOrderModal(false)}
+        onOrderCreated={handleOrderCreated}
       />
 
       {/* Admin Create Assisted Order Modal */}

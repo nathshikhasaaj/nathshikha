@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import crypto from 'node:crypto';
+import mongoose from 'mongoose';
 import { EmailEvent } from '../models/EmailEvent.js';
 import { Order } from '../models/Order.js';
 import { isValidEmail } from '../middleware/securityMiddleware.js';
@@ -275,7 +276,7 @@ async function sendEmailCore({
   // If a recipient is provided but has an invalid format, warn and record delivery failure
   if (!isValidEmail(recipient)) {
     console.warn(`[EmailService] Skipped: invalid recipient "${recipient}" for ${emailType}`);
-    if (orderId) {
+    if (orderId && mongoose.connection?.readyState === 1) {
       try {
         await EmailEvent.create({
           orderId,
@@ -310,19 +311,21 @@ async function sendEmailCore({
     console.warn(
       `[EmailService] SMTP_PASSWORD is not set in environment. Email [${emailType}] to ${recipient} was not dispatched to SMTP server.`
     );
-    try {
-      await EmailEvent.create({
-        orderId,
-        userId,
-        emailType,
-        recipient,
-        subject,
-        status: 'skipped',
-        errorMessage: 'SMTP_PASSWORD is not configured in server environment',
-        metadata
-      });
-    } catch (dbErr) {
-      console.error('[EmailService] Failed to log email event:', dbErr.message);
+    if (mongoose.connection?.readyState === 1) {
+      try {
+        await EmailEvent.create({
+          orderId,
+          userId,
+          emailType,
+          recipient,
+          subject,
+          status: 'skipped',
+          errorMessage: 'SMTP_PASSWORD is not configured in server environment',
+          metadata
+        });
+      } catch (dbErr) {
+        console.error('[EmailService] Failed to log email event:', dbErr.message);
+      }
     }
     return { success: false, skipped: true, error: 'SMTP_PASSWORD not configured' };
   }
@@ -478,6 +481,7 @@ export async function sendPasswordResetEmail(user, rawToken, originUrl = null) {
  * Helper to build Item rows in Order Email HTML
  */
 function renderOrderItemsTable(order) {
+  const baseUrl = getAppBaseUrl();
   let items = order.items || [];
   const isGiftItem = (i) => i && (i.itemType === 'free_gift' || i.item_type === 'free_gift' || i.name === 'Free Complimentary Gift');
   if (Boolean(order.free_gift?.included || order.freeGift?.included) && !items.some(isGiftItem)) {
@@ -489,9 +493,39 @@ function renderOrderItemsTable(order) {
     }];
   }
 
+  const isCustomOrder = order.orderType === 'custom' || order.order_type === 'custom';
+
   const itemsRows = items
     .map((item) => {
       const isFreeGift = isGiftItem(item);
+      const unitPrice = isFreeGift ? 0 : Number(item.price || item.unitPrice || 0);
+      const qty = Number(item.qty || item.quantity) || 1;
+      const lineTotal = unitPrice * qty;
+
+      const rawImg = item.img || item.image || item.designImage;
+      let imgHtml = '';
+      if (rawImg && typeof rawImg === 'string' && rawImg.trim()) {
+        const cleanImg = rawImg.trim();
+        const fullImgUrl = cleanImg.startsWith('http')
+          ? cleanImg
+          : `${baseUrl}${cleanImg.startsWith('/') ? '' : '/'}${cleanImg}`;
+        imgHtml = `
+          <div style="margin:4px 0 6px 0;">
+            <a href="${fullImgUrl}" target="_blank" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+              <img src="${fullImgUrl}" alt="${item.name}" style="width:48px; height:48px; object-fit:cover; border-radius:4px; border:1px solid #e2e8f0; vertical-align:middle; display:inline-block;" />
+              <span style="font-size:11.5px; color:#b45309; text-decoration:underline;">View Reference Design ↗</span>
+            </a>
+          </div>
+        `;
+      }
+
+      const itemNotes = item.notes || item.designNotes || item.design_notes;
+      const notesHtml = itemNotes && typeof itemNotes === 'string' && itemNotes.trim()
+        ? `<div style="font-size:11.5px; color:#92400e; background:#fef3c7; border:1px solid #fde68a; border-radius:4px; padding:4px 8px; margin-top:5px; line-height:1.4;">
+            <strong>Design Notes / Instructions:</strong> ${itemNotes.trim()}
+          </div>`
+        : '';
+
       const paramsMap =
         (item.selectedParameters && typeof item.selectedParameters === 'object' ? item.selectedParameters : null) ||
         (item.selectedOptions && typeof item.selectedOptions === 'object' ? item.selectedOptions : {});
@@ -519,9 +553,12 @@ function renderOrderItemsTable(order) {
         ${isFreeGift ? '<br><small style="color:#9d174d; font-weight:600;">Complimentary Gift from Nathshikha</small>' : ''}
         ${item.tag ? `<br><small style="color:#c69a59; font-weight:600;">${item.tag}</small>` : ''}
         ${badgesHtml ? `<br>${badgesHtml}` : ''}
+        ${imgHtml}
+        ${notesHtml}
       </td>
-      <td style="text-align:center;">${item.qty || 1}</td>
-      <td style="text-align:right;">${isFreeGift ? '₹0' : `₹${Number(item.price || 0).toLocaleString('en-IN')}`}</td>
+      <td style="text-align:right;">${isFreeGift ? '₹0' : `₹${unitPrice.toLocaleString('en-IN')}`}</td>
+      <td style="text-align:center;">${qty}</td>
+      <td style="text-align:right; font-weight:600;">${isFreeGift ? '₹0' : `₹${lineTotal.toLocaleString('en-IN')}`}</td>
     </tr>
   `;
     })
@@ -533,36 +570,38 @@ function renderOrderItemsTable(order) {
   const total = order.total || Math.max(0, subtotal - discount) + shipping;
 
   return `
+    ${isCustomOrder ? '<div style="margin-bottom:8px;"><span style="display:inline-block; font-size:11px; font-weight:700; color:#92400e; background:#fef3c7; border:1px solid #f59e0b; padding:2px 8px; border-radius:4px;">✨ CUSTOM BESPOKE JEWELLERY ORDER</span></div>' : ''}
     <table class="order-table">
       <thead>
         <tr>
-          <th>Jewellery Piece</th>
+          <th>Jewellery Piece / Design</th>
+          <th style="text-align:right;">Unit Price</th>
           <th style="text-align:center;">Qty</th>
-          <th style="text-align:right;">Price</th>
+          <th style="text-align:right;">Line Total</th>
         </tr>
       </thead>
       <tbody>
         ${itemsRows}
         <tr>
-          <td colspan="2" style="text-align:right; color:#7a6b63;">Subtotal:</td>
+          <td colspan="3" style="text-align:right; color:#7a6b63;">Subtotal:</td>
           <td style="text-align:right;">₹${Number(subtotal).toLocaleString('en-IN')}</td>
         </tr>
         ${
           discount > 0
             ? `
         <tr>
-          <td colspan="2" style="text-align:right; color:#15803d;">Coupon Discount (${order.coupon_code || order.couponCode}):</td>
+          <td colspan="3" style="text-align:right; color:#15803d;">Coupon Discount (${order.coupon_code || order.couponCode}):</td>
           <td style="text-align:right; color:#15803d;">- ₹${Number(discount).toLocaleString('en-IN')}</td>
         </tr>
         `
             : ''
         }
         <tr>
-          <td colspan="2" style="text-align:right; color:#7a6b63;">Shipping (${order.shipping_method || order.shippingMethod || 'Standard'}):</td>
+          <td colspan="3" style="text-align:right; color:#7a6b63;">Shipping (${order.shipping_method || order.shippingMethod || 'Standard'}):</td>
           <td style="text-align:right;">${shipping === 0 ? '<span style="color:#15803d; font-weight:700;">FREE</span>' : `₹${Number(shipping).toLocaleString('en-IN')}`}</td>
         </tr>
         <tr class="total-row">
-          <td colspan="2" style="text-align:right;">Total Amount:</td>
+          <td colspan="3" style="text-align:right;">Total Amount:</td>
           <td style="text-align:right;">₹${Number(total).toLocaleString('en-IN')}</td>
         </tr>
       </tbody>

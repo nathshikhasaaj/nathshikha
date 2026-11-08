@@ -225,6 +225,9 @@ export function buildInvoicePdfBinary(order) {
     if (item.itemType === 'free_gift' || item.item_type === 'free_gift' || item.name === 'Free Complimentary Gift') {
       return 'FREE-GIFT';
     }
+    if (item.itemType === 'custom' || item.item_type === 'custom' || order.orderType === 'custom' || order.order_type === 'custom') {
+      return `CUSTOM-${String(index + 1).padStart(2, '0')}`;
+    }
     if (item.productCode) return String(item.productCode);
     if (item.sku) return String(item.sku);
     if (item.product_code) return String(item.product_code);
@@ -369,26 +372,30 @@ export function buildInvoicePdfBinary(order) {
     items.forEach((item, idx) => {
       const params = getParameterEntries(item.selectedParameters || item.selectedOptions);
       const paramStr = params.length > 0 ? params.map((p) => `${p.name}: ${p.value}`).join(', ') : '';
+      const itemNotes = item.notes || item.designNotes || item.design_notes;
+      const notesStr = itemNotes && typeof itemNotes === 'string' && itemNotes.trim() ? `Note: ${itemNotes.trim()}` : '';
+      const subInfo = paramStr || notesStr;
+
       const unitPrice = Number(item.price || item.unitPrice || 0);
       const qty = Number(item.qty || item.quantity) || 1;
       const rowTotal = unitPrice * qty;
       const prdCode = getProductCode(item, idx);
       const itemName = item.name || item.product_name || item.title || item.productName || 'Jewellery Item';
 
-      const rowHeight = paramStr ? 28 : 22;
+      const rowHeight = subInfo ? 28 : 22;
       setColor(idx % 2 === 0 ? 255 : 252, idx % 2 === 0 ? 255 : 250, idx % 2 === 0 ? 255 : 246);
       setStrokeColor(240, 230, 216);
       drawRect(40, currentY, width - 80, rowHeight, true, true);
 
-      drawText(String(idx + 1), 48, currentY + (paramStr ? 12 : 7), 'F1', 9, 92, 78, 71);
-      drawText(itemName.substring(0, 42), 75, currentY + (paramStr ? 15 : 7), 'F2', 9, 31, 20, 16);
-      if (paramStr) {
-        drawText(paramStr.substring(0, 50), 75, currentY + 4, 'F1', 7.5, 120, 90, 60);
+      drawText(String(idx + 1), 48, currentY + (subInfo ? 12 : 7), 'F1', 9, 92, 78, 71);
+      drawText(itemName.substring(0, 42), 75, currentY + (subInfo ? 15 : 7), 'F2', 9, 31, 20, 16);
+      if (subInfo) {
+        drawText(subInfo.substring(0, 50), 75, currentY + 4, 'F1', 7.5, 120, 90, 60);
       }
-      drawText(prdCode, 300, currentY + (paramStr ? 12 : 7), 'F1', 8.5, 92, 78, 71);
-      drawText(pdfMoney(unitPrice), 370, currentY + (paramStr ? 12 : 7), 'F1', 8.5, 43, 29, 22);
-      drawText(String(qty), 455, currentY + (paramStr ? 12 : 7), 'F1', 9, 43, 29, 22);
-      drawText(pdfMoney(rowTotal), 500, currentY + (paramStr ? 12 : 7), 'F2', 9, 31, 20, 16);
+      drawText(prdCode, 300, currentY + (subInfo ? 12 : 7), 'F1', 8.5, 92, 78, 71);
+      drawText(pdfMoney(unitPrice), 370, currentY + (subInfo ? 12 : 7), 'F1', 8.5, 43, 29, 22);
+      drawText(String(qty), 455, currentY + (subInfo ? 12 : 7), 'F1', 9, 43, 29, 22);
+      drawText(pdfMoney(rowTotal), 500, currentY + (subInfo ? 12 : 7), 'F2', 9, 31, 20, 16);
 
       currentY -= (rowHeight + 2);
     });
@@ -409,6 +416,8 @@ export function buildInvoicePdfBinary(order) {
     drawText('This order includes a complimentary gift from Nathshikha.', 48, totalsY + 52, 'F1', 7.5, 31, 20, 16);
     if (handwrittenNote) {
       drawText(`Note: "${handwrittenNote.substring(0, 44)}"`, 48, totalsY + 38, 'F1', 7.5, 131, 24, 67);
+    } else if (order.orderType === 'custom' || order.order_type === 'custom') {
+      drawText('Bespoke custom handcrafted jewellery specifications.', 48, totalsY + 38, 'F1', 7.5, 146, 64, 14);
     } else if (hasPdfCustom) {
       const customTxt = customObj?.details || 'Reference design attached';
       drawText(`Custom: "${customTxt.substring(0, 44)}"`, 48, totalsY + 38, 'F1', 7.5, 91, 20, 32);
@@ -420,6 +429,11 @@ export function buildInvoicePdfBinary(order) {
     if (handwrittenNote.length > 48) {
       drawText(`"${handwrittenNote.substring(48, 96)}"`, 48, totalsY + 40, 'F1', 7.5, 131, 24, 67);
     }
+  } else if (order.orderType === 'custom' || order.order_type === 'custom') {
+    drawText('* BESPOKE CUSTOM JEWELLERY ORDER', 48, totalsY + 66, 'F2', 8, 146, 64, 14);
+    drawText('Handcrafted custom design made to bespoke specifications.', 48, totalsY + 52, 'F1', 7.5, 31, 20, 16);
+    drawText('Reference designs & custom artisan instructions verified.', 48, totalsY + 40, 'F1', 7.5, 107, 92, 83);
+    drawText('Official handcrafted jewellery invoice from Nathshikha.', 48, totalsY + 28, 'F1', 7.5, 107, 92, 83);
   } else if (hasPdfCustom) {
     drawText('* CUSTOMIZATION REQUIREMENT', 48, totalsY + 66, 'F2', 8, 91, 20, 32);
     const customTxt = customObj?.details || (customObj?.referenceImage || customObj?.reference_image ? 'Reference design photo attached' : 'Customization requested');

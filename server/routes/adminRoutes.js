@@ -96,6 +96,40 @@ router.post('/upload', uploadSingle(['image', 'photo', 'file']), async (req, res
   }
 });
 
+// Upload custom design reference artwork (Sharp optimized, unwatermarked for exact design fidelity)
+router.post(['/upload-custom-design', '/orders/upload-custom-design'], uploadSingle(['image', 'photo', 'file', 'designImage']), async (req, res) => {
+  if (!req.file) {
+    return res
+      .status(400)
+      .json({ error: 'Please select a valid image file (JPG, JPEG, PNG, WEBP).' });
+  }
+
+  const filename = `custom-design-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.jpg`;
+  const target = path.join(uploadsDir, filename);
+
+  try {
+    const sharp = (await import('sharp')).default;
+    const optimizedBuffer = await sharp(req.file.path)
+      .rotate()
+      .jpeg({ quality: 92, mozjpeg: true })
+      .toBuffer();
+
+    await fs.promises.writeFile(target, optimizedBuffer);
+
+    if (fs.existsSync(req.file.path) && req.file.path !== target) {
+      await fs.promises.unlink(req.file.path).catch(() => {});
+    }
+
+    res.json({ ok: true, url: `/uploads/${filename}` });
+  } catch (err) {
+    console.error('Failed to validate custom design image:', err.message);
+    if (fs.existsSync(req.file.path)) {
+      await fs.promises.unlink(req.file.path).catch(() => {});
+    }
+    res.status(400).json({ error: 'Invalid or unsupported image file. Please upload a valid JPG, PNG, or WEBP image.' });
+  }
+});
+
 // Upload multiple product images with automatic Nathshikha logo watermark
 router.post('/upload-multiple', uploadMultiple(['images', 'photos', 'files'], 10), async (req, res) => {
   if (!req.files || req.files.length === 0) {
@@ -361,7 +395,17 @@ router.get('/orders', async (req, res) => {
       orders.map((o) => {
         const coOrders = o.shipmentGroupCode ? (groupCodeMap.get(o.shipmentGroupCode) || []).filter((no) => no !== o.orderNo) : [];
         const isGiftItem = (i) => i && (i.itemType === 'free_gift' || i.item_type === 'free_gift' || i.name === 'Free Complimentary Gift');
-        let orderItems = Array.isArray(o.items) ? o.items.map((i) => ({ ...i, item_type: i.itemType || 'product', itemType: i.itemType || 'product' })) : [];
+        const effectiveOrderType = o.orderType || o.order_type || 'regular';
+        let orderItems = Array.isArray(o.items)
+          ? o.items.map((i) => ({
+              ...i,
+              item_type: i.itemType || i.item_type || (effectiveOrderType === 'custom' ? 'custom' : 'product'),
+              itemType: i.itemType || i.item_type || (effectiveOrderType === 'custom' ? 'custom' : 'product'),
+              notes: i.notes || i.designNotes || i.design_notes || null,
+              designNotes: i.notes || i.designNotes || i.design_notes || null,
+              design_notes: i.notes || i.designNotes || i.design_notes || null
+            }))
+          : [];
         if (Boolean(o.freeGift?.included) && !orderItems.some(isGiftItem)) {
           orderItems = [...orderItems, {
             name: 'Free Complimentary Gift',
@@ -379,6 +423,8 @@ router.get('/orders', async (req, res) => {
           ...o,
           id: o._id.toString(),
           order_no: o.orderNo,
+          order_type: effectiveOrderType,
+          orderType: effectiveOrderType,
           shipment_group_id: o.shipmentGroupId ? o.shipmentGroupId.toString() : null,
           shipment_group_code: o.shipmentGroupCode || null,
           co_shipped_orders: coOrders,
@@ -887,8 +933,221 @@ router.post('/orders/:id/resend-assisted', async (req, res) => {
   }
 });
 
+// Handler for creating a Custom Order with manually entered items, pricing and shipping
+export async function handleCreateCustomOrder(req, res) {
+  const {
+    userId,
+    name,
+    phone,
+    email,
+    customerName,
+    customerPhone,
+    customerEmail,
+    address,
+    pincode,
+    city,
+    state,
+    shippingMethod = 'Standard Delivery',
+    items,
+    shipping = 0,
+    adminNotes,
+    notes
+  } = req.body;
+
+  const rawName = String(customerName || req.body.customer_name || name || '').trim().slice(0, 100);
+  if (!rawName) {
+    return res.status(400).json({ error: 'Customer name is required.' });
+  }
+
+  const rawPhone = String(customerPhone || req.body.customer_phone || phone || '').trim();
+  const cleanPhoneDigits = rawPhone.replace(/\D/g, '');
+  if (!cleanPhoneDigits || cleanPhoneDigits.length < 10) {
+    return res.status(400).json({ error: 'Please enter a valid 10-digit Indian mobile number.' });
+  }
+  const cleanCustomerPhone = cleanPhoneDigits.length === 10 ? cleanPhoneDigits : cleanPhoneDigits.slice(-10);
+
+  const inputEmail = customerEmail !== undefined ? customerEmail : (email !== undefined ? email : req.body.customer_email);
+  const rawEmail = typeof inputEmail === 'string' && inputEmail.trim()
+    ? inputEmail.trim().toLowerCase().slice(0, 120)
+    : null;
+
+  if (rawEmail && !isValidEmail(rawEmail)) {
+    return res.status(400).json({ error: 'Please enter a valid email address or leave it blank.' });
+  }
+
+  const rawAddress = String(address || '').trim().slice(0, 500);
+  if (!rawAddress) {
+    return res.status(400).json({ error: 'Complete delivery address is required.' });
+  }
+
+  const rawPincode = String(pincode || '').trim();
+  if (!rawPincode || !isValidPincode(rawPincode)) {
+    return res.status(400).json({ error: 'Please enter a valid 6-digit delivery PIN code.' });
+  }
+
+  if (!Array.isArray(items) || items.length === 0 || items.length > 50) {
+    return res.status(400).json({ error: 'Please add at least one custom product item to the order.' });
+  }
+
+  // Parse and validate manual shipping charges (defaults to 0, zero shipping is fully valid)
+  const parsedShipping = Number(shipping !== undefined ? shipping : (req.body.shippingCharge || 0));
+  if (isNaN(parsedShipping) || parsedShipping < 0) {
+    return res.status(400).json({ error: 'Shipping charges must be a non-negative number.' });
+  }
+  const finalShipping = Math.round(parsedShipping * 100) / 100;
+
+  // Validate custom items & recalculate subtotal server-side (never trust frontend totals)
+  let subtotal = 0;
+  const normalizedItems = [];
+
+  for (let idx = 0; idx < items.length; idx++) {
+    const it = items[idx];
+    const itemName = String(it.name || it.productName || it.designName || '').trim().slice(0, 200);
+    if (!itemName) {
+      return res.status(400).json({ error: `Custom product/design name is required for item #${idx + 1}.` });
+    }
+
+    const rawPrice = it.price !== undefined ? it.price : it.unitPrice;
+    const unitPrice = Number(rawPrice);
+    if (isNaN(unitPrice) || unitPrice < 0) {
+      return res.status(400).json({ error: `Unit price for "${itemName}" must be a non-negative number.` });
+    }
+
+    const rawQty = it.qty !== undefined ? it.qty : it.quantity;
+    const qty = parseInt(rawQty, 10);
+    if (isNaN(qty) || qty < 1 || qty > 100) {
+      return res.status(400).json({ error: `Quantity for "${itemName}" must be a positive integer between 1 and 100.` });
+    }
+
+    const lineTotal = unitPrice * qty;
+    subtotal += lineTotal;
+
+    const rawImg = String(it.img || it.image || it.designImage || '').trim();
+    let cleanImg = '';
+    if (rawImg) {
+      const match = rawImg.match(/(\/?uploads\/[a-zA-Z0-9_\-\.]+)/);
+      if (match && !rawImg.includes('..')) {
+        cleanImg = match[1].startsWith('/') ? match[1] : `/${match[1]}`;
+      } else if (rawImg.startsWith('data:image/') || rawImg.startsWith('http')) {
+        cleanImg = rawImg;
+      }
+    }
+
+    const rawNotes = String(it.notes || it.designNotes || it.instructions || '').trim().slice(0, 2000);
+
+    normalizedItems.push({
+      productId: null,
+      name: itemName,
+      price: unitPrice,
+      qty,
+      img: cleanImg,
+      itemType: 'custom',
+      notes: rawNotes || null,
+      designNotes: rawNotes || null,
+      selectedParameters: {},
+      selectedOptions: {}
+    });
+  }
+
+  // Grand Total = Subtotal + Admin-Entered Shipping Charges
+  const grandTotal = Math.round((subtotal + finalShipping) * 100) / 100;
+  const orderNo = await generateOrderNo();
+  const guestToken = crypto.randomBytes(24).toString('hex');
+
+  // Resolve Linked Customer User Account if exists
+  let linkedUserId = userId && mongoose.Types.ObjectId.isValid(userId) ? userId : null;
+  if (!linkedUserId && rawEmail) {
+    const existingUser = await User.findOne({ email: rawEmail });
+    if (existingUser) linkedUserId = existingUser._id;
+  }
+  if (!linkedUserId && cleanCustomerPhone) {
+    const existingUserByPhone = await User.findOne({ phone: cleanCustomerPhone });
+    if (existingUserByPhone) linkedUserId = existingUserByPhone._id;
+  }
+
+  const finalNotes = String(adminNotes || notes || '').trim();
+
+  try {
+    const order = await Order.create({
+      orderNo,
+      orderType: 'custom',
+      userId: linkedUserId,
+      name: rawName,
+      phone: cleanCustomerPhone,
+      email: rawEmail || null,
+      customerName: rawName,
+      customerPhone: cleanCustomerPhone,
+      customerEmail: rawEmail || null,
+      recipientName: null,
+      recipientPhone: null,
+      address: rawAddress,
+      pincode: rawPincode,
+      city: city ? String(city).trim() : '',
+      state: state ? String(state).trim() : 'Maharashtra',
+      shippingMethod: String(shippingMethod || 'Standard Delivery').trim(),
+      subtotal,
+      couponCode: null,
+      couponDiscount: 0,
+      shipping: finalShipping,
+      giftWrap: false,
+      giftWrapCharge: 0,
+      isGift: false,
+      handwrittenNote: null,
+      total: grandTotal,
+      paymentMethod: 'upi',
+      paymentStatus: 'verification_pending',
+      orderStatus: 'placed',
+      freeGift: { included: Boolean(req.body.freeGiftIncluded || req.body.freeGift?.included || req.body.free_gift?.included) },
+      confirmedAt: null,
+      expectedDeliveryDate: null,
+      acceptedTerms: true,
+      guestToken,
+      customization: {
+        requested: true,
+        details: 'Custom Bespoke Order Created by Admin',
+        referenceImage: normalizedItems[0]?.img || null,
+        requestedAt: new Date()
+      },
+      items: normalizedItems,
+      editHistory: [
+        {
+          editedAt: new Date(),
+          editedBy: req.user?.name || req.user?.email || 'Admin',
+          changedFields: ['Custom Order Created by Admin'],
+          notes: finalNotes || 'Bespoke custom order created by Admin.'
+        }
+      ]
+    });
+
+    // Send Order Notification Email (non-blocking, safe skip if no email)
+    if (rawEmail) {
+      sendOrderPlacedEmail(order).catch((mailErr) => {
+        console.error('[Admin] Failed to send custom order placed email:', mailErr.message);
+      });
+    }
+
+    res.status(201).json({
+      ok: true,
+      success: true,
+      message: `Custom Order #${order.orderNo} created successfully.`,
+      order: order.toJSON()
+    });
+  } catch (err) {
+    console.error('Failed to create custom admin order:', err);
+    res.status(400).json({ error: err.message || 'Failed to create custom order.' });
+  }
+}
+
+// Dedicated endpoint for custom order creation
+router.post('/orders/custom', async (req, res) => {
+  return handleCreateCustomOrder(req, res);
+});
+
 // Create manual order on behalf of customer (with 100% customer-order compatibility)
 router.post('/orders', async (req, res) => {
+  if (req.body.orderType === 'custom' || req.body.order_type === 'custom') {
+    return handleCreateCustomOrder(req, res);
+  }
   const {
     userId,
     name,
@@ -2029,7 +2288,19 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details', '/orders/:id'], 
     let normalizedItems = order.items;
     let subtotal = order.subtotal;
     let couponDiscount = order.couponDiscount || 0;
-    const shipping = order.shipping !== undefined ? order.shipping : (order.shipping_charge || 0);
+    let shipping = order.shipping !== undefined ? order.shipping : (order.shipping_charge || 0);
+
+    // Support manual shipping update for custom orders
+    if ((order.orderType === 'custom' || order.order_type === 'custom') && req.body.shipping !== undefined) {
+      const manualShip = Number(req.body.shipping);
+      if (!isNaN(manualShip) && manualShip >= 0) {
+        if (shipping !== manualShip) {
+          changedFieldLabels.push(`Shipping Charge (₹${shipping} → ₹${manualShip})`);
+        }
+        shipping = manualShip;
+        order.shipping = manualShip;
+      }
+    }
 
     if (items !== undefined) {
       if (!Array.isArray(items) || items.length === 0) {
@@ -2047,14 +2318,71 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details', '/orders/:id'], 
         });
       }
 
-      // Validate products against catalog
-      const validProductIds = items
-        .map((i) => (i.productId || i.id || i._id)?.toString())
-        .filter((pid) => pid && mongoose.Types.ObjectId.isValid(pid));
+      if (order.orderType === 'custom' || order.order_type === 'custom') {
+        // Custom order item processing: zero catalog lookups, zero inventory deduction
+        const tempCustomItems = [];
+        let newCustomSubtotal = 0;
 
-      if (validProductIds.length !== items.length) {
-        return res.status(400).json({ error: 'One or more items have invalid product IDs.' });
-      }
+        for (let idx = 0; idx < items.length; idx++) {
+          const it = items[idx];
+          const itemName = String(it.name || it.productName || it.designName || '').trim().slice(0, 200);
+          if (!itemName) {
+            return res.status(400).json({ error: `Custom product/design name is required for item #${idx + 1}.` });
+          }
+
+          const rawPrice = it.price !== undefined ? it.price : it.unitPrice;
+          const unitPrice = Number(rawPrice);
+          if (isNaN(unitPrice) || unitPrice < 0) {
+            return res.status(400).json({ error: `Unit price for "${itemName}" must be a non-negative number.` });
+          }
+
+          const rawQty = it.qty !== undefined ? it.qty : it.quantity;
+          const qty = parseInt(rawQty, 10);
+          if (isNaN(qty) || qty < 1 || qty > 100) {
+            return res.status(400).json({ error: `Quantity for "${itemName}" must be a positive integer between 1 and 100.` });
+          }
+
+          newCustomSubtotal += unitPrice * qty;
+
+          const rawImg = String(it.img || it.image || it.designImage || '').trim();
+          let cleanImg = '';
+          if (rawImg) {
+            const match = rawImg.match(/(\/?uploads\/[a-zA-Z0-9_\-\.]+)/);
+            if (match && !rawImg.includes('..')) {
+              cleanImg = match[1].startsWith('/') ? match[1] : `/${match[1]}`;
+            } else if (rawImg.startsWith('data:image/') || rawImg.startsWith('http')) {
+              cleanImg = rawImg;
+            }
+          }
+
+          const rawNotes = String(it.notes || it.designNotes || it.instructions || '').trim().slice(0, 2000);
+
+          tempCustomItems.push({
+            productId: null,
+            name: itemName,
+            price: unitPrice,
+            qty,
+            img: cleanImg,
+            itemType: 'custom',
+            notes: rawNotes || null,
+            designNotes: rawNotes || null,
+            selectedParameters: {},
+            selectedOptions: {}
+          });
+        }
+
+        normalizedItems = tempCustomItems;
+        subtotal = newCustomSubtotal;
+        changedFieldLabels.push(`Custom Items (${normalizedItems.length} items, Subtotal: ₹${subtotal})`);
+      } else {
+        // Validate products against catalog (Regular Order Flow)
+        const validProductIds = items
+          .map((i) => (i.productId || i.id || i._id)?.toString())
+          .filter((pid) => pid && mongoose.Types.ObjectId.isValid(pid));
+
+        if (validProductIds.length !== items.length) {
+          return res.status(400).json({ error: 'One or more items have invalid product IDs.' });
+        }
 
       const catalogProducts = await Product.find({ _id: { $in: validProductIds } });
       const catalogMap = new Map(catalogProducts.map((p) => [p._id.toString(), p]));
@@ -2174,7 +2502,8 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details', '/orders/:id'], 
         }
       }
 
-      changedFieldLabels.push(`Order Products (${normalizedItems.length} items, Subtotal: ₹${subtotal})`);
+        changedFieldLabels.push(`Order Products (${normalizedItems.length} items, Subtotal: ₹${subtotal})`);
+      }
     }
 
     // 8. Compute Final Total Server-Side
@@ -2229,6 +2558,7 @@ router.patch(['/orders/:id/edit', '/orders/:id/update-details', '/orders/:id'], 
       order.subtotal = subtotal;
       order.couponDiscount = couponDiscount;
     }
+    order.shipping = shipping;
     order.total = calculatedTotal;
 
     if (order.assistedOrder?.isAssisted || order.orderStatus === 'payment_pending') {
@@ -2333,7 +2663,7 @@ async function handleAdminDeleteOrder(req, res) {
         $set: {
           isDeleted: true,
           deletedAt: now,
-          deletedBy: req.user?.id && isValidObjectId(req.user.id) ? req.user.id : null,
+          deletedBy: req.user?.id && mongoose.isValidObjectId(req.user.id) ? req.user.id : null,
           deletedByName: req.user?.name || req.user?.email || 'Admin',
           deleteReason: cleanReason,
           restoreUntil

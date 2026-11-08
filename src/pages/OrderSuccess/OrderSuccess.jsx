@@ -266,6 +266,11 @@ export default function OrderSuccess() {
                           ))}
                         </div>
                       )}
+                      {Boolean(item.notes || item.designNotes || item.design_notes) && (
+                        <div style={{ fontSize: 11, color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 4, padding: '2px 7px', marginTop: 3 }}>
+                          <b>Design Notes:</b> {item.notes || item.designNotes || item.design_notes}
+                        </div>
+                      )}
                       <small>Qty: {item.qty} · {money(item.price)} each</small>
                     </div>
                     <b className="successPageItemTotal">{money((item.price || 0) * (item.qty || 1))}</b>

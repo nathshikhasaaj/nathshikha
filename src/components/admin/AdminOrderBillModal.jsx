@@ -113,6 +113,9 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
     if (item.itemType === 'free_gift' || item.item_type === 'free_gift' || item.name === 'Free Complimentary Gift') {
       return 'FREE-GIFT';
     }
+    if (item.itemType === 'custom' || item.item_type === 'custom' || order.order_type === 'custom' || order.orderType === 'custom') {
+      return `CUSTOM-${String(index + 1).padStart(2, '0')}`;
+    }
     if (item.productCode) return String(item.productCode);
     if (item.sku) return String(item.sku);
     if (item.product_code) return String(item.product_code);
@@ -126,14 +129,17 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
   };
 
   const generateWhatsAppMessage = () => {
+    const isCustomOrder = order.order_type === 'custom' || order.orderType === 'custom';
     const itemsList = items
       .map((item, i) => {
         const params = getParameterEntries(item.selectedParameters || item.selectedOptions);
         const paramStr = params.length > 0 ? ` [${params.map((p) => `${p.name}: ${p.value}`).join(', ')}]` : '';
+        const itemNotes = item.notes || item.designNotes || item.design_notes;
+        const notesStr = itemNotes && typeof itemNotes === 'string' && itemNotes.trim() ? `\n   Note: ${itemNotes.trim()}` : '';
         const itemName = item.name || item.product_name || item.title || item.productName || 'Jewellery Item';
         const itemPrice = Number(item.price || item.unitPrice || 0);
         const itemQty = Number(item.qty || item.quantity) || 1;
-        return `${i + 1}. *${itemName}*${paramStr}\n   Qty: ${itemQty} × ${money(itemPrice)} = ${money(
+        return `${i + 1}. *${itemName}*${paramStr}${notesStr}\n   Qty: ${itemQty} × ${money(itemPrice)} = ${money(
           itemPrice * itemQty
         )}`;
       })
@@ -144,6 +150,9 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
     msg += `Thank you for shopping with *Nathshikha Luxury Jewellery*! Here is your official order invoice and billing receipt:\n\n`;
     msg += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
     msg += `🧾 *Invoice / Order No:* #${order.order_no}\n`;
+    if (isCustomOrder) {
+      msg += `🎨 *Order Type:* Bespoke Handcrafted Custom Order\n`;
+    }
     msg += `📅 *Date:* ${formattedDate}\n`;
     msg += `🔖 *Order Status:* ${formatOrderStatus(order.order_status)}\n`;
     msg += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
@@ -285,6 +294,13 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
         const rowTotal = unitPrice * qty;
         const prdCode = getProductCode(item, idx);
         const itemName = item.name || item.product_name || item.title || item.productName || 'Jewellery Item';
+        const itemNotes = item.notes || item.designNotes || item.design_notes;
+        const notesHtml = itemNotes && typeof itemNotes === 'string' && itemNotes.trim()
+          ? `<div style="margin-top:3px;font-size:10.5px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;padding:2px 6px;border-radius:3px;">
+              <b>Design Notes:</b> ${escapeHtml(itemNotes.trim())}
+            </div>`
+          : '';
+
         const paramsHtml =
           params.length > 0
             ? `<div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:4px;">
@@ -303,6 +319,7 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
             <td style="padding:8px 10px;border-bottom:1px solid #ebdcc5;">
               <div style="font-weight:700;font-size:12px;color:#1f1410;">${escapeHtml(itemName)}</div>
               ${paramsHtml}
+              ${notesHtml}
             </td>
             <td style="padding:8px 10px;border-bottom:1px solid #ebdcc5;font-family:monospace;font-size:11px;color:#5c4e47;">${escapeHtml(prdCode)}</td>
             <td style="text-align:right;padding:8px 10px;border-bottom:1px solid #ebdcc5;font-size:11.5px;">${money(unitPrice)}</td>
@@ -1039,6 +1056,11 @@ export default function AdminOrderBillModal({ order, isOpen, onClose }) {
                                     {p.name}: <b>{p.value}</b>
                                   </span>
                                 ))}
+                              </div>
+                            )}
+                            {Boolean(item.notes || item.designNotes || item.design_notes) && (
+                              <div style={{ marginTop: 4, fontSize: '11px', color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 4, padding: '2px 6px' }}>
+                                <b>Design Notes:</b> {item.notes || item.designNotes || item.design_notes}
                               </div>
                             )}
                           </td>

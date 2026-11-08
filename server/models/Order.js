@@ -29,6 +29,18 @@ const orderItemSchema = new mongoose.Schema(
       type: String,
       default: 'product'
     },
+    notes: {
+      type: String,
+      default: null,
+      trim: true,
+      maxlength: 2000
+    },
+    designNotes: {
+      type: String,
+      default: null,
+      trim: true,
+      maxlength: 2000
+    },
     selectedParameters: {
       type: mongoose.Schema.Types.Mixed,
       default: {}
@@ -47,6 +59,12 @@ const orderSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true
+    },
+    orderType: {
+      type: String,
+      enum: ['regular', 'custom'],
+      default: 'regular',
+      alias: 'order_type'
     },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -483,6 +501,8 @@ const orderSchema = new mongoose.Schema(
       transform: (doc, ret) => {
         ret.id = ret._id.toString();
         ret.order_no = ret.orderNo;
+        ret.order_type = ret.orderType || 'regular';
+        ret.orderType = ret.order_type;
         ret.user_id = ret.userId ? ret.userId.toString() : null;
         ret.is_gift = Boolean(ret.isGift);
         ret.gift_wrap = Boolean(ret.giftWrap);
@@ -624,8 +644,11 @@ const orderSchema = new mongoose.Schema(
         if (Array.isArray(ret.items)) {
           ret.items = ret.items.map((item) => ({
             ...item,
-            item_type: item.itemType || 'product',
-            itemType: item.itemType || 'product'
+            item_type: item.itemType || (ret.order_type === 'custom' ? 'custom' : 'product'),
+            itemType: item.itemType || (ret.order_type === 'custom' ? 'custom' : 'product'),
+            notes: item.notes || item.designNotes || null,
+            designNotes: item.notes || item.designNotes || null,
+            design_notes: item.notes || item.designNotes || null
           }));
         }
 
@@ -645,6 +668,7 @@ const orderSchema = new mongoose.Schema(
 );
 
 orderSchema.pre('validate', function () {
+  if (this.order_type !== undefined && this.orderType === undefined) this.orderType = this.order_type;
   if (this.is_gift !== undefined && this.isGift === undefined) this.isGift = this.is_gift;
   if (this.gift_wrap !== undefined && this.giftWrap === undefined) this.giftWrap = this.gift_wrap;
   if (this.gift_wrap_charge !== undefined && this.giftWrapCharge === undefined) this.giftWrapCharge = this.gift_wrap_charge;

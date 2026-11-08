@@ -15,7 +15,14 @@ export default function AdminPaymentList({ pendingOrders, approve, updateOrder }
         pendingOrders.map((o) => (
           <div className="paymentRow" key={o.id}>
             <div>
-              <b>{o.order_no}</b>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <b>{o.order_no}</b>
+                {(o.order_type === 'custom' || o.orderType === 'custom') && (
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#92400e', background: '#fef3c7', border: '1px solid #f59e0b', padding: '1px 5px', borderRadius: 3 }}>
+                    ✨ Custom
+                  </span>
+                )}
+              </div>
               <span>
                 {o.name} · {money(o.total)}
               </span>

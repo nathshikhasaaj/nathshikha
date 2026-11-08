@@ -121,6 +121,12 @@ export default function AdminOrderDetailsModal({
     if (item.itemType === 'free_gift' || item.item_type === 'free_gift' || item.name === 'Free Complimentary Gift') {
       return 'FREE-GIFT';
     }
+    if (item.itemType === 'custom' || item.item_type === 'custom' || order.order_type === 'custom' || order.orderType === 'custom') {
+      return `CUSTOM-${String(index + 1).padStart(2, '0')}`;
+    }
+    if (item.productCode) return String(item.productCode);
+    if (item.sku) return String(item.sku);
+    if (item.product_code) return String(item.product_code);
     if (item.productId) {
       return `PRD-${String(item.productId).slice(-6).toUpperCase()}`;
     }
@@ -292,6 +298,15 @@ export default function AdminOrderDetailsModal({
                 {formatOrderStatus(order.order_status)}
               </b>
             </div>
+
+            {(order.order_type === 'custom' || order.orderType === 'custom') && (
+              <div className="bannerStatusItem">
+                <span>Order Classification:</span>
+                <b className="customOrderBannerTag" style={{ color: '#92400e', background: '#fef3c7', border: '1.5px solid #f59e0b', padding: '3px 9px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 800 }}>
+                  ✨ CUSTOM ORDER
+                </b>
+              </div>
+            )}
 
             <div className="bannerStatusItem">
               <span>Cancellation Status:</span>
@@ -1228,12 +1243,28 @@ export default function AdminOrderDetailsModal({
                               e.currentTarget.src = '/assets/thushi.jpg';
                             }}
                           />
+                          {item.img && (
+                            <a
+                              href={item.img}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="viewFullDesignLink"
+                              style={{ display: 'block', fontSize: 10, color: '#b45309', marginTop: 3, textDecoration: 'underline', textAlign: 'center' }}
+                            >
+                              View Design ↗
+                            </a>
+                          )}
                         </td>
                         <td className="codeCell">
                           <code>{getProductCode(item, idx)}</code>
                         </td>
                         <td className="nameCell">
                           <b>{item.name}</b>
+                          {Boolean(item.notes || item.designNotes || item.design_notes) && (
+                            <div style={{ marginTop: 5, padding: '4px 8px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 4, color: '#92400e', fontSize: 11.5, lineHeight: 1.4 }}>
+                              <strong>Custom Design Notes:</strong> {item.notes || item.designNotes || item.design_notes}
+                            </div>
+                          )}
                           {(() => {
                             const itemParams =
                               (item.selectedParameters && typeof item.selectedParameters === 'object'
@@ -1297,33 +1328,37 @@ export default function AdminOrderDetailsModal({
                         </td>
                         {isDelivered && (
                           <td>
-                            <button
-                              type="button"
-                              className="outlineBtn compact"
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 4,
-                                fontSize: 11,
-                                padding: '5px 10px',
-                                whiteSpace: 'nowrap'
-                              }}
-                              onClick={() => handleCopyReviewLink(item, idx)}
-                              disabled={generatingItemIndex === idx}
-                              title="Generate and copy direct customer review link"
-                            >
-                              {generatingItemIndex === idx ? (
-                                <Loader2 size={12} className="spinIcon" />
-                              ) : copiedItemIndex === idx ? (
-                                <span style={{ color: '#198754', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                                  <Check size={12} /> Copied!
-                                </span>
-                              ) : (
-                                <>
-                                  <Link2 size={12} /> Copy Review Link
-                                </>
-                              )}
-                            </button>
+                            {item.itemType !== 'custom' && item.item_type !== 'custom' && item.productId ? (
+                              <button
+                                type="button"
+                                className="outlineBtn compact"
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: 4,
+                                  fontSize: 11,
+                                  padding: '5px 10px',
+                                  whiteSpace: 'nowrap'
+                                }}
+                                onClick={() => handleCopyReviewLink(item, idx)}
+                                disabled={generatingItemIndex === idx}
+                                title="Generate and copy direct customer review link"
+                              >
+                                {generatingItemIndex === idx ? (
+                                  <Loader2 size={12} className="spinIcon" />
+                                ) : copiedItemIndex === idx ? (
+                                  <span style={{ color: '#198754', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                                    <Check size={12} /> Copied!
+                                  </span>
+                                ) : (
+                                  <>
+                                    <Link2 size={12} /> Copy Review Link
+                                  </>
+                                )}
+                              </button>
+                            ) : (
+                              <span style={{ fontSize: 11, color: '#94a3b8' }}>Custom Bespoke</span>
+                            )}
                           </td>
                         )}
                       </tr>
@@ -1391,10 +1426,15 @@ export default function AdminOrderDetailsModal({
                                 ))}
                               </div>
                             )}
+                            {Boolean(item.notes || item.designNotes || item.design_notes) && (
+                              <div style={{ marginTop: 6, padding: '4px 8px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 4, color: '#92400e', fontSize: 11, lineHeight: 1.4 }}>
+                                <strong>Custom Notes:</strong> {item.notes || item.designNotes || item.design_notes}
+                              </div>
+                            )}
                           </div>
                         </div>
 
-                        {isDelivered && (
+                        {isDelivered && item.itemType !== 'custom' && item.item_type !== 'custom' && item.productId && (
                           <div className="adminItemReviewRow">
                             <button
                               type="button"

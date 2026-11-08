@@ -1,0 +1,427 @@
+/* ============================================================ */
+/* NATHSHIKHA ORDER TYPE CHOICE MODAL STYLES                     */
+/* Mobile-First Responsive Redesign                             */
+/* ============================================================ */
+
+.orderTypeModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(18, 10, 10, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  animation: choiceFadeIn 0.22s ease-out;
+  box-sizing: border-box;
+}
+
+@keyframes choiceFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.orderTypeModalDialog {
+  max-width: 680px;
+  width: 100%;
+  max-height: calc(100dvh - 32px);
+  max-height: calc(100vh - 32px);
+  background: #fffdfa;
+  border-radius: 16px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(212, 175, 55, 0.3);
+  border: 1px solid #ebdcc6;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: choiceSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+@keyframes choiceSlideUp {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Header */
+.orderTypeModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  background: linear-gradient(135deg, #4a050e 0%, #6d1b29 100%);
+  color: #ffffff;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+  flex-shrink: 0;
+}
+
+.orderTypeHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.orderTypeIconBadge {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(212, 175, 55, 0.2);
+  border: 1px solid #d4af37;
+  color: #ffd700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.orderTypeTitleGroup {
+  min-width: 0;
+}
+
+.orderTypeTitleGroup h2 {
+  margin: 0;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.orderTypeTitleGroup p {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.orderTypeCloseBtn {
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: #ffffff;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+  touch-action: manipulation;
+}
+
+.orderTypeCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: rotate(90deg);
+}
+
+.orderTypeCloseBtn:active {
+  transform: scale(0.92);
+}
+
+/* Modal Body */
+.orderTypeModalBody {
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  flex: 1 1 auto;
+}
+
+/* Cards */
+.orderTypeChoiceCard {
+  background: #ffffff;
+  border: 1.5px solid #ebdcc6;
+  border-radius: 14px;
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  touch-action: manipulation;
+}
+
+.orderTypeChoiceCard:hover {
+  transform: translateY(-3px);
+  border-color: #b8860b;
+  box-shadow: 0 12px 28px rgba(109, 27, 41, 0.12);
+}
+
+.orderTypeChoiceCard:active {
+  transform: scale(0.985);
+}
+
+.orderTypeChoiceCard:focus-visible {
+  outline: 2px solid #b8860b;
+  outline-offset: 2px;
+}
+
+.orderTypeChoiceCard.customOrderCard {
+  border-color: #f59e0b;
+  background: linear-gradient(180deg, #fffdf8 0%, #ffffff 100%);
+}
+
+.orderTypeChoiceCard.customOrderCard:hover {
+  border-color: #d97706;
+  box-shadow: 0 12px 28px rgba(217, 119, 6, 0.16);
+}
+
+.choiceCardBadge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 12px;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  box-shadow: 0 1px 3px rgba(146, 64, 14, 0.1);
+}
+
+.choiceCardIconBox {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  flex-shrink: 0;
+}
+
+.choiceCardIconBox.regularIcon {
+  background: #fdf2f4;
+  color: #6d1b29;
+  border: 1px solid #fbcfe8;
+}
+
+.choiceCardIconBox.customIcon {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.choiceCardTitle {
+  margin: 0 0 6px;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: #4a050e;
+}
+
+.choiceCardDesc {
+  margin: 0 0 14px;
+  font-size: 0.82rem;
+  line-height: 1.48;
+  color: #6e5c54;
+  flex-grow: 1;
+}
+
+.choiceCardFeatures {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 18px;
+  width: 100%;
+}
+
+.choiceCardFeatures li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: #3b2d26;
+  margin-bottom: 6px;
+  line-height: 1.35;
+}
+
+.choiceCardFeatures li svg {
+  flex-shrink: 0;
+  color: #15803d;
+}
+
+.choiceActionBtn {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  touch-action: manipulation;
+}
+
+.choiceActionBtn.regularBtn {
+  background: #6d1b29;
+  color: #ffffff;
+  border: 1px solid #4a050e;
+  box-shadow: 0 2px 6px rgba(109, 27, 41, 0.2);
+}
+
+.choiceActionBtn.regularBtn:hover {
+  background: #4a050e;
+}
+
+.choiceActionBtn.regularBtn:active {
+  transform: scale(0.98);
+}
+
+.choiceActionBtn.customBtn {
+  background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+  color: #ffffff;
+  border: 1px solid #92400e;
+  box-shadow: 0 2px 6px rgba(180, 83, 9, 0.25);
+}
+
+.choiceActionBtn.customBtn:hover {
+  background: linear-gradient(135deg, #92400e 0%, #b45309 100%);
+}
+
+.choiceActionBtn.customBtn:active {
+  transform: scale(0.98);
+}
+
+.orderTypeModalFooter {
+  padding: 12px 20px;
+  background: #fdfbf7;
+  border-top: 1px solid #ebdcc6;
+  text-align: center;
+  font-size: 0.76rem;
+  color: #8c7a72;
+  flex-shrink: 0;
+  line-height: 1.35;
+}
+
+/* ============================================================ */
+/* RESPONSIVE BREAKPOINTS (Mobile & Tablet)                     */
+/* ============================================================ */
+
+@media (max-width: 640px) {
+  .orderTypeModalOverlay {
+    padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  }
+
+  .orderTypeModalDialog {
+    max-height: calc(100dvh - 16px);
+    max-height: calc(100vh - 16px);
+    border-radius: 14px;
+  }
+
+  .orderTypeModalHeader {
+    padding: 14px 16px;
+  }
+
+  .orderTypeIconBadge {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+  }
+
+  .orderTypeTitleGroup h2 {
+    font-size: 1.1rem;
+  }
+
+  .orderTypeTitleGroup p {
+    font-size: 0.75rem;
+  }
+
+  .orderTypeModalBody {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .orderTypeChoiceCard {
+    padding: 16px 14px;
+    border-radius: 12px;
+  }
+
+  .choiceCardIconBox {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+  }
+
+  .choiceCardTitle {
+    font-size: 1.05rem;
+    margin-bottom: 4px;
+  }
+
+  .choiceCardDesc {
+    font-size: 0.78rem;
+    margin-bottom: 10px;
+  }
+
+  .choiceCardFeatures {
+    margin-bottom: 14px;
+  }
+
+  .choiceCardFeatures li {
+    font-size: 0.75rem;
+    margin-bottom: 5px;
+  }
+
+  .choiceActionBtn {
+    min-height: 44px;
+    font-size: 0.88rem;
+    padding: 12px 14px;
+  }
+
+  .orderTypeModalFooter {
+    padding: 10px 14px;
+    font-size: 0.72rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .orderTypeModalOverlay {
+    padding: 4px;
+  }
+
+  .orderTypeModalDialog {
+    max-height: calc(100dvh - 8px);
+    max-height: calc(100vh - 8px);
+    border-radius: 10px;
+  }
+
+  .orderTypeModalHeader {
+    padding: 12px 12px;
+  }
+
+  .orderTypeTitleGroup h2 {
+    font-size: 1rem;
+  }
+
+  .orderTypeModalBody {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .orderTypeChoiceCard {
+    padding: 14px 12px;
+  }
+}
