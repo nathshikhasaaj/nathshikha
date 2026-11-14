@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { ALL_CATEGORIES } from '../../utils/parameterHelpers';
+import AdminDropdown from './AdminDropdown';
 import './AdminProductForm.css';
 
 const POPULAR_TAGS = ['NEW', 'BESTSELLER', 'BRIDAL', 'TRENDING', 'FEATURED', 'HANDMADE'];
@@ -432,16 +433,13 @@ export default function AdminProductForm({
               ))}
             </div>
           </div>
-          <select
+          <AdminDropdown
             value={form.category || (effectiveCategories[0] || 'Traditional')}
-            onChange={(e) => setForm({ ...form, category: e.target.value })}
-          >
-            {effectiveCategories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
+            onChange={(val) => setForm({ ...form, category: val })}
+            options={effectiveCategories.map((c) => ({ value: c, label: c }))}
+            fullWidth
+            placeholder="Select product category"
+          />
         </div>
 
         {/* Tag Selection with Quick Chips */}
@@ -672,24 +670,22 @@ export default function AdminProductForm({
 
             {/* Add Parameter Dropdown Bar */}
             <div className="addParamActionWrap">
-              <select
+              <AdminDropdown
                 value={selectedParamToAdd}
-                onChange={(e) => {
-                  const val = e.target.value;
+                onChange={(val) => {
                   if (val) {
                     handleAddManualUrl();
                     handleAssignParameter(val);
+                    setSelectedParamToAdd('');
                   }
                 }}
-                className="paramPickerSelect"
-              >
-                <option value="">+ Add Parameter from Library…</option>
-                {availableToAdd.map((mp) => (
-                  <option key={mp.id || mp._id} value={mp.id || mp._id}>
-                    + {mp.name} ({(mp.values || []).length} choices)
-                  </option>
-                ))}
-              </select>
+                options={availableToAdd.map((mp) => ({
+                  value: mp.id || mp._id,
+                  label: `+ ${mp.name} (${(mp.values || []).length} choices)`
+                }))}
+                placeholder="+ Add Parameter from Library…"
+                minWidth="230px"
+              />
             </div>
           </div>
 

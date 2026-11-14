@@ -353,10 +353,12 @@
   gap: 6px;
 }
 
-.filterControlWrap label {
+.filterControlWrap label,
+.filterInlineLabel {
   font-size: 12px;
   font-weight: 700;
   color: #6b5e58;
+  white-space: nowrap;
 }
 
 .productSelect {
@@ -375,6 +377,25 @@
 .productSelect:focus {
   outline: none;
   border-color: #b8860b;
+}
+
+.pageSizeLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b5e58;
+  white-space: nowrap;
+}
+
+.pageSizeAdminDropdown .adminDropdownTrigger {
+  height: 32px;
+  padding: 0 8px;
+  font-size: 12px;
+  border-radius: 6px;
+  min-height: 32px;
+}
+
+.pageSizeAdminDropdown .adminDropdownMenu {
+  min-width: 110px;
 }
 
 .clearAllFiltersBtn {
@@ -1188,16 +1209,16 @@
 }
 
 /* ==========================================================================
-   9. RESPONSIVE BREAKPOINTS
+   9. RESPONSIVE BREAKPOINTS (320px, 360px, 375px, 390px, 430px, 768px, 1024px, 1280px+)
    ========================================================================== */
 
-@media (max-width: 1100px) {
+@media (max-width: 1200px) {
   .productKpiGrid {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .productDashboardHeader {
     flex-direction: column;
     align-items: flex-start;
@@ -1218,6 +1239,26 @@
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
   }
+}
+
+@media (max-width: 768px) {
+  .productControlsToolbar {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .productFiltersRow {
+    gap: 10px;
+  }
+
+  .filterControlWrap {
+    flex: 1 1 160px;
+  }
+
+  .filterControlWrap .adminDropdownContainer {
+    width: 100%;
+    min-width: 0 !important;
+  }
 
   .clearAllFiltersBtn {
     margin-left: 0;
@@ -1227,32 +1268,229 @@
 }
 
 @media (max-width: 640px) {
-  .productKpiGrid {
-    grid-template-columns: 1fr 1fr;
+  .adminProductDashboard {
+    gap: 14px;
   }
 
+  .dashboardTitleRow {
+    gap: 10px;
+  }
+
+  .titleBadgeIcon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .titleWithCount h1 {
+    font-size: 1.35rem;
+  }
+
+  .productKpiGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .productKpiCard {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .kpiIconBox {
+    width: 34px;
+    height: 34px;
+  }
+
+  .kpiLabel {
+    font-size: 11px;
+  }
+
+  .kpiVal {
+    font-size: 1.25rem;
+  }
+
+  .productSearchInput {
+    height: 42px;
+    padding: 0 36px 0 38px;
+    font-size: 13.5px;
+  }
+
+  /* Structured 2-column mobile filter grid */
+  .productFiltersRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .filterControlWrap {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .filterControlWrap .adminDropdownContainer {
+    width: 100%;
+    min-width: 0 !important;
+  }
+
+  .clearAllFiltersBtn {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin-left: 0;
+    margin-top: 4px;
+  }
+
+  /* Hide table, show cards on mobile */
   .productTableWrap {
-    display: none; /* Hide wide table on small mobile */
+    display: none;
   }
 
   .productCardsMobileList {
-    display: flex; /* Show touch cards */
+    display: flex;
+    padding: 8px;
+    gap: 10px;
+  }
+
+  .productMobileCard {
+    border-radius: 10px;
+  }
+
+  .mobileCardTop {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .mobileCardThumb {
+    width: 64px;
+    height: 64px;
+  }
+
+  .mobileProductName {
+    font-size: 13.5px;
+  }
+
+  .mobilePriceVal {
+    font-size: 14.5px;
+  }
+
+  .mobileCardBottomActions {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+
+  .mobileActionBtn {
+    font-size: 12px;
+    min-height: 36px;
   }
 
   .productPaginationBar {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     gap: 12px;
+    padding: 14px;
+  }
+
+  .paginationInfo {
+    text-align: center;
+    font-size: 12px;
   }
 
   .paginationControls {
     width: 100%;
-    justify-content: space-between;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .pageSizeWrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .pageNavButtons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
   }
 }
 
-@media (max-width: 360px) {
+@media (max-width: 380px) {
+  .productDashboardHeader {
+    padding: 12px;
+  }
+
+  .titleWithCount h1 {
+    font-size: 1.22rem;
+  }
+
+  .productDashboardSub {
+    font-size: 11.5px;
+  }
+
+  .productDashboardHeaderActions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .primaryAddProductBtn,
+  .refreshCatalogueBtn {
+    width: 100%;
+    padding: 9px 12px;
+    font-size: 12.5px;
+  }
+
   .productKpiGrid {
     grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .productFiltersRow {
+    grid-template-columns: 1fr;
+  }
+
+  .productSearchInput {
+    font-size: 12.5px;
+    padding: 0 30px 0 34px;
+  }
+
+  .mobileCardTop {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .mobileCardThumb {
+    width: 100%;
+    height: 120px;
+  }
+
+  .mobileCardThumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .mobileCardBottomActions {
+    flex-wrap: wrap;
+  }
+
+  .mobileActionBtn {
+    flex: 1 1 calc(50% - 4px);
+    font-size: 11px;
+  }
+
+  .mobileCardBottomActions .adminRowActionWrap {
+    width: 100%;
+  }
+
+  .mobileCardBottomActions .adminRowActionWrap .rowActionTriggerBtn {
+    width: 100%;
+    height: 34px;
   }
 }

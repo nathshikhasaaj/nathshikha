@@ -1,0 +1,367 @@
+/* ==========================================================================
+   ADMIN DROPDOWN COMPONENT STYLES
+   Royal Nathshikha Palette: Maroon (#6d1b29), Gold (#b8860b), Cream (#fdfbf7)
+   ========================================================================== */
+
+.adminDropdownContainer {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.adminDropdownContainer.isFullWidth {
+  width: 100%;
+  display: flex;
+}
+
+.adminDropdownLabel {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #6b5e58;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+/* ==========================================================================
+   TRIGGER BUTTON
+   ========================================================================== */
+
+.adminDropdownTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1.5px solid #d8cab5;
+  background: #ffffff;
+  color: #3b2820;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.18s ease;
+  user-select: none;
+  box-sizing: border-box;
+  touch-action: manipulation;
+}
+
+.adminDropdownTrigger:hover {
+  background: #fdfbf7;
+  border-color: #b8860b;
+}
+
+.adminDropdownTrigger.isOpen {
+  border-color: #6d1b29;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(109, 27, 41, 0.12);
+}
+
+.dropdownTriggerText {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.dropdownSelectedLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.dropdownPlaceholder {
+  color: #8c7d75;
+  font-weight: 500;
+}
+
+.dropdownOptIcon {
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.dropdownCountBadge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #5b1420;
+  background: #faeff1;
+  border: 1px solid #ebdcc6;
+  padding: 1px 6px;
+  border-radius: 10px;
+  margin-left: 2px;
+}
+
+.dropdownChevronIcon {
+  color: #8c7d75;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+}
+
+.dropdownChevronIcon.isRotated {
+  transform: rotate(180deg);
+  color: #6d1b29;
+}
+
+/* ==========================================================================
+   FLOATING MENU POPOVER
+   ========================================================================== */
+
+.adminDropdownMenu {
+  position: absolute;
+  left: 0;
+  z-index: 1050;
+  min-width: 100%;
+  max-width: 320px;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #ebdcc6;
+  box-shadow: 0 12px 30px rgba(44, 22, 16, 0.14), 0 2px 6px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: dropdownFadeIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.adminDropdownMenu.directionDown {
+  top: calc(100% + 4px);
+}
+
+.adminDropdownMenu.directionUp {
+  bottom: calc(100% + 4px);
+  top: auto;
+  box-shadow: 0 -12px 30px rgba(44, 22, 16, 0.14), 0 -2px 6px rgba(0, 0, 0, 0.04);
+  animation: dropdownFadeInUp 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes dropdownFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ==========================================================================
+   MINI SEARCH BAR FOR LONG LISTS
+   ========================================================================== */
+
+.dropdownSearchWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  background: #fcf9f5;
+  border-bottom: 1px solid #ebdcc6;
+  box-sizing: border-box;
+}
+
+.dropdownSearchIcon {
+  color: #8c7d75;
+  position: absolute;
+  left: 18px;
+  pointer-events: none;
+}
+
+.dropdownSearchInput {
+  width: 100%;
+  height: 32px;
+  padding: 0 26px 0 28px;
+  border-radius: 6px;
+  border: 1px solid #d8cab5;
+  background: #ffffff;
+  font-size: 12.5px;
+  color: #2b1f1a;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.dropdownSearchInput:focus {
+  outline: none;
+  border-color: #b8860b;
+  box-shadow: 0 0 0 2px rgba(184, 134, 11, 0.15);
+}
+
+.dropdownClearSearchBtn {
+  position: absolute;
+  right: 16px;
+  background: transparent;
+  border: none;
+  color: #8c7d75;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dropdownClearSearchBtn:hover {
+  color: #6d1b29;
+}
+
+/* ==========================================================================
+   OPTIONS LIST & ITEMS (INTERNAL SCROLLING)
+   ========================================================================== */
+
+.dropdownOptionsList {
+  max-height: 230px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px;
+  box-sizing: border-box;
+  /* Smooth, slim scrollbars */
+  scrollbar-width: thin;
+  scrollbar-color: #d8cab5 transparent;
+}
+
+.dropdownOptionsList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dropdownOptionsList::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dropdownOptionsList::-webkit-scrollbar-thumb {
+  background-color: #d8cab5;
+  border-radius: 6px;
+}
+
+.dropdownOptionItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 36px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  color: #3b2820;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.dropdownOptionItem:hover:not(.isDisabled) {
+  background: #faeff1;
+  color: #6d1b29;
+}
+
+.dropdownOptionItem.isSelected {
+  background: #6d1b29;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.dropdownOptionItem.isSelected:hover {
+  background: #5b1420;
+  color: #ffffff;
+}
+
+.dropdownOptionItem.isDisabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.optionLabelWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.optColorBullet {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.optIcon {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.optText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.optCountTag {
+  font-size: 11.5px;
+  opacity: 0.75;
+  margin-left: 2px;
+  white-space: nowrap;
+}
+
+.optCheckIcon {
+  flex-shrink: 0;
+  color: #ffffff;
+}
+
+.dropdownNoResults {
+  padding: 16px 12px;
+  text-align: center;
+  font-size: 12.5px;
+  color: #8c7d75;
+}
+
+/* ==========================================================================
+   MOBILE RESPONSIVENESS
+   ========================================================================== */
+
+@media (max-width: 640px) {
+  .adminDropdownTrigger {
+    height: 40px;
+    font-size: 13px;
+  }
+
+  .adminDropdownMenu {
+    max-width: calc(100vw - 32px);
+    width: 100%;
+  }
+
+  .dropdownOptionsList {
+    max-height: 250px;
+  }
+
+  .dropdownOptionItem {
+    min-height: 40px;
+    padding: 10px 12px;
+    font-size: 13.5px;
+  }
+}
+

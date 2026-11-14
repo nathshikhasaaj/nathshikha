@@ -24,6 +24,8 @@ import {
 } from 'lucide-react';
 import { money } from '../../utils/formatters';
 import AdminProductDetailsModal from './AdminProductDetailsModal';
+import AdminDropdown from './AdminDropdown';
+import AdminRowActionMenu from './AdminRowActionMenu';
 import './AdminProductList.css';
 
 export default function AdminProductList({
@@ -81,6 +83,49 @@ export default function AdminProductList({
     });
     return Array.from(set).sort();
   }, [categoriesList, allProducts]);
+
+  // Memoized options for AdminDropdown selectors
+  const categoryOptions = useMemo(() => {
+    const opts = [
+      { value: 'ALL', label: `All Categories (${allProducts.length})` }
+    ];
+    availableCategories.forEach((cat) => {
+      const count = allProducts.filter((p) => p.category === cat).length;
+      opts.push({ value: cat, label: cat, count });
+    });
+    return opts;
+  }, [availableCategories, allProducts]);
+
+  const statusOptions = useMemo(() => [
+    { value: 'ALL', label: 'All Statuses' },
+    { value: 'LIVE', label: 'Live in Store', color: '#15803d' },
+    { value: 'HIDDEN', label: 'Hidden from Store', color: '#6b7280' }
+  ], []);
+
+  const stockOptions = useMemo(() => [
+    { value: 'ALL', label: 'All Stock Levels' },
+    { value: 'IN_STOCK', label: 'In Stock (> 5)', color: '#15803d' },
+    { value: 'LOW_STOCK', label: 'Low Stock (1–5)', color: '#b45309' },
+    { value: 'OUT_OF_STOCK', label: 'Out of Stock (0)', color: '#b91c1c' }
+  ], []);
+
+  const sortOptions = useMemo(() => [
+    { value: 'newest', label: 'Recently Added' },
+    { value: 'oldest', label: 'Oldest First' },
+    { value: 'name_asc', label: 'Name: A to Z' },
+    { value: 'name_desc', label: 'Name: Z to A' },
+    { value: 'price_asc', label: 'Price: Low to High' },
+    { value: 'price_desc', label: 'Price: High to Low' },
+    { value: 'stock_asc', label: 'Stock: Low to High' },
+    { value: 'stock_desc', label: 'Stock: High to Low' }
+  ], []);
+
+  const pageSizeOptions = useMemo(() => [
+    { value: 10, label: '10 / page' },
+    { value: 25, label: '25 / page' },
+    { value: 50, label: '50 / page' },
+    { value: 100, label: '100 / page' }
+  ], []);
 
   // Overall KPI Statistics
   const stats = useMemo(() => {
@@ -400,74 +445,50 @@ export default function AdminProductList({
         <div className="productFiltersRow">
           {/* Category Dropdown */}
           <div className="filterControlWrap">
-            <label htmlFor="catFilterSelect">Category:</label>
-            <select
-              id="catFilterSelect"
-              className="productSelect"
+            <label className="filterInlineLabel">Category:</label>
+            <AdminDropdown
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-            >
-              <option value="ALL">All Categories ({allProducts.length})</option>
-              {availableCategories.map((cat) => {
-                const count = allProducts.filter((p) => p.category === cat).length;
-                return (
-                  <option key={cat} value={cat}>
-                    {cat} ({count})
-                  </option>
-                );
-              })}
-            </select>
+              onChange={setSelectedCategory}
+              options={categoryOptions}
+              minWidth="175px"
+              placeholder="All Categories"
+            />
           </div>
 
           {/* Status Dropdown */}
           <div className="filterControlWrap">
-            <label htmlFor="statusFilterSelect">Status:</label>
-            <select
-              id="statusFilterSelect"
-              className="productSelect"
+            <label className="filterInlineLabel">Status:</label>
+            <AdminDropdown
               value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-            >
-              <option value="ALL">All Statuses</option>
-              <option value="LIVE">Live in Store</option>
-              <option value="HIDDEN">Hidden from Store</option>
-            </select>
+              onChange={setSelectedStatus}
+              options={statusOptions}
+              minWidth="155px"
+              placeholder="All Statuses"
+            />
           </div>
 
           {/* Stock Dropdown */}
           <div className="filterControlWrap">
-            <label htmlFor="stockFilterSelect">Stock:</label>
-            <select
-              id="stockFilterSelect"
-              className="productSelect"
+            <label className="filterInlineLabel">Stock:</label>
+            <AdminDropdown
               value={selectedStock}
-              onChange={(e) => setSelectedStock(e.target.value)}
-            >
-              <option value="ALL">All Stock Levels</option>
-              <option value="IN_STOCK">In Stock (&gt; 5)</option>
-              <option value="LOW_STOCK">Low Stock (1–5)</option>
-              <option value="OUT_OF_STOCK">Out of Stock (0)</option>
-            </select>
+              onChange={setSelectedStock}
+              options={stockOptions}
+              minWidth="160px"
+              placeholder="All Stock Levels"
+            />
           </div>
 
           {/* Sort By Dropdown */}
           <div className="filterControlWrap">
-            <label htmlFor="sortFilterSelect">Sort:</label>
-            <select
-              id="sortFilterSelect"
-              className="productSelect"
+            <label className="filterInlineLabel">Sort:</label>
+            <AdminDropdown
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-            >
-              <option value="newest">Recently Added</option>
-              <option value="oldest">Oldest First</option>
-              <option value="name_asc">Name: A to Z</option>
-              <option value="name_desc">Name: Z to A</option>
-              <option value="price_asc">Price: Low to High</option>
-              <option value="price_desc">Price: High to Low</option>
-              <option value="stock_asc">Stock: Low to High</option>
-              <option value="stock_desc">Stock: High to Low</option>
-            </select>
+              onChange={setSortBy}
+              options={sortOptions}
+              minWidth="165px"
+              placeholder="Sort By"
+            />
           </div>
 
           {/* Clear Filters Button */}
@@ -681,14 +702,14 @@ export default function AdminProductList({
                               <Pencil size={14} />
                             </button>
 
-                            <button
-                              type="button"
-                              className="tableActionBtn deleteBtn"
-                              onClick={() => setDeleteConfirmProduct(p)}
-                              title="Delete product permanently"
-                            >
-                              <Trash2 size={14} />
-                            </button>
+                            <AdminRowActionMenu
+                              product={p}
+                              onView={() => setViewingProduct(p)}
+                              onEdit={() => editProduct(p)}
+                              onToggleActive={toggleProductActive}
+                              onToggleBestseller={toggleProductBestseller}
+                              onDelete={() => setDeleteConfirmProduct(p)}
+                            />
                           </div>
                         </td>
                       </tr>
@@ -764,25 +785,14 @@ export default function AdminProductList({
                         <span>Edit</span>
                       </button>
 
-                      {toggleProductActive && (
-                        <button
-                          type="button"
-                          className="mobileActionBtn toggle"
-                          onClick={() => toggleProductActive(p)}
-                        >
-                          {isLive ? <EyeOff size={13} /> : <Eye size={13} />}
-                          <span>{isLive ? 'Hide' : 'Publish'}</span>
-                        </button>
-                      )}
-
-                      <button
-                        type="button"
-                        className="mobileActionBtn delete"
-                        onClick={() => setDeleteConfirmProduct(p)}
-                      >
-                        <Trash2 size={13} />
-                        <span>Delete</span>
-                      </button>
+                      <AdminRowActionMenu
+                        product={p}
+                        onView={() => setViewingProduct(p)}
+                        onEdit={() => editProduct(p)}
+                        onToggleActive={toggleProductActive}
+                        onToggleBestseller={toggleProductBestseller}
+                        onDelete={() => setDeleteConfirmProduct(p)}
+                      />
                     </div>
                   </div>
                 );
@@ -804,18 +814,15 @@ export default function AdminProductList({
               <div className="paginationControls">
                 {/* Rows per page selector */}
                 <div className="pageSizeWrap">
-                  <label htmlFor="pageSizeSelect">Per page:</label>
-                  <select
-                    id="pageSizeSelect"
-                    className="pageSizeSelect"
+                  <label className="pageSizeLabel">Per page:</label>
+                  <AdminDropdown
                     value={pageSize}
-                    onChange={(e) => setPageSize(Number(e.target.value))}
-                  >
-                    <option value={10}>10</option>
-                    <option value={25}>25</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
+                    onChange={(val) => setPageSize(Number(val))}
+                    options={pageSizeOptions}
+                    direction="up"
+                    minWidth="110px"
+                    className="pageSizeAdminDropdown"
+                  />
                 </div>
 
                 {/* Page Nav Buttons */}
