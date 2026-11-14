@@ -38,6 +38,7 @@ import AdminHeader from '../../components/admin/AdminHeader';
 import AdminStats from '../../components/admin/AdminStats';
 import AdminProductForm from '../../components/admin/AdminProductForm';
 import AdminProductList from '../../components/admin/AdminProductList';
+import AdminProductModal from '../../components/admin/AdminProductModal';
 import AdminOrderList from '../../components/admin/AdminOrderList';
 import AdminPaymentVerificationModal from '../../components/admin/AdminPaymentVerificationModal';
 import AdminOrderDetailsModal from '../../components/admin/AdminOrderDetailsModal';
@@ -112,6 +113,7 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
   const [isEditingShipment, setIsEditingShipment] = useState(false);
   const [cancellationModalOrder, setCancellationModalOrder] = useState(null);
   const [editOrderModalOrder, setEditOrderModalOrder] = useState(null);
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
 
   const handleOrderCreated = (newOrder) => {
     setOrders((prev) => [newOrder, ...prev]);
@@ -642,6 +644,7 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
       setToast(editing ? `✓ "${form.name}" updated successfully` : `✓ "${form.name}" added to catalogue!`);
       setForm(emptyForm);
       setEditing(null);
+      setIsProductModalOpen(false);
       await load();
       if (refreshProducts) refreshProducts();
       setTab('products');
@@ -652,9 +655,11 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
     }
   };
 
-  const removeProduct = async (id, name) => {
-    if (!window.confirm(`Are you sure you want to permanently delete "${name || 'this product'}"?\n\nThis will completely remove it from the database.`)) {
-      return;
+  const removeProduct = async (id, name, skipConfirm = false) => {
+    if (!skipConfirm) {
+      if (!window.confirm(`Are you sure you want to permanently delete "${name || 'this product'}"?\n\nThis will completely remove it from the database.`)) {
+        return;
+      }
     }
     try {
       await api(`/admin/products/${id}`, { method: 'DELETE' });
@@ -723,12 +728,7 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
       isBestseller: Boolean(p.isBestseller || p.is_bestseller || p.tag === 'BESTSELLER')
     });
     setTab('products');
-    const formElement = document.getElementById('adminProductFormTop');
-    if (formElement) {
-      formElement.scrollIntoView({ behavior: 'smooth' });
-    } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    setIsProductModalOpen(true);
   };
 
   const updateSuggestion = async (id, status, notes) => {
@@ -1095,24 +1095,23 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
 
           {/* TAB 4: PRODUCTS CATALOGUE */}
           {tab === 'products' && (
-            <div className="adminTwoCol">
-              <AdminProductForm
-                form={form}
-                setForm={setForm}
-                editing={editing}
-                setEditing={setEditing}
-                saveProduct={saveProduct}
-                uploadImage={uploadImage}
-                uploadMultipleImages={uploadMultipleImages}
-                busy={busy}
-                emptyForm={emptyForm}
-              />
+            <div className="adminProductsView">
               <AdminProductList
                 allProducts={allProducts}
-                editProduct={editProduct}
-                removeProduct={removeProduct}
+                categoriesList={categoriesList}
+                onAddNew={() => {
+                  setEditing(null);
+                  setForm(emptyForm);
+                  setIsProductModalOpen(true);
+                }}
+                editProduct={(p) => {
+                  editProduct(p);
+                }}
+                removeProduct={(id, name) => removeProduct(id, name, true)}
                 toggleProductActive={toggleProductActive}
                 toggleProductBestseller={toggleProductBestseller}
+                onRefresh={load}
+                refreshing={refreshing}
               />
             </div>
           )}
@@ -1371,6 +1370,25 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
         order={cancellationModalOrder}
         onReviewCancellation={handleReviewCancellation}
         onProcessRefund={handleProcessRefund}
+      />
+
+      {/* Admin Product Add / Edit Modal */}
+      <AdminProductModal
+        isOpen={isProductModalOpen}
+        onClose={() => {
+          setIsProductModalOpen(false);
+          setEditing(null);
+          setForm(emptyForm);
+        }}
+        form={form}
+        setForm={setForm}
+        editing={editing}
+        setEditing={setEditing}
+        saveProduct={saveProduct}
+        uploadImage={uploadImage}
+        uploadMultipleImages={uploadMultipleImages}
+        busy={busy}
+        emptyForm={emptyForm}
       />
     </div>
   );
