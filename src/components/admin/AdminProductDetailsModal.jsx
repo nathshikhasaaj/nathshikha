@@ -133,9 +133,10 @@ export default function AdminProductDetailsModal({
                   className="productDetailMainImg"
                   loading="eager"
                   onError={(e) => {
-                    if (product.img && e.target.src !== product.img) {
+                    e.target.onerror = null;
+                    if (product.img && !e.target.src.endsWith(product.img) && activeImage !== product.img) {
                       e.target.src = product.img;
-                    } else if (!e.target.src.includes('/assets/nath-category.jpg')) {
+                    } else {
                       e.target.src = '/assets/nath-category.jpg';
                     }
                   }}
@@ -160,9 +161,8 @@ export default function AdminProductDetailsModal({
                         src={imgUrl}
                         alt={`${product.name} thumb ${idx + 1}`}
                         onError={(e) => {
-                          if (!e.target.src.includes('/assets/nath-category.jpg')) {
-                            e.target.src = '/assets/nath-category.jpg';
-                          }
+                          e.target.onerror = null;
+                          e.target.src = '/assets/nath-category.jpg';
                         }}
                       />
                     </button>

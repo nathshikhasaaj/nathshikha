@@ -272,15 +272,17 @@ async function sendEmailCore({
   }
 
   const recipient = to.toLowerCase().trim();
+  const safeOrderId = (orderId && mongoose.Types.ObjectId.isValid(orderId)) ? orderId : null;
+  const safeUserId = (userId && mongoose.Types.ObjectId.isValid(userId)) ? userId : null;
 
   // If a recipient is provided but has an invalid format, warn and record delivery failure
   if (!isValidEmail(recipient)) {
     console.warn(`[EmailService] Skipped: invalid recipient "${recipient}" for ${emailType}`);
-    if (orderId && mongoose.connection?.readyState === 1) {
+    if (safeOrderId && mongoose.connection?.readyState === 1) {
       try {
         await EmailEvent.create({
-          orderId,
-          userId,
+          orderId: safeOrderId,
+          userId: safeUserId,
           emailType,
           recipient,
           subject,
@@ -289,7 +291,7 @@ async function sendEmailCore({
           metadata
         });
         await Order.updateOne(
-          { _id: orderId },
+          { _id: safeOrderId },
           {
             $set: {
               emailDeliveryStatus: 'failed',
@@ -314,8 +316,8 @@ async function sendEmailCore({
     if (mongoose.connection?.readyState === 1) {
       try {
         await EmailEvent.create({
-          orderId,
-          userId,
+          orderId: safeOrderId,
+          userId: safeUserId,
           emailType,
           recipient,
           subject,
@@ -344,8 +346,8 @@ async function sendEmailCore({
     console.log(`✓ [EmailService] ${emailType} sent to ${recipient} (MessageId: ${info.messageId})`);
 
     await EmailEvent.create({
-      orderId,
-      userId,
+      orderId: safeOrderId,
+      userId: safeUserId,
       emailType,
       recipient,
       subject,
@@ -353,9 +355,9 @@ async function sendEmailCore({
       metadata: { ...metadata, messageId: info.messageId }
     }).catch((dbErr) => console.error('[EmailService] Failed to log sent event:', dbErr.message));
 
-    if (orderId) {
+    if (safeOrderId) {
       await Order.updateOne(
-        { _id: orderId },
+        { _id: safeOrderId },
         {
           $set: {
             emailDeliveryStatus: 'delivered',
@@ -370,8 +372,8 @@ async function sendEmailCore({
     console.error(`✗ [EmailService] Failed to send ${emailType} to ${recipient}:`, err.message);
 
     await EmailEvent.create({
-      orderId,
-      userId,
+      orderId: safeOrderId,
+      userId: safeUserId,
       emailType,
       recipient,
       subject,
@@ -380,9 +382,9 @@ async function sendEmailCore({
       metadata
     }).catch((dbErr) => console.error('[EmailService] Failed to log failure event:', dbErr.message));
 
-    if (orderId) {
+    if (safeOrderId) {
       await Order.updateOne(
-        { _id: orderId },
+        { _id: safeOrderId },
         {
           $set: {
             emailDeliveryStatus: 'failed',
@@ -612,11 +614,28 @@ function renderOrderItemsTable(order) {
 /* ============================================================ */
 /* 3. ORDER PLACED EMAIL (PENDING PAYMENT VERIFICATION)         */
 /* ============================================================ */
-export async function sendOrderPlacedEmail(order) {
+export async function sendOrderPlacedEmail(order, options = {}) {
   const recipientEmail = order.customer_email || order.customerEmail || order.email;
   if (!recipientEmail || typeof recipientEmail !== 'string' || !recipientEmail.trim()) {
     console.log(`[EmailService] Skipped ORDER_PLACED: no customer email on Order #${order.order_no || order.orderNo}`);
     return { success: true, skipped: true, reason: 'No customer email address on order' };
+  }
+
+  const orderId = order._id || order.id;
+  const safeOrderId = (orderId && mongoose.Types.ObjectId.isValid(orderId)) ? orderId : null;
+
+  // STRICT IDEMPOTENCY GUARD: Do NOT send duplicate order placed emails unless explicitly resending
+  if (safeOrderId && !options.isResend && !options.force) {
+    const existingSent = await EmailEvent.findOne({
+      orderId: safeOrderId,
+      emailType: 'ORDER_PLACED',
+      status: 'sent'
+    });
+
+    if (existingSent) {
+      console.log(`[EmailService] Skipped duplicate ORDER_PLACED email for Order #${order.order_no || order.orderNo}`);
+      return { success: true, skipped: true, reason: 'Already sent' };
+    }
   }
 
   const baseUrl = getAppBaseUrl();
@@ -659,15 +678,16 @@ export async function sendOrderPlacedEmail(order) {
     }),
     text: `Your Nathshikha Order #${orderNo} has been placed and is pending payment verification. View at: ${orderUrl}`,
     emailType: 'ORDER_PLACED',
-    orderId: order._id || order.id,
-    userId: order.userId || order.user_id
+    orderId: safeOrderId,
+    userId: order.userId || order.user_id,
+    metadata: { isResend: Boolean(options.isResend) }
   });
 }
 
 /* ============================================================ */
 /* 4. ORDER CONFIRMED EMAIL (PAYMENT VERIFIED)                  */
 /* ============================================================ */
-export async function sendOrderConfirmedEmail(order) {
+export async function sendOrderConfirmedEmail(order, options = {}) {
   const recipientEmail = order.customer_email || order.customerEmail || order.email;
   if (!recipientEmail || typeof recipientEmail !== 'string' || !recipientEmail.trim()) {
     console.log(`[EmailService] Skipped ORDER_CONFIRMED: no customer email on Order #${order.order_no || order.orderNo}`);
@@ -675,17 +695,20 @@ export async function sendOrderConfirmedEmail(order) {
   }
 
   const orderId = order._id || order.id;
+  const safeOrderId = (orderId && mongoose.Types.ObjectId.isValid(orderId)) ? orderId : null;
 
-  // STRICT IDEMPOTENCY GUARD: Do NOT send duplicate order confirmed emails
-  const existingSent = await EmailEvent.findOne({
-    orderId,
-    emailType: 'ORDER_CONFIRMED',
-    status: 'sent'
-  });
+  // STRICT IDEMPOTENCY GUARD: Do NOT send duplicate order confirmed emails unless explicitly resending
+  if (safeOrderId && !options.isResend && !options.force) {
+    const existingSent = await EmailEvent.findOne({
+      orderId: safeOrderId,
+      emailType: 'ORDER_CONFIRMED',
+      status: 'sent'
+    });
 
-  if (existingSent) {
-    console.log(`[EmailService] Skipped duplicate ORDER_CONFIRMED email for Order #${order.order_no || order.orderNo}`);
-    return { success: true, skipped: true, reason: 'Already sent' };
+    if (existingSent) {
+      console.log(`[EmailService] Skipped duplicate ORDER_CONFIRMED email for Order #${order.order_no || order.orderNo}`);
+      return { success: true, skipped: true, reason: 'Already sent' };
+    }
   }
 
   const baseUrl = getAppBaseUrl();
@@ -744,19 +767,203 @@ export async function sendOrderConfirmedEmail(order) {
     }),
     text: `Your payment has been verified and your Nathshikha Order #${orderNo} is confirmed! Expected Delivery: ${expectedDateText}. View at: ${orderUrl}`,
     emailType: 'ORDER_CONFIRMED',
-    orderId,
-    userId: order.userId || order.user_id
+    orderId: safeOrderId,
+    userId: order.userId || order.user_id,
+    metadata: { isResend: Boolean(options.isResend) }
+  });
+}
+
+/* ============================================================ */
+/* 4A. ORDER MAKING EMAIL (ARTISAN CRAFTING IN PROGRESS)         */
+/* ============================================================ */
+export async function sendOrderMakingEmail(order, options = {}) {
+  const recipientEmail = order.customer_email || order.customerEmail || order.email;
+  if (!recipientEmail || typeof recipientEmail !== 'string' || !recipientEmail.trim()) {
+    console.log(`[EmailService] Skipped ORDER_MAKING: no customer email on Order #${order.order_no || order.orderNo}`);
+    return { success: true, skipped: true, reason: 'No customer email address on order' };
+  }
+
+  const orderId = order._id || order.id;
+  const safeOrderId = (orderId && mongoose.Types.ObjectId.isValid(orderId)) ? orderId : null;
+
+  // STRICT IDEMPOTENCY GUARD: Do NOT send duplicate order making emails unless explicitly resending
+  if (safeOrderId && !options.isResend && !options.force) {
+    const existingSent = await EmailEvent.findOne({
+      orderId: safeOrderId,
+      emailType: 'ORDER_MAKING',
+      status: 'sent'
+    });
+
+    if (existingSent) {
+      console.log(`[EmailService] Skipped duplicate ORDER_MAKING email for Order #${order.order_no || order.orderNo}`);
+      return { success: true, skipped: true, reason: 'Already sent' };
+    }
+  }
+
+  const baseUrl = getAppBaseUrl();
+  const orderUrl = `${baseUrl}/orders`;
+  const recipientName = order.customer_name || order.customerName || order.name || 'Valued Customer';
+  const orderNo = order.order_no || order.orderNo;
+
+  const expectedDateText = (order.expected_delivery_date || order.expectedDeliveryDate)
+    ? new Date(order.expected_delivery_date || order.expectedDeliveryDate).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      })
+    : (order.confirmed_at || order.confirmedAt)
+    ? new Date(new Date(order.confirmed_at || order.confirmedAt).getTime() + 20 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      })
+    : 'Within 20 days of order confirmation';
+
+  const contentHtml = `
+    <h2 style="margin:0 0 14px 0; font-size: 20px;">Artisan Crafting in Progress ✨</h2>
+    <p>Dear <strong>${recipientName}</strong>,</p>
+    <p>Wonderful news! Our master artisans have begun handcrafted making of your heirloom jewellery for Order <strong>#${orderNo}</strong>.</p>
+    
+    <div class="notice-card" style="border-left-color: #d4af37; background-color: #fdfaf4;">
+      <p style="margin:0 0 8px 0; font-size:13.5px; color:#6d1b29;">
+        ✨ <strong>Handcrafted Maharashtrian Heritage:</strong> Each pearl, ghungroo, and gold stone is being meticulously set by hand in our studio with authentic devotion.
+      </p>
+      <p style="margin:0; font-size:13px; color:#78350f;">
+        📅 <strong>Expected Delivery:</strong> <strong>${expectedDateText}</strong>
+      </p>
+    </div>
+
+    ${renderOrderItemsTable(order)}
+
+    <div style="background:#faf5ee; border:1px solid #ebdcc6; border-radius:6px; padding:16px; margin:20px 0;">
+      <h4 style="margin:0 0 8px 0; color:#6d1b29; font-size:13px; text-transform:uppercase;">Delivery Destination</h4>
+      <p style="margin:0; font-size:13px; color:#475569;">
+        <strong>Recipient:</strong> ${order.recipient_name || order.recipientName || order.name}<br>
+        <strong>Address:</strong> ${order.address}, ${order.city}, ${order.state} - ${order.pincode}<br>
+        <strong>Contact:</strong> ${order.recipient_phone || order.recipientPhone || order.phone}
+      </p>
+    </div>
+  `;
+
+  return sendEmailCore({
+    to: recipientEmail,
+    subject: `Your Nathshikha Order #${orderNo} is Being Handcrafted by Our Artisans`,
+    html: renderEmailLayout({
+      title: `Order #${orderNo} Crafting in Progress`,
+      previewText: `Our artisans have begun crafting your jewellery for Order #${orderNo}!`,
+      contentHtml,
+      ctaText: 'Track Order Status',
+      ctaUrl: orderUrl
+    }),
+    text: `Our master artisans have begun handcrafting your jewellery for Nathshikha Order #${orderNo}! Expected Delivery: ${expectedDateText}. Track at: ${orderUrl}`,
+    emailType: 'ORDER_MAKING',
+    orderId: safeOrderId,
+    userId: order.userId || order.user_id,
+    metadata: { isResend: Boolean(options.isResend) }
+  });
+}
+
+/* ============================================================ */
+/* 4B. ORDER PACKING EMAIL (QC & PACKAGING IN PROGRESS)         */
+/* ============================================================ */
+export async function sendOrderPackingEmail(order, options = {}) {
+  const recipientEmail = order.customer_email || order.customerEmail || order.email;
+  if (!recipientEmail || typeof recipientEmail !== 'string' || !recipientEmail.trim()) {
+    console.log(`[EmailService] Skipped ORDER_PACKING: no customer email on Order #${order.order_no || order.orderNo}`);
+    return { success: true, skipped: true, reason: 'No customer email address on order' };
+  }
+
+  const orderId = order._id || order.id;
+  const safeOrderId = (orderId && mongoose.Types.ObjectId.isValid(orderId)) ? orderId : null;
+
+  // STRICT IDEMPOTENCY GUARD: Do NOT send duplicate order packing emails unless explicitly resending
+  if (safeOrderId && !options.isResend && !options.force) {
+    const existingSent = await EmailEvent.findOne({
+      orderId: safeOrderId,
+      emailType: 'ORDER_PACKING',
+      status: 'sent'
+    });
+
+    if (existingSent) {
+      console.log(`[EmailService] Skipped duplicate ORDER_PACKING email for Order #${order.order_no || order.orderNo}`);
+      return { success: true, skipped: true, reason: 'Already sent' };
+    }
+  }
+
+  const baseUrl = getAppBaseUrl();
+  const orderUrl = `${baseUrl}/orders`;
+  const recipientName = order.customer_name || order.customerName || order.name || 'Valued Customer';
+  const orderNo = order.order_no || order.orderNo;
+
+  const contentHtml = `
+    <h2 style="margin:0 0 14px 0; font-size: 20px;">Quality Check & Packaging in Progress 🎁</h2>
+    <p>Dear <strong>${recipientName}</strong>,</p>
+    <p>Your handcrafted jewellery for Order <strong>#${orderNo}</strong> has been completed by our artisans and is now in our <strong>Quality Inspection & Packaging</strong> phase.</p>
+    
+    <div class="notice-card" style="border-left-color: #0284c7; background-color: #f0f9ff;">
+      <p style="margin:0 0 6px 0; font-size:13.5px; color:#0369a1;">
+        🔍 <strong>Quality Assured:</strong> Every piece is meticulously checked for stone setting, finish, and durability before being nestled in our protective royal keepsake box.
+      </p>
+      <p style="margin:0; font-size:12.5px; color:#0c4a6e;">
+        📦 Next step: Your package will be sealed and handed over to our courier partner for dispatch!
+      </p>
+    </div>
+
+    ${renderOrderItemsTable(order)}
+
+    <div style="background:#faf5ee; border:1px solid #ebdcc6; border-radius:6px; padding:16px; margin:20px 0;">
+      <h4 style="margin:0 0 8px 0; color:#6d1b29; font-size:13px; text-transform:uppercase;">Delivery Destination</h4>
+      <p style="margin:0; font-size:13px; color:#475569;">
+        <strong>Recipient:</strong> ${order.recipient_name || order.recipientName || order.name}<br>
+        <strong>Address:</strong> ${order.address}, ${order.city}, ${order.state} - ${order.pincode}<br>
+        <strong>Contact:</strong> ${order.recipient_phone || order.recipientPhone || order.phone}
+      </p>
+    </div>
+  `;
+
+  return sendEmailCore({
+    to: recipientEmail,
+    subject: `Your Nathshikha Order #${orderNo} is in Quality Inspection & Packaging`,
+    html: renderEmailLayout({
+      title: `Order #${orderNo} in Packaging`,
+      previewText: `Your jewellery for Order #${orderNo} is undergoing quality check and luxury packaging!`,
+      contentHtml,
+      ctaText: 'Track Order Status',
+      ctaUrl: orderUrl
+    }),
+    text: `Your handcrafted jewellery for Nathshikha Order #${orderNo} is undergoing Quality Check & Packaging! Track at: ${orderUrl}`,
+    emailType: 'ORDER_PACKING',
+    orderId: safeOrderId,
+    userId: order.userId || order.user_id,
+    metadata: { isResend: Boolean(options.isResend) }
   });
 }
 
 /* ============================================================ */
 /* 5. ORDER SHIPPED EMAIL (WITH TRACKING & UNBOXING NOTICE)     */
 /* ============================================================ */
-export async function sendOrderShippedEmail(order) {
+export async function sendOrderShippedEmail(order, options = {}) {
   const recipientEmail = order.customer_email || order.customerEmail || order.email;
   if (!recipientEmail || typeof recipientEmail !== 'string' || !recipientEmail.trim()) {
     console.log(`[EmailService] Skipped ORDER_SHIPPED: no customer email on Order #${order.order_no || order.orderNo}`);
     return { success: true, skipped: true, reason: 'No customer email address on order' };
+  }
+
+  const orderId = order._id || order.id;
+  const safeOrderId = (orderId && mongoose.Types.ObjectId.isValid(orderId)) ? orderId : null;
+
+  // STRICT IDEMPOTENCY GUARD: Do NOT send duplicate order shipped emails unless explicitly resending
+  if (safeOrderId && !options.isResend && !options.force) {
+    const existingSent = await EmailEvent.findOne({
+      orderId: safeOrderId,
+      emailType: 'ORDER_SHIPPED',
+      status: 'sent'
+    });
+
+    if (existingSent) {
+      console.log(`[EmailService] Skipped duplicate ORDER_SHIPPED email for Order #${order.order_no || order.orderNo}`);
+      return { success: true, skipped: true, reason: 'Already sent' };
+    }
   }
 
   const baseUrl = getAppBaseUrl();
@@ -818,20 +1025,37 @@ export async function sendOrderShippedEmail(order) {
     }),
     text: `Your Nathshikha Order #${orderNo} has shipped via ${partner} with tracking ID ${trackingId}. View order: ${orderUrl}`,
     emailType: 'ORDER_SHIPPED',
-    orderId: order._id || order.id,
+    orderId: safeOrderId,
     userId: order.userId || order.user_id,
-    metadata: { partner, trackingId, groupCode }
+    metadata: { partner, trackingId, groupCode, isResend: Boolean(options.isResend) }
   });
 }
 
 /* ============================================================ */
 /* 6. ORDER DELIVERED EMAIL (WITH REVIEW CTA)                   */
 /* ============================================================ */
-export async function sendOrderDeliveredEmail(order) {
+export async function sendOrderDeliveredEmail(order, options = {}) {
   const recipientEmail = order.customer_email || order.customerEmail || order.email;
   if (!recipientEmail || typeof recipientEmail !== 'string' || !recipientEmail.trim()) {
     console.log(`[EmailService] Skipped ORDER_DELIVERED: no customer email on Order #${order.order_no || order.orderNo}`);
     return { success: true, skipped: true, reason: 'No customer email address on order' };
+  }
+
+  const orderId = order._id || order.id;
+  const safeOrderId = (orderId && mongoose.Types.ObjectId.isValid(orderId)) ? orderId : null;
+
+  // STRICT IDEMPOTENCY GUARD: Do NOT send duplicate order delivered emails unless explicitly resending
+  if (safeOrderId && !options.isResend && !options.force) {
+    const existingSent = await EmailEvent.findOne({
+      orderId: safeOrderId,
+      emailType: 'ORDER_DELIVERED',
+      status: 'sent'
+    });
+
+    if (existingSent) {
+      console.log(`[EmailService] Skipped duplicate ORDER_DELIVERED email for Order #${order.order_no || order.orderNo}`);
+      return { success: true, skipped: true, reason: 'Already sent' };
+    }
   }
 
   const baseUrl = getAppBaseUrl();
@@ -866,9 +1090,56 @@ export async function sendOrderDeliveredEmail(order) {
     }),
     text: `Your Nathshikha Order #${orderNo} has been delivered! Write a review: ${reviewUrl}`,
     emailType: 'ORDER_DELIVERED',
-    orderId: order._id || order.id,
-    userId: order.userId || order.user_id
+    orderId: safeOrderId,
+    userId: order.userId || order.user_id,
+    metadata: { isResend: Boolean(options.isResend) }
   });
+}
+
+/* ============================================================ */
+/* 6B. UNIFIED STATUS CHANGE EMAIL DISPATCHER                   */
+/* ============================================================ */
+export async function dispatchOrderStatusEmail(order, previousStatus = null, options = {}) {
+  if (!order) return { success: false, skipped: true, reason: 'No order provided' };
+
+  const currentStatus = String(order.orderStatus || order.order_status || '').toLowerCase().trim();
+  const prevStatus = previousStatus ? String(previousStatus).toLowerCase().trim() : null;
+
+  // If status did not actually change, skip sending duplicate status change email
+  if (prevStatus && currentStatus === prevStatus && !options.force && !options.isResend) {
+    console.log(`[EmailService] Skipped status email: status '${currentStatus}' has not changed for Order #${order.order_no || order.orderNo}`);
+    return { success: true, skipped: true, reason: 'Status unchanged' };
+  }
+
+  const recipientEmail = order.customer_email || order.customerEmail || order.email;
+  if (!recipientEmail || typeof recipientEmail !== 'string' || !recipientEmail.trim()) {
+    console.log(`[EmailService] Skipped status email: no customer email on Order #${order.order_no || order.orderNo}`);
+    return { success: true, skipped: true, reason: 'No customer email address on order' };
+  }
+
+  try {
+    switch (currentStatus) {
+      case 'placed':
+        return await sendOrderPlacedEmail(order, options);
+      case 'confirmed':
+        return await sendOrderConfirmedEmail(order, options);
+      case 'making':
+        return await sendOrderMakingEmail(order, options);
+      case 'packing':
+      case 'processing':
+        return await sendOrderPackingEmail(order, options);
+      case 'shipped':
+        return await sendOrderShippedEmail(order, options);
+      case 'delivered':
+        return await sendOrderDeliveredEmail(order, options);
+      default:
+        console.log(`[EmailService] No email template mapped for status '${currentStatus}' on Order #${order.order_no || order.orderNo}`);
+        return { success: true, skipped: true, reason: `No email template for status: ${currentStatus}` };
+    }
+  } catch (err) {
+    console.error(`[EmailService] Error in dispatchOrderStatusEmail for Order #${order.order_no || order.orderNo}:`, err.message);
+    return { success: false, error: err.message };
+  }
 }
 
 /* ============================================================ */
@@ -1101,41 +1372,17 @@ export async function resendOrderEmail(order, emailType) {
     case 'ASSISTED_ORDER_SENT':
       return sendAssistedOrderEmail(order);
     case 'ORDER_PLACED':
-      return sendOrderPlacedEmail(order);
-    case 'ORDER_CONFIRMED': {
-      // For manual resend, bypass duplicate check by sending directly
-      const baseUrl = getAppBaseUrl();
-      const orderUrl = `${baseUrl}/orders`;
-      const recipientEmail = order.customer_email || order.customerEmail || order.email;
-      const recipientName = order.customer_name || order.customerName || order.name || 'Valued Customer';
-      const orderNo = order.order_no || order.orderNo;
-      const contentHtml = `
-        <h2 style="margin:0 0 14px 0; font-size: 20px;">Order Confirmed ✓</h2>
-        <p>Dear <strong>${recipientName}</strong>,</p>
-        <p>Your payment has been verified and your order <strong>#${orderNo}</strong> is confirmed.</p>
-        ${renderOrderItemsTable(order)}
-      `;
-      return sendEmailCore({
-        to: recipientEmail,
-        subject: `Your Nathshikha Order #${orderNo} is Confirmed (Resent)`,
-        html: renderEmailLayout({
-          title: `Order #${orderNo} Confirmed`,
-          previewText: `Payment verified! Order #${orderNo} has been confirmed.`,
-          contentHtml,
-          ctaText: 'View My Order',
-          ctaUrl: orderUrl
-        }),
-        text: `Your Nathshikha Order #${orderNo} is confirmed. View at: ${orderUrl}`,
-        emailType: 'ORDER_CONFIRMED',
-        orderId: order._id || order.id,
-        userId: order.userId || order.user_id,
-        metadata: { isResend: true }
-      });
-    }
+      return sendOrderPlacedEmail(order, { isResend: true, force: true });
+    case 'ORDER_CONFIRMED':
+      return sendOrderConfirmedEmail(order, { isResend: true, force: true });
+    case 'ORDER_MAKING':
+      return sendOrderMakingEmail(order, { isResend: true, force: true });
+    case 'ORDER_PACKING':
+      return sendOrderPackingEmail(order, { isResend: true, force: true });
     case 'ORDER_SHIPPED':
-      return sendOrderShippedEmail(order);
+      return sendOrderShippedEmail(order, { isResend: true, force: true });
     case 'ORDER_DELIVERED':
-      return sendOrderDeliveredEmail(order);
+      return sendOrderDeliveredEmail(order, { isResend: true, force: true });
     case 'CANCELLATION_APPROVED':
       return sendCancellationApprovedEmail(order);
     case 'REFUND_COMPLETED':

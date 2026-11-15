@@ -26,6 +26,9 @@ import {
   sendAdminTestEmail,
   sendAssistedOrderEmail,
   sendOrderPlacedEmail,
+  sendOrderMakingEmail,
+  sendOrderPackingEmail,
+  dispatchOrderStatusEmail,
   resendOrderEmail
 } from '../services/emailService.js';
 
@@ -2029,10 +2032,10 @@ router.patch('/orders/:id', async (req, res) => {
 
     await order.save();
 
-    // If order was just marked as delivered, send Delivered email
-    if (orderStatus === 'delivered' && previousStatus !== 'delivered') {
-      sendOrderDeliveredEmail(order).catch((err) => {
-        console.error('[Admin] Failed to send order delivered email:', err.message);
+    // Trigger automatic customer status email whenever order status genuinely changes
+    if (orderStatus && orderStatus !== previousStatus) {
+      dispatchOrderStatusEmail(order, previousStatus).catch((err) => {
+        console.error(`[Admin] Failed to dispatch status email for order #${order.orderNo || order.order_no} [${orderStatus}]:`, err.message);
       });
     }
 

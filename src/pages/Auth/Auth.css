@@ -340,3 +340,40 @@
   font-size: 12.5px;
   font-weight: 600;
 }
+
+/* Responsive adjustments for Auth forms */
+@media (max-width: 480px) {
+  .authFormCard {
+    padding: 24px 18px;
+    border-radius: 8px;
+  }
+  
+  .authContainer input {
+    padding: 11px 12px;
+    font-size: 14px;
+  }
+
+  .authSubmitBtn {
+    height: 48px;
+  }
+
+  .unverifiedEmailNotice {
+    padding: 12px 12px;
+    gap: 8px;
+  }
+
+  .registerSuccessCard {
+    padding: 28px 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  .authFormCard {
+    padding: 18px 12px;
+  }
+
+  .authContainer input {
+    padding: 10px 10px;
+    font-size: 13px;
+  }
+}

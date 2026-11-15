@@ -1039,4 +1039,34 @@
   .trashSelect, .trashToggleBtn {
     width: 100%;
   }
+  .trashDetailsGrid {
+    grid-template-columns: 1fr;
+  }
+  .trashModalContent {
+    max-width: 95vw;
+    padding: 1.25rem 1rem;
+    max-height: 90vh;
+  }
+  .modalActions {
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+  }
+  .cancelRestoreBtn, .confirmRestoreBtn {
+    width: 100%;
+    flex: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .deletionGrid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  .cardRow {
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+  .cardRow b {
+    text-align: left;
+  }
 }

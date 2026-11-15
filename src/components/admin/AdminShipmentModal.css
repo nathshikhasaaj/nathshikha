@@ -95,9 +95,29 @@
   margin-top: 2px;
 }
 
+.modalActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 14px;
+  border-top: 1px solid #ebdcc5;
+}
+
 @media (max-width: 500px) {
   .shipmentOrderContextBox {
     grid-template-columns: 1fr;
     gap: 8px;
+  }
+
+  .modalActions {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .modalActions button {
+    width: 100%;
+    justify-content: center;
   }
 }

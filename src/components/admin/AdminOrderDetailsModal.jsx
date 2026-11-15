@@ -22,7 +22,6 @@ import {
   Loader2,
   AlertTriangle,
   RotateCcw,
-  Box,
   Boxes,
   FileText,
   Sparkles,
@@ -31,12 +30,10 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { api } from '../../services/api';
-import { money, formatOrderStatus, formatWhatsAppPhone, formatOrderAge } from '../../utils/formatters';
+import { money, formatOrderStatus, formatWhatsAppPhone } from '../../utils/formatters';
 import { getParameterEntries } from '../../utils/parameterHelpers';
 import AdminOrderBillModal from './AdminOrderBillModal';
 import AdminEditEmailModal from './AdminEditEmailModal';
-import AdminOrderPriorityModal from './AdminOrderPriorityModal';
-import { calculateOrderPriority } from '../../utils/orderPriorityEngine';
 import './AdminOrderDetailsModal.css';
 
 export default function AdminOrderDetailsModal({
@@ -57,7 +54,6 @@ export default function AdminOrderDetailsModal({
   const [copyNotice, setCopyNotice] = useState('');
   const [isBillModalOpen, setIsBillModalOpen] = useState(false);
   const [isEditEmailModalOpen, setIsEditEmailModalOpen] = useState(false);
-  const [isPriorityModalOpen, setIsPriorityModalOpen] = useState(false);
   const [emailEvents, setEmailEvents] = useState([]);
   const [loadingEmails, setLoadingEmails] = useState(false);
   const [resendingEmail, setResendingEmail] = useState(false);
@@ -87,8 +83,6 @@ export default function AdminOrderDetailsModal({
   }, [isOpen, order?.id, order?._id, order?.email, order?.customer_email, order?.email_delivery_status, order?.emailDeliveryStatus]);
 
   if (!isOpen || !order) return null;
-
-  const priorityMeta = calculateOrderPriority(order);
 
   const isVerified =
     order.payment_status === 'verified' ||
@@ -352,25 +346,6 @@ export default function AdminOrderDetailsModal({
               </b>
             </div>
 
-            <div className="bannerStatusItem">
-              <span>Priority Level:</span>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                <b className={`priorityStatusPill ${priorityMeta.badgeClass}`} title={priorityMeta.reason}>
-                  <span className="priorityBullet" />
-                  {priorityMeta.label}
-                </b>
-                <button
-                  type="button"
-                  className="outlineBtn compact"
-                  style={{ padding: '2px 8px', fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 3 }}
-                  onClick={() => setIsPriorityModalOpen(true)}
-                  title="Edit manual priority or operational note"
-                >
-                  <Edit3 size={11} /> Priority
-                </button>
-              </div>
-            </div>
-
             {Boolean(order.free_gift?.included || order.freeGift?.included) && (
               <div className="bannerStatusItem">
                 <span>Special Privilege:</span>
@@ -433,163 +408,6 @@ export default function AdminOrderDetailsModal({
                 <RotateCcw size={14} /> Process Refund
               </button>
             )}
-          </div>
-
-          {/* ========================================================================= */}
-          {/* CHRONOLOGICAL ORDER LIFECYCLE TIMELINE STEPPER                            */}
-          {/* ========================================================================= */}
-          <div className="orderLifecycleStepperCard">
-            <div className="stepperCardHeader">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Clock size={16} />
-                <h4>Chronological Fulfillment Lifecycle</h4>
-              </div>
-              <span className="stepperAgingText">
-                Order Age: <b>{formatOrderAge(priorityMeta.orderAgeDays)}</b>
-                {priorityMeta.productionAgeDays !== priorityMeta.orderAgeDays && (
-                  <span> · In Production: <b>{formatOrderAge(priorityMeta.productionAgeDays)}</b></span>
-                )}
-                {priorityMeta.isOverdue && (
-                  <span style={{ color: '#dc2626', fontWeight: 700, marginLeft: 6 }}>
-                    ⚠️ {priorityMeta.daysOverdue}d Overdue
-                  </span>
-                )}
-              </span>
-            </div>
-
-            <div className="orderTimelineStepper">
-              {/* Step 1: Placed */}
-              <div className="stepperStep completed">
-                <div className="stepIconCircle">
-                  <Check size={12} />
-                </div>
-                <div className="stepInfo">
-                  <span className="stepTitle">Order Placed</span>
-                  <span className="stepTime">
-                    {order.created_at || order.createdAt
-                      ? new Date(order.created_at || order.createdAt).toLocaleDateString('en-IN', {
-                          day: 'numeric',
-                          month: 'short',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })
-                      : 'Recorded'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Step 2: Payment Verified */}
-              <div className={`stepperStep ${isVerified ? 'completed' : 'current'}`}>
-                <div className="stepIconCircle">
-                  {isVerified ? <Check size={12} /> : <Clock size={12} />}
-                </div>
-                <div className="stepInfo">
-                  <span className="stepTitle">Payment Verified</span>
-                  <span className="stepTime">
-                    {order.verified_at || order.verifiedAt
-                      ? new Date(order.verified_at || order.verifiedAt).toLocaleDateString('en-IN', {
-                          day: 'numeric',
-                          month: 'short',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })
-                      : isVerified
-                      ? 'Verified'
-                      : 'Awaiting Verification'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Step 3: Confirmed */}
-              <div className={`stepperStep ${order.confirmed_at || order.confirmedAt ? 'completed' : isVerified ? 'current' : 'pending'}`}>
-                <div className="stepIconCircle">
-                  {order.confirmed_at || order.confirmedAt ? <Check size={12} /> : <Package size={12} />}
-                </div>
-                <div className="stepInfo">
-                  <span className="stepTitle">Order Confirmed</span>
-                  <span className="stepTime">
-                    {order.confirmed_at || order.confirmedAt
-                      ? new Date(order.confirmed_at || order.confirmedAt).toLocaleDateString('en-IN', {
-                          day: 'numeric',
-                          month: 'short'
-                        })
-                      : 'Pending Confirmation'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Step 4: Making */}
-              <div className={`stepperStep ${['making', 'packing', 'processing', 'shipped', 'delivered'].includes(order.order_status || order.orderStatus) ? (['packing', 'processing', 'shipped', 'delivered'].includes(order.order_status || order.orderStatus) ? 'completed' : 'current') : 'pending'}`}>
-                <div className="stepIconCircle">
-                  {['packing', 'processing', 'shipped', 'delivered'].includes(order.order_status || order.orderStatus) ? <Check size={12} /> : <Sparkles size={12} />}
-                </div>
-                <div className="stepInfo">
-                  <span className="stepTitle">Artisan Making</span>
-                  <span className="stepTime">
-                    {order.status_timestamps?.making_started_at || order.statusTimestamps?.makingStartedAt
-                      ? new Date(order.status_timestamps?.making_started_at || order.statusTimestamps?.makingStartedAt).toLocaleDateString('en-IN', {
-                          day: 'numeric',
-                          month: 'short'
-                        })
-                      : (order.order_status === 'making' ? 'In Progress' : ['packing', 'processing', 'shipped', 'delivered'].includes(order.order_status || order.orderStatus) ? 'Completed' : 'Pending')}
-                  </span>
-                </div>
-              </div>
-
-              {/* Step 5: Packing */}
-              <div className={`stepperStep ${['packing', 'processing', 'shipped', 'delivered'].includes(order.order_status || order.orderStatus) ? (['shipped', 'delivered'].includes(order.order_status || order.orderStatus) ? 'completed' : 'current') : 'pending'}`}>
-                <div className="stepIconCircle">
-                  {['shipped', 'delivered'].includes(order.order_status || order.orderStatus) ? <Check size={12} /> : <Box size={12} />}
-                </div>
-                <div className="stepInfo">
-                  <span className="stepTitle">QC & Packaging</span>
-                  <span className="stepTime">
-                    {order.status_timestamps?.packing_started_at || order.statusTimestamps?.packingStartedAt
-                      ? new Date(order.status_timestamps?.packing_started_at || order.statusTimestamps?.packingStartedAt).toLocaleDateString('en-IN', {
-                          day: 'numeric',
-                          month: 'short'
-                        })
-                      : (['packing', 'processing'].includes(order.order_status || order.orderStatus) ? 'Packed & Ready' : ['shipped', 'delivered'].includes(order.order_status || order.orderStatus) ? 'Completed' : 'Pending')}
-                  </span>
-                </div>
-              </div>
-
-              {/* Step 6: Shipped */}
-              <div className={`stepperStep ${isShipped ? (isDelivered ? 'completed' : 'current') : 'pending'}`}>
-                <div className="stepIconCircle">
-                  {isDelivered ? <Check size={12} /> : <Truck size={12} />}
-                </div>
-                <div className="stepInfo">
-                  <span className="stepTitle">Dispatched</span>
-                  <span className="stepTime">
-                    {order.shipped_at || order.shippedAt
-                      ? new Date(order.shipped_at || order.shippedAt).toLocaleDateString('en-IN', {
-                          day: 'numeric',
-                          month: 'short'
-                        })
-                      : (isShipped ? 'Dispatched' : 'Awaiting Courier')}
-                  </span>
-                </div>
-              </div>
-
-              {/* Step 7: Delivered */}
-              <div className={`stepperStep ${isDelivered ? 'completed' : 'pending'}`}>
-                <div className="stepIconCircle">
-                  <CheckCircle2 size={12} />
-                </div>
-                <div className="stepInfo">
-                  <span className="stepTitle">Delivered</span>
-                  <span className="stepTime">
-                    {order.delivered_at || order.deliveredAt
-                      ? new Date(order.delivered_at || order.deliveredAt).toLocaleDateString('en-IN', {
-                          day: 'numeric',
-                          month: 'short'
-                        })
-                      : (isDelivered ? 'Delivered' : 'Pending Delivery')}
-                  </span>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Cancellation Information Card if Applicable */}
@@ -812,6 +630,9 @@ export default function AdminOrderDetailsModal({
                         alt="Customer Reference Design"
                         className="customAdminThumbnail"
                         onClick={() => window.open(customizationImgUrl, '_blank', 'noopener,noreferrer')}
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
                       />
                       <div className="customImageMeta">
                         <span className="imageName">Reference Design Sketch / Photo</span>
@@ -1699,6 +1520,8 @@ export default function AdminOrderDetailsModal({
                   >
                     <option value="ORDER_PLACED">Order Placed Email</option>
                     <option value="ORDER_CONFIRMED">Order Confirmed Email</option>
+                    <option value="ORDER_MAKING">Artisan Crafting Email</option>
+                    <option value="ORDER_PACKING">QC & Packaging Email</option>
                     <option value="ORDER_SHIPPED">Order Shipped Email</option>
                     <option value="ORDER_DELIVERED">Order Delivered Email</option>
                     <option value="CANCELLATION_APPROVED">Cancellation Approved Email</option>
@@ -1900,20 +1723,6 @@ export default function AdminOrderDetailsModal({
               onOrderUpdated(updatedOrder);
             }
             fetchEmailEvents();
-          }}
-        />
-      )}
-
-      {/* Edit Order Priority Modal */}
-      {isPriorityModalOpen && (
-        <AdminOrderPriorityModal
-          order={order}
-          isOpen={isPriorityModalOpen}
-          onClose={() => setIsPriorityModalOpen(false)}
-          onPriorityUpdated={(updatedOrder) => {
-            if (onOrderUpdated) {
-              onOrderUpdated(updatedOrder);
-            }
           }}
         />
       )}

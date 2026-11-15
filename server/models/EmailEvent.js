@@ -22,6 +22,8 @@ const emailEventSchema = new mongoose.Schema(
         'PASSWORD_RESET',
         'ORDER_PLACED',
         'ORDER_CONFIRMED',
+        'ORDER_MAKING',
+        'ORDER_PACKING',
         'ORDER_SHIPPED',
         'ORDER_DELIVERED',
         'CANCELLATION_APPROVED',

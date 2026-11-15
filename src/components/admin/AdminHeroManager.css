@@ -574,3 +574,89 @@
 .heroDeleteConfirmBtn:hover {
   background: #c9302c;
 }
+
+/* ==========================================================================
+   RESPONSIVE OPTIMIZATIONS (TABLET & MOBILE)
+   ========================================================================== */
+@media (max-width: 768px) {
+  .heroManagerHeader {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .heroManagerHeaderRight {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .heroPrimaryBtn,
+  .heroSecondaryBtn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .heroSlidesAdminGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .heroFormRow {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .heroModalOverlay {
+    padding: 12px;
+  }
+
+  .heroEditModal {
+    padding: 18px 14px;
+    border-radius: 10px;
+    max-height: 92vh;
+  }
+
+  .heroModalActions {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .heroModalCancelBtn,
+  .heroModalSaveBtn {
+    width: 100%;
+    padding: 11px;
+    text-align: center;
+  }
+
+  .heroPositionInputs {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .heroCardImageWrap {
+    height: 220px;
+  }
+
+  .heroCardFooter {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .heroCardActions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .heroConfirmModal {
+    padding: 20px 16px;
+  }
+
+  .heroConfirmActions {
+    flex-direction: column-reverse;
+  }
+
+  .heroConfirmActions button {
+    width: 100%;
+  }
+}
