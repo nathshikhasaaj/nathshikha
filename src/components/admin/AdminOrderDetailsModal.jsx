@@ -30,7 +30,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { api } from '../../services/api';
-import { money, formatOrderStatus, formatWhatsAppPhone } from '../../utils/formatters';
+import { money, formatOrderStatus, formatWhatsAppPhone, formatOrderAge } from '../../utils/formatters';
 import { getParameterEntries } from '../../utils/parameterHelpers';
 import AdminOrderBillModal from './AdminOrderBillModal';
 import AdminEditEmailModal from './AdminEditEmailModal';
