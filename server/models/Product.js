@@ -80,9 +80,18 @@ const productSchema = new mongoose.Schema(
       required: [true, 'Product price is required'],
       min: [1, 'Price must be greater than 0']
     },
+    mainCategory: {
+      type: String,
+      enum: {
+        values: ['Traditional', 'Signature', 'Wedding Special', 'Nath Collection', 'Other', null],
+        message: '{VALUE} is not a valid Main Category'
+      },
+      default: null,
+      trim: true
+    },
     category: {
       type: String,
-      default: 'Traditional',
+      default: 'Nath',
       trim: true
     },
     tag: {
@@ -127,6 +136,8 @@ const productSchema = new mongoose.Schema(
       virtuals: true,
       transform: (doc, ret) => {
         ret.id = ret._id.toString();
+        ret.mainCategory = ret.mainCategory || null;
+        ret.main_category = ret.mainCategory;
         // Ensure images array always contains at least the primary img
         if (!ret.images || ret.images.length === 0) {
           ret.images = ret.img ? [ret.img] : [];

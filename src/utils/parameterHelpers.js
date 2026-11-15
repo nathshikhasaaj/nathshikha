@@ -2,6 +2,14 @@
  * Parameter Library Helpers & Cart Composite Key Generator for Nathshikha
  */
 
+export const MAIN_CATEGORIES = [
+  'Traditional',
+  'Signature',
+  'Wedding Special',
+  'Nath Collection',
+  'Other'
+];
+
 export const ALL_CATEGORIES = [
   'Bangles',
   'Nath',
@@ -10,8 +18,6 @@ export const ALL_CATEGORIES = [
   'Necklace',
   'Rings',
   'Pearl',
-  'Traditional',
-  'Signature',
   'Accessories',
   'Other'
 ];

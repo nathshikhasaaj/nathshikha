@@ -1,106 +1,322 @@
+/* ==========================================================================
+   HOMEPAGE SHOP BY CATEGORY SECTION
+   Premium Handmade Royal Maharashtrian Jewellery Storefront
+   5 Curated Categories in strict Left-to-Right Order:
+   1. Signature | 2. Traditional | 3. Wedding Special | 4. Nath | 5. Other
+   ========================================================================== */
+
+.catSectionContainer {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: 0 4px;
+}
+
 .catGrid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: clamp(14px, 2vw, 28px);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: clamp(14px, 1.8vw, 24px);
   position: relative;
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
   box-sizing: border-box;
 }
 
-.cat {
-  text-align: center;
+/* Base Category Card */
+.catCard {
+  display: flex;
+  flex-direction: column;
   position: relative;
-  background: transparent !important;
-  transition: transform 0.25s ease;
+  background: #ffffff;
+  border: 1px solid rgba(201, 166, 89, 0.3);
+  border-radius: 18px;
+  padding: 10px 10px 14px;
+  text-decoration: none;
+  box-shadow: 0 4px 16px rgba(72, 32, 22, 0.05);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.35s ease;
+  box-sizing: border-box;
+  overflow: hidden;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Subtle Hover Elevation on Desktop */
+@media (hover: hover) and (pointer: fine) {
+  .catCard:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 36px rgba(122, 26, 40, 0.12), 0 2px 10px rgba(201, 166, 89, 0.22);
+    border-color: rgba(201, 166, 89, 0.7);
+  }
+
+  .catCard:hover .catCardImg {
+    transform: scale(1.06);
+  }
+
+  .catCard:hover .catCardGoldBorder {
+    border-color: rgba(224, 189, 112, 0.75);
+  }
+
+  .catCard:hover .catCardName {
+    color: var(--maroon, #7a1a28);
+  }
+
+  .catCard:hover .catCardExplore {
+    color: var(--maroon, #7a1a28);
+    gap: 8px;
+  }
+
+  .catCard:hover .catCardArrow {
+    transform: translateX(3px);
+  }
+}
+
+/* Active touch state for mobile */
+.catCard:active {
+  transform: scale(0.985);
+  transition: transform 0.12s ease;
+}
+
+/* Card Visual Frame */
+.catCardVisual {
+  width: 100%;
+  position: relative;
+  border-radius: 13px;
+  overflow: hidden;
+  background: #fbf7ef;
+  box-sizing: border-box;
+}
+
+.catCardMedia {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: 13px;
+  background: #fbf7ef;
+}
+
+/* Product Category Image */
+.catCardImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Inner decorative gold hairline */
+.catCardGoldBorder {
+  position: absolute;
+  inset: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 9px;
+  pointer-events: none;
+  transition: border-color 0.35s ease;
+  z-index: 2;
+}
+
+/* Delicate bottom shadow gradient inside image */
+.catCardShimmer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30%;
+  background: linear-gradient(to top, rgba(43, 35, 36, 0.22) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Typography & Metadata */
+.catCardMeta {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;
-  max-width: 100%;
+  text-align: center;
+  padding: 12px 4px 2px;
+  flex: 1;
   box-sizing: border-box;
 }
 
-.cat:hover {
-  transform: translateY(-5px);
-}
-
-.cat:after {
-  content: '';
-  position: absolute;
-  inset: 7px;
-  border: 1px solid rgba(201, 166, 89, 0.19);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.cat img {
-  width: 100%;
-  max-width: 150px;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 1px solid var(--figma-soft-gold);
-  padding: 6px;
-  background: #fffdf9;
-  box-shadow: 0 8px 24px rgba(72, 32, 22, 0.08);
-  position: relative;
-  z-index: 1;
-  display: block;
-}
-
-.cat span {
-  font-family: var(--font-serif);
-  font-size: clamp(12px, 1.2vw, 16px);
-  display: block;
-  margin-top: 12px;
-  color: var(--figma-charcoal);
-  position: relative;
-  z-index: 2;
-  word-break: break-word;
-  overflow-wrap: break-word;
+.catCardName {
+  font-family: var(--font-serif, 'Cinzel', Georgia, serif);
+  font-size: clamp(14px, 1.1vw, 17px);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--figma-charcoal, #2b2324);
+  margin: 0 0 3px 0;
   line-height: 1.3;
+  transition: color 0.25s ease;
+  word-break: break-word;
 }
 
-@media (max-width: 1024px) {
+.catCardSub {
+  font-family: var(--font-sans, 'Inter', Arial, sans-serif);
+  font-size: clamp(11px, 0.8vw, 12px);
+  color: #7d6b6e;
+  margin: 0 0 8px 0;
+  line-height: 1.35;
+  font-weight: 400;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.catCardExplore {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-family: var(--font-sans, 'Inter', Arial, sans-serif);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--figma-gold, #c69a59);
+  margin-top: auto;
+  transition: color 0.25s ease, gap 0.25s ease;
+}
+
+.catCardArrow {
+  width: 12px;
+  height: 12px;
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   RESPONSIVE LAYOUTS
+   ========================================================================== */
+
+/* Medium Desktops & Laptops (1025px - 1180px) */
+@media (max-width: 1180px) and (min-width: 901px) {
   .catGrid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px 16px;
+    gap: 14px;
+  }
+
+  .catCard {
+    padding: 8px 8px 12px;
+  }
+
+  .catCardMeta {
+    padding: 10px 2px 2px;
   }
 }
 
+/* Tablet (641px - 900px): Balanced 6-column grid with centered 2nd row */
+@media (max-width: 900px) and (min-width: 641px) {
+  .catGrid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 18px 16px;
+  }
+
+  /* Row 1: 3 cards across */
+  .catCard-signature {
+    grid-column: 1 / span 2;
+  }
+
+  .catCard-traditional {
+    grid-column: 3 / span 2;
+  }
+
+  .catCard-wedding-special {
+    grid-column: 5 / span 2;
+  }
+
+  /* Row 2: 2 cards centered */
+  .catCard-nath {
+    grid-column: 2 / span 2;
+  }
+
+  .catCard-other {
+    grid-column: 4 / span 2;
+  }
+
+  .catCard {
+    padding: 10px 10px 14px;
+  }
+
+  .catCardName {
+    font-size: 15px;
+  }
+}
+
+/* Mobile (<= 640px): Compact 2-column grid with centered 5th card */
 @media (max-width: 640px) {
   .catGrid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 20px 14px;
+    gap: 12px 10px;
   }
 
-  .cat img {
-    max-width: 135px;
-    padding: 5px;
+  .catCard {
+    padding: 7px 7px 11px;
+    border-radius: 14px;
   }
 
-  .cat span {
-    font-size: 13px;
-    font-weight: 600;
-    margin-top: 10px;
-    color: #2b2324;
+  .catCardVisual {
+    border-radius: 10px;
+  }
+
+  .catCardMedia {
+    border-radius: 10px;
+  }
+
+  .catCardGoldBorder {
+    inset: 4px;
+    border-radius: 7px;
+  }
+
+  .catCardMeta {
+    padding: 8px 2px 0;
+  }
+
+  .catCardName {
+    font-size: 13.5px;
+    margin-bottom: 2px;
+  }
+
+  .catCardSub {
+    display: none; /* Keep mobile cards clean and compact */
+  }
+
+  .catCardExplore {
+    font-size: 10px;
+    letter-spacing: 1px;
+  }
+
+  /* Centered 5th category card on mobile row 3 */
+  .catCard-other {
+    grid-column: 1 / -1;
+    max-width: calc(50% - 5px);
+    justify-self: center;
+    width: 100%;
   }
 }
 
+/* Small Mobile (< 380px) */
 @media (max-width: 380px) {
   .catGrid {
-    gap: 16px 10px;
+    gap: 10px 8px;
   }
 
-  .cat img {
-    max-width: 115px;
-    padding: 4px;
+  .catCard {
+    padding: 6px 6px 10px;
   }
 
-  .cat span {
-    font-size: 12px;
-    margin-top: 8px;
+  .catCardName {
+    font-size: 12.5px;
+  }
+
+  .catCardExplore {
+    font-size: 9.5px;
+  }
+
+  .catCard-other {
+    max-width: calc(50% - 4px);
   }
 }

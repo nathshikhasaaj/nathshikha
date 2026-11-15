@@ -19,8 +19,20 @@ export default function Category() {
     let isMounted = true;
     setLoading(true);
 
+    const normalizedCat = decodeURIComponent(cat || '').trim().toLowerCase().replace(/-/g, ' ');
+    let matchedMainCategory = null;
+    if (normalizedCat === 'traditional') matchedMainCategory = 'Traditional';
+    else if (normalizedCat === 'signature') matchedMainCategory = 'Signature';
+    else if (normalizedCat === 'wedding special') matchedMainCategory = 'Wedding Special';
+    else if (normalizedCat === 'nath collection') matchedMainCategory = 'Nath Collection';
+    else if (normalizedCat === 'other') matchedMainCategory = 'Other';
+
+    const productsUrl = matchedMainCategory
+      ? `/products?mainCategory=${encodeURIComponent(matchedMainCategory)}`
+      : `/products?category=${encodeURIComponent(cat)}`;
+
     Promise.all([
-      api(`/products?category=${encodeURIComponent(cat)}`).catch(() => []),
+      api(productsUrl).catch(() => []),
       api('/categories').catch(() => [])
     ])
       .then(([prods, allCats]) => {

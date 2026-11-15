@@ -64,8 +64,9 @@ import './AdminDashboard.css';
 const emptyForm = {
   name: '',
   price: '',
-  category: 'Traditional',
-  tag: 'NEW',
+  mainCategory: '',
+  category: 'Nath',
+  tag: 'New',
   img: '',
   images: [],
   description: '',
@@ -485,6 +486,27 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
     });
   };
 
+  const handlePriorityUpdated = (updatedOrder) => {
+    if (!updatedOrder) return;
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.id === updatedOrder.id || o._id === updatedOrder._id || o.order_no === updatedOrder.order_no || o.orderNo === updatedOrder.orderNo
+          ? { ...o, ...updatedOrder }
+          : o
+      )
+    );
+    if (
+      detailsModalOrder &&
+      (detailsModalOrder.id === updatedOrder.id ||
+        detailsModalOrder._id === updatedOrder._id ||
+        detailsModalOrder.order_no === updatedOrder.order_no ||
+        detailsModalOrder.orderNo === updatedOrder.orderNo)
+    ) {
+      setDetailsModalOrder((prev) => ({ ...prev, ...updatedOrder }));
+    }
+    setToast(`Priority for Order #${updatedOrder.order_no || updatedOrder.orderNo} updated successfully!`);
+  };
+
   // Handle Payment Verification Submission
   const handleVerifyPayment = async (orderId, { transactionId, paymentApp, freeGiftIncluded }) => {
     const result = await api(`/admin/orders/${orderId}/verify-payment`, {
@@ -617,6 +639,12 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
     if (!form.price || Number(form.price) <= 0) {
       return setToast('Please enter a valid product price');
     }
+    if (!form.mainCategory?.trim()) {
+      return setToast('Please select a Main Category (Traditional, Signature, Wedding Special, Nath Collection, or Other)');
+    }
+    if (form.category === 'Traditional' || form.category === 'Signature') {
+      return setToast('Traditional and Signature are Main Categories and cannot be used as an individual product Category.');
+    }
     if (imagesList.length === 0) {
       return setToast('Please upload at least 1 product photo');
     }
@@ -629,8 +657,9 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
         body: JSON.stringify({
           ...form,
           name: form.name.trim(),
-          category: form.category || 'Traditional',
-          tag: form.tag || (form.isBestseller ? 'BESTSELLER' : 'NEW'),
+          mainCategory: form.mainCategory.trim(),
+          category: form.category || 'Nath',
+          tag: form.tag || (form.isBestseller ? 'Bestsellers' : 'New'),
           img: imagesList[0] || form.img,
           images: imagesList,
           productParameters: Array.isArray(form.productParameters) ? form.productParameters : [],
@@ -717,15 +746,16 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
     setForm({
       name: p.name || '',
       price: p.price || '',
-      category: p.category || 'Traditional',
-      tag: p.tag || (p.isBestseller ? 'BESTSELLER' : 'NEW'),
+      mainCategory: p.mainCategory || p.main_category || '',
+      category: p.category || 'Nath',
+      tag: p.tag || (p.isBestseller ? 'Bestsellers' : 'New'),
       img: p.img || images[0] || '',
       images: images,
       description: p.description || '',
       productParameters: Array.isArray(p.productParameters) ? p.productParameters : [],
       stock: p.stock !== undefined ? p.stock : 10,
       active: p.active !== undefined ? p.active : 1,
-      isBestseller: Boolean(p.isBestseller || p.is_bestseller || p.tag === 'BESTSELLER')
+      isBestseller: Boolean(p.isBestseller || p.is_bestseller || p.tag === 'BESTSELLER' || p.tag === 'Bestsellers')
     });
     setTab('products');
     setIsProductModalOpen(true);
@@ -1068,6 +1098,7 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
                 onReviewCancellationClick={(order) => setCancellationModalOrder(order)}
                 onDeleteOrder={handleDeleteOrder}
                 onOpenCreateAssistedOrder={() => setShowCreateAssistedOrderModal(true)}
+                onOrderUpdated={handlePriorityUpdated}
               />
             </div>
           )}

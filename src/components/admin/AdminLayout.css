@@ -414,6 +414,8 @@
   flex-direction: column;
   transition: margin-left var(--admin-transition-normal);
   width: calc(100% - var(--admin-sidebar-width));
+  min-width: 0;
+  max-width: 100%;
   box-sizing: border-box;
 }
 
@@ -578,6 +580,7 @@
   padding: 24px 28px 60px;
   max-width: 1600px;
   width: 100%;
+  min-width: 0;
   margin: 0 auto;
   box-sizing: border-box;
 }

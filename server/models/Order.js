@@ -343,6 +343,39 @@ const orderSchema = new mongoose.Schema(
       type: String,
       default: null
     },
+    deliveredAt: {
+      type: Date,
+      default: null
+    },
+    manualPriority: {
+      level: {
+        type: String,
+        enum: ['auto', 'normal', 'medium', 'high', 'critical'],
+        default: 'auto'
+      },
+      note: {
+        type: String,
+        default: null,
+        trim: true,
+        maxlength: 1000
+      },
+      assignedBy: {
+        type: String,
+        default: null
+      },
+      assignedAt: {
+        type: Date,
+        default: null
+      }
+    },
+    statusTimestamps: {
+      placedAt: { type: Date, default: Date.now },
+      confirmedAt: { type: Date, default: null },
+      makingStartedAt: { type: Date, default: null },
+      packingStartedAt: { type: Date, default: null },
+      shippedAt: { type: Date, default: null },
+      deliveredAt: { type: Date, default: null }
+    },
     customization: {
       requested: {
         type: Boolean,
@@ -656,6 +689,24 @@ const orderSchema = new mongoose.Schema(
         ret.tracking_id = ret.trackingId;
         ret.shipped_at = ret.shippedAt;
         ret.shipped_by = ret.shippedBy;
+        ret.delivered_at = ret.deliveredAt || null;
+        ret.deliveredAt = ret.delivered_at;
+        ret.manual_priority = {
+          level: ret.manualPriority?.level || 'auto',
+          note: ret.manualPriority?.note || null,
+          assigned_by: ret.manualPriority?.assignedBy || null,
+          assigned_at: ret.manualPriority?.assignedAt || null
+        };
+        ret.manualPriority = ret.manual_priority;
+        ret.status_timestamps = {
+          placed_at: ret.statusTimestamps?.placedAt || ret.createdAt || null,
+          confirmed_at: ret.statusTimestamps?.confirmedAt || ret.confirmedAt || null,
+          making_started_at: ret.statusTimestamps?.makingStartedAt || null,
+          packing_started_at: ret.statusTimestamps?.packingStartedAt || null,
+          shipped_at: ret.statusTimestamps?.shippedAt || ret.shippedAt || null,
+          delivered_at: ret.statusTimestamps?.deliveredAt || ret.deliveredAt || null
+        };
+        ret.statusTimestamps = ret.status_timestamps;
         ret.guest_token = ret.guestToken;
         ret.created_at = ret.createdAt ? ret.createdAt.toISOString() : new Date().toISOString();
         ret.updated_at = ret.updatedAt ? ret.updatedAt.toISOString() : undefined;

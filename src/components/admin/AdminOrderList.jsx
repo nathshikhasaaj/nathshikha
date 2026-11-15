@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Package,
   ShieldCheck,
@@ -15,7 +15,17 @@ import {
   Boxes,
   Calendar,
   Trash2,
-  Loader2
+  Loader2,
+  ShieldAlert,
+  SlidersHorizontal,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  X,
+  ExternalLink,
+  Flame,
+  Check,
+  Edit3
 } from 'lucide-react';
 import {
   money,
@@ -25,6 +35,14 @@ import {
   formatWhatsAppPhone
 } from '../../utils/formatters';
 import { getParameterEntries } from '../../utils/parameterHelpers';
+import {
+  calculateOrderPriority,
+  categorizeOrders,
+  PRIORITY_LEVELS,
+  PRIORITY_RANKS
+} from '../../utils/orderPriorityEngine';
+import AdminDropdown from './AdminDropdown';
+import AdminOrderPriorityModal from './AdminOrderPriorityModal';
 import './AdminOrderList.css';
 
 export default function AdminOrderList({
@@ -39,25 +57,37 @@ export default function AdminOrderList({
   onOpenShipmentModal,
   onReviewCancellationClick,
   onDeleteOrder,
-  onOpenCreateAssistedOrder
+  onOpenCreateAssistedOrder,
+  onOrderUpdated
 }) {
   const [sortBy, setSortBy] = useState('newest');
+  const [priorityFilter, setPriorityFilter] = useState('ALL');
+  const [orderTypeFilter, setOrderTypeFilter] = useState('ALL');
+
+  // Pagination state
+  const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Layout / Scroll refs
+  const tabsBarRef = useRef(null);
+  const ordersContainerRef = useRef(null);
+
+  // Modals state
+  const [priorityModalOrder, setPriorityModalOrder] = useState(null);
   const [deleteModalOrder, setDeleteModalOrder] = useState(null);
   const [deleteReasonType, setDeleteReasonType] = useState('Duplicate order');
   const [customDeleteReason, setCustomDeleteReason] = useState('');
   const [deleteReasonError, setDeleteReasonError] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const openDeleteModal = (order) => {
-    setDeleteModalOrder(order);
-    setDeleteReasonType('Duplicate order');
-    setCustomDeleteReason('');
-    setDeleteReasonError('');
-  };
+  // Categorize and compute intelligence metrics across all orders
+  const { processedOrders, counts } = useMemo(() => {
+    return categorizeOrders(orders);
+  }, [orders]);
 
+  // Handle status update
   const handleStatusChange = (order, newStatus) => {
     if (newStatus === 'shipped') {
-      // Intercept 'shipped' to collect shipment partner & tracking details
       if (onOpenShipmentModal) {
         onOpenShipmentModal(order, Boolean(order.shipment_partner || order.tracking_id));
       }
@@ -67,187 +97,531 @@ export default function AdminOrderList({
   };
 
   const getProductCode = (item, order, index) => {
+    if (item.itemType === 'free_gift' || item.item_type === 'free_gift' || item.name === 'Free Complimentary Gift') {
+      return 'FREE-GIFT';
+    }
+    if (item.itemType === 'custom' || item.item_type === 'custom' || order.order_type === 'custom' || order.orderType === 'custom') {
+      return `CUSTOM-${String(index + 1).padStart(2, '0')}`;
+    }
+    if (item.productCode) return String(item.productCode);
+    if (item.sku) return String(item.sku);
     if (item.productId) {
       return `PRD-${String(item.productId).slice(-6).toUpperCase()}`;
     }
     if (item.id) {
       return `PRD-${String(item.id).slice(-6).toUpperCase()}`;
     }
-    return `PRD-${String(order.order_no).slice(-4)}-${index + 1}`;
+    return `PRD-${String(order.order_no || order.orderNo).slice(-4)}-${index + 1}`;
   };
 
-  // Status mapping for friendly labels
-  const getStatusLabel = (status) => {
-    switch (status) {
-      case 'placed':
-        return 'Order Received';
-      case 'payment_pending':
-        return 'Payment Pending';
-      case 'confirmed':
-        return 'Confirmed';
-      case 'making':
-        return 'Making';
-      case 'packing':
-      case 'processing':
-        return 'QC & Packed';
-      case 'shipped':
-        return 'Dispatched';
-      case 'delivered':
-        return 'Delivered';
-      case 'cancelled':
-        return 'Cancelled';
-      default:
-        return status ? status.toUpperCase() : 'Received';
-    }
-  };
-
-  // Count priority orders (order age strictly > 15 days)
-  const priorityCount = useMemo(() => {
-    return orders.filter((o) => {
-      const age = getOrderAgeInDays(o.created_at || o.createdAt);
-      return age > 15;
-    }).length;
-  }, [orders]);
-
-  const pendingVerificationTotal = useMemo(() => {
-    return orders.filter(
-      (o) =>
-        o.payment_status === 'verification_pending' ||
-        o.paymentStatus === 'verification_pending' ||
-        (o.payment_status !== 'verified' && o.payment_status !== 'paid')
-    ).length;
-  }, [orders]);
-
-  const cancellationRequestsCount = useMemo(() => {
-    return orders.filter(
-      (o) =>
-        o.cancellation_status === 'cancellation_requested' ||
-        o.cancellationStatus === 'cancellation_requested'
-    ).length;
-  }, [orders]);
-
-  // Filter & Sort Pipeline
+  // Filter Pipeline
   const filteredOrders = useMemo(() => {
-    const filtered = orders.filter((o) => {
-      const isVerified =
-        o.payment_status === 'verified' ||
-        o.paymentStatus === 'verified' ||
-        o.payment_status === 'paid';
-      const isPendingVerification =
-        !isVerified &&
-        (o.payment_status === 'verification_pending' ||
-          o.paymentStatus === 'verification_pending' ||
-          o.payment_status === 'pending');
+    return processedOrders.filter((o) => {
+      const meta = o._priorityMeta;
+      const orderStatus = String(o.order_status || o.orderStatus || 'placed').toLowerCase();
 
-      const age = getOrderAgeInDays(o.created_at || o.createdAt);
-      const isPriority = age > 15;
-
-      const isCancelReq =
-        o.cancellation_status === 'cancellation_requested' ||
-        o.cancellationStatus === 'cancellation_requested';
-
-      // 1. Filter Tab
-      if (filter === 'verification_pending') {
-        if (!isPendingVerification) return false;
+      // 1. Primary Operational Queue Filter
+      if (filter === 'needs_attention') {
+        if (!meta.isNeedsAttention) return false;
+      } else if (filter === 'urgent_critical') {
+        if (!meta.isUrgentOrCritical) return false;
+      } else if (filter === 'verification_pending') {
+        if (meta.primaryQueue !== 'payment_pending') return false;
+      } else if (filter === 'to_process') {
+        if (orderStatus !== 'confirmed') return false;
+      } else if (filter === 'making') {
+        if (orderStatus !== 'making') return false;
+      } else if (filter === 'packing') {
+        if (orderStatus !== 'packing' && orderStatus !== 'processing') return false;
+      } else if (filter === 'shipped') {
+        if (orderStatus !== 'shipped') return false;
+      } else if (filter === 'delivered') {
+        if (orderStatus !== 'delivered') return false;
+      } else if (filter === 'cancelled') {
+        if (!meta.isCancelled) return false;
+      } else if (filter === 'cancellation_requested') {
+        if (o.cancellation_status !== 'cancellation_requested' && o.cancellationStatus !== 'cancellation_requested') {
+          return false;
+        }
       } else if (filter === 'assisted') {
         const isAssisted =
           o.assisted_order?.is_assisted ||
           o.assistedOrder?.isAssisted ||
-          o.order_status === 'payment_pending' ||
-          o.orderStatus === 'payment_pending';
+          orderStatus === 'payment_pending';
         if (!isAssisted) return false;
-      } else if (filter === 'cancellation_requested') {
-        if (!isCancelReq) return false;
-      } else if (filter === 'priority') {
-        if (!isPriority) return false;
-      } else if (filter === 'placed') {
-        if (o.order_status !== 'placed' && o.orderStatus !== 'placed') return false;
-      } else if (filter === 'confirmed') {
-        if (o.order_status !== 'confirmed' && o.orderStatus !== 'confirmed') return false;
-      } else if (filter === 'making') {
-        if (o.order_status !== 'making' && o.orderStatus !== 'making') return false;
-      } else if (filter === 'packing') {
-        if (o.order_status !== 'packing' && o.orderStatus !== 'packing' && o.order_status !== 'processing')
-          return false;
-      } else if (filter === 'shipped') {
-        if (o.order_status !== 'shipped' && o.orderStatus !== 'shipped') return false;
-      } else if (filter === 'delivered') {
-        if (o.order_status !== 'delivered' && o.orderStatus !== 'delivered') return false;
       }
 
-      // 2. Search Query
+      // 2. Secondary Priority Filter
+      if (priorityFilter !== 'ALL' && meta.level !== priorityFilter) {
+        return false;
+      }
+
+      // 3. Secondary Order Type Filter
+      if (orderTypeFilter !== 'ALL') {
+        const isCustom = o.order_type === 'custom' || o.orderType === 'custom';
+        const isAssisted = o.assisted_order?.is_assisted || o.assistedOrder?.isAssisted;
+        const isGift = Boolean(o.is_gift || o.isGift);
+
+        if (orderTypeFilter === 'CUSTOM' && !isCustom) return false;
+        if (orderTypeFilter === 'REGULAR' && isCustom) return false;
+        if (orderTypeFilter === 'ASSISTED' && !isAssisted) return false;
+        if (orderTypeFilter === 'GIFT' && !isGift) return false;
+      }
+
+      // 4. Search Query Filter
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
-        const nameMatch = (o.name || '').toLowerCase().includes(q);
-        const phoneMatch = (o.phone || '').includes(q);
-        const orderNoMatch = (o.order_no || '').toLowerCase().includes(q);
-        const groupMatch = (o.shipment_group_code || o.shipmentGroupCode || '').toLowerCase().includes(q);
+        const orderNo = String(o.order_no || o.orderNo || '').toLowerCase();
+        const name = String(o.recipient_name || o.name || '').toLowerCase();
+        const custName = String(o.customer_name || o.customerName || '').toLowerCase();
+        const phone = String(o.phone || o.customerPhone || '');
+        const email = String(o.customer_email || o.email || '').toLowerCase();
+        const txId = String(o.payment_transaction_id || o.upi_utr || '').toLowerCase();
+        const group = String(o.shipment_group_code || o.shipmentGroupCode || '').toLowerCase();
+        const track = String(o.tracking_id || o.trackingId || '').toLowerCase();
+
         const itemMatch = (o.items || []).some((i) =>
-          (i.name || '').toLowerCase().includes(q)
+          String(i.name || '').toLowerCase().includes(q)
         );
-        const emailMatch = (o.customer_email || o.customerEmail || o.email || '').toLowerCase().includes(q);
-        const txMatch = (o.payment_transaction_id || o.upi_utr || '').toLowerCase().includes(q);
-        return nameMatch || phoneMatch || emailMatch || orderNoMatch || groupMatch || itemMatch || txMatch;
+
+        const matches =
+          orderNo.includes(q) ||
+          name.includes(q) ||
+          custName.includes(q) ||
+          phone.includes(q) ||
+          email.includes(q) ||
+          txId.includes(q) ||
+          group.includes(q) ||
+          track.includes(q) ||
+          itemMatch;
+
+        if (!matches) return false;
       }
 
       return true;
     });
+  }, [processedOrders, filter, priorityFilter, orderTypeFilter, searchQuery]);
 
-    // Sort
-    return filtered.sort((a, b) => {
+  // Sort Pipeline: Default to strict createdAt DESC (Newest Created First)
+  const sortedOrders = useMemo(() => {
+    const list = [...filteredOrders];
+
+    return list.sort((a, b) => {
+      const metaA = a._priorityMeta;
+      const metaB = b._priorityMeta;
       const timeA = new Date(a.created_at || a.createdAt || 0).getTime();
       const timeB = new Date(b.created_at || b.createdAt || 0).getTime();
-      const ageA = getOrderAgeInDays(a.created_at || a.createdAt);
-      const ageB = getOrderAgeInDays(b.created_at || b.createdAt);
+
+      if (sortBy === 'newest') {
+        if (timeB !== timeA) return timeB - timeA;
+        const idA = String(a.order_no || a.orderNo || a.id || a._id || '');
+        const idB = String(b.order_no || b.orderNo || b.id || b._id || '');
+        return idB.localeCompare(idA);
+      }
 
       if (sortBy === 'oldest') {
-        return timeA - timeB;
+        if (timeA !== timeB) return timeA - timeB;
+        const idA = String(a.order_no || a.orderNo || a.id || a._id || '');
+        const idB = String(b.order_no || b.orderNo || b.id || b._id || '');
+        return idA.localeCompare(idB);
       }
-      if (sortBy === 'age_desc') {
-        return ageB - ageA;
-      }
+
       if (sortBy === 'priority_first') {
-        const isPriorityA = ageA > 15 ? 1 : 0;
-        const isPriorityB = ageB > 15 ? 1 : 0;
-        if (isPriorityA !== isPriorityB) {
-          return isPriorityB - isPriorityA;
+        // Sort primarily by priority rank (Critical=4, High=3, Medium=2, Normal=1, NoAction=0)
+        if (metaA.rank !== metaB.rank) {
+          return metaB.rank - metaA.rank;
         }
-        return ageB - ageA;
+        // Within same rank, older production age comes first
+        return metaB.productionAgeDays - metaA.productionAgeDays;
       }
-      // Default 'newest'
+
+      if (sortBy === 'delay_desc') {
+        // Longest production aging first
+        return metaB.productionAgeDays - metaA.productionAgeDays;
+      }
+
+      if (sortBy === 'sla_earliest') {
+        // Earliest deadline first
+        const slaA = metaA.expectedDeliveryDate ? new Date(metaA.expectedDeliveryDate).getTime() : 9999999999999;
+        const slaB = metaB.expectedDeliveryDate ? new Date(metaB.expectedDeliveryDate).getTime() : 9999999999999;
+        return slaA - slaB;
+      }
+
+      if (sortBy === 'amount_desc') {
+        const amtA = Number(a.total_amount ?? a.totalPrice ?? a.final_amount ?? a.total ?? 0);
+        const amtB = Number(b.total_amount ?? b.totalPrice ?? b.final_amount ?? b.total ?? 0);
+        return amtB - amtA;
+      }
+
+      if (sortBy === 'customer_asc') {
+        const nameA = String(a.name || a.customer?.name || '').toLowerCase();
+        const nameB = String(b.name || b.customer?.name || '').toLowerCase();
+        return nameA.localeCompare(nameB);
+      }
+
+      // Default fallback: newest created first
       return timeB - timeA;
     });
-  }, [orders, filter, searchQuery, sortBy]);
+  }, [filteredOrders, sortBy]);
 
-  const [visibleCount, setVisibleCount] = useState(6);
+  // Reset to page 1 whenever filters or sorting change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, priorityFilter, orderTypeFilter, searchQuery, sortBy, pageSize]);
 
-  // Auto-reset to 6 when filters, search or sort change
-  React.useEffect(() => {
-    setVisibleCount(6);
-  }, [filter, searchQuery, sortBy]);
+  // Ensure active queue tab smoothly scrolls into view when selected
+  useEffect(() => {
+    if (tabsBarRef.current) {
+      const activeBtn = tabsBarRef.current.querySelector('.queueTabBtn.active');
+      if (activeBtn && typeof activeBtn.scrollIntoView === 'function') {
+        activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+    }
+  }, [filter]);
 
-  const visibleOrders = useMemo(() => {
-    return filteredOrders.slice(0, visibleCount);
-  }, [filteredOrders, visibleCount]);
+  // Page navigation helper with smooth scroll to table top
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    if (ordersContainerRef.current) {
+      ordersContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  // Pagination calculation
+  const totalItems = sortedOrders.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  const paginatedOrders = useMemo(() => {
+    const start = (safeCurrentPage - 1) * pageSize;
+    return sortedOrders.slice(start, start + pageSize);
+  }, [sortedOrders, safeCurrentPage, pageSize]);
+
+  // Priority options for dropdown
+  const priorityDropdownOptions = [
+    { value: 'ALL', label: 'All Priorities' },
+    { value: PRIORITY_LEVELS.CRITICAL, label: '🚨 Critical Priority', color: '#b91c1c' },
+    { value: PRIORITY_LEVELS.HIGH, label: '🔴 High Priority', color: '#d97706' },
+    { value: PRIORITY_LEVELS.MEDIUM, label: '🟡 Medium Priority', color: '#b45309' },
+    { value: PRIORITY_LEVELS.NORMAL, label: '🟢 Normal Priority', color: '#15803d' },
+    { value: PRIORITY_LEVELS.NO_ACTION, label: '⚪ No Action / Completed', color: '#6b7280' }
+  ];
+
+  const orderTypeDropdownOptions = [
+    { value: 'ALL', label: 'All Order Types' },
+    { value: 'REGULAR', label: 'Regular Orders' },
+    { value: 'CUSTOM', label: '✨ Bespoke Custom Orders' },
+    { value: 'ASSISTED', label: '✦ Assisted Checkout Orders' },
+    { value: 'GIFT', label: '🎁 Gift Wrapped Orders' }
+  ];
+
+  const sortOptions = [
+    { value: 'newest', label: 'Sort: Newest Created First' },
+    { value: 'priority_first', label: 'Sort: Highest Priority First' },
+    { value: 'delay_desc', label: 'Sort: Longest Production Delay' },
+    { value: 'sla_earliest', label: 'Sort: Delivery Deadline' },
+    { value: 'oldest', label: 'Sort: Oldest First' },
+    { value: 'amount_desc', label: 'Sort: Order Total (High to Low)' },
+    { value: 'customer_asc', label: 'Sort: Customer Name (A-Z)' }
+  ];
+
+  const pageSizeOptions = [
+    { value: 10, label: '10 / page' },
+    { value: 25, label: '25 / page' },
+    { value: 50, label: '50 / page' },
+    { value: 100, label: '100 / page' }
+  ];
+
+  const hasActiveSecondaryFilters =
+    priorityFilter !== 'ALL' ||
+    orderTypeFilter !== 'ALL' ||
+    sortBy !== 'newest' ||
+    Boolean(searchQuery.trim());
+
+  const resetAllFilters = () => {
+    setFilter('all');
+    setPriorityFilter('ALL');
+    setOrderTypeFilter('ALL');
+    setSearchQuery('');
+    setSortBy('newest');
+    setCurrentPage(1);
+  };
+
+  const handleNextActionClick = (e, order, nextAction) => {
+    e.stopPropagation();
+    switch (nextAction.key) {
+      case 'verify_payment':
+        if (onVerifyPaymentClick) onVerifyPaymentClick(order);
+        break;
+      case 'review_cancellation':
+        if (onReviewCancellationClick) onReviewCancellationClick(order);
+        break;
+      case 'start_making':
+        handleStatusChange(order, 'making');
+        break;
+      case 'start_packing':
+        handleStatusChange(order, 'packing');
+        break;
+      case 'ship_order':
+        if (onOpenShipmentModal) onOpenShipmentModal(order, false);
+        break;
+      case 'track_shipment':
+      case 'confirm_order':
+      default:
+        if (onViewOrderClick) onViewOrderClick(order);
+        break;
+    }
+  };
 
   return (
     <div className="adminOrdersSection">
-      {/* Search, Filter & Sort Controls */}
-      <div className="ordersControlBar">
-        <div className="searchBox">
-          <Search size={16} className="searchIcon" />
+      {/* ========================================================================= */}
+      {/* 1. SMART OPERATIONAL PRIORITY DASHBOARD (SUMMARY CARDS)                   */}
+      {/* ========================================================================= */}
+      <section className="orderSummaryKpiGrid" aria-label="Order Operations Overview">
+        <div
+          className={`orderKpiCard ${filter === 'all' ? 'activeCard' : ''}`}
+          onClick={() => setFilter('all')}
+          role="button"
+          tabIndex={0}
+        >
+          <div className="orderKpiIcon totalIcon">
+            <Package size={18} />
+          </div>
+          <div className="orderKpiContent">
+            <span className="orderKpiLabel">Total Orders</span>
+            <span className="orderKpiVal">{counts.total}</span>
+          </div>
+        </div>
+
+        <div
+          className={`orderKpiCard ${filter === 'urgent_critical' ? 'activeCard' : ''} ${counts.critical > 0 ? 'kpiAlertPulsing' : ''}`}
+          onClick={() => setFilter('urgent_critical')}
+          role="button"
+          tabIndex={0}
+        >
+          <div className="orderKpiIcon criticalIcon">
+            <Flame size={18} />
+          </div>
+          <div className="orderKpiContent">
+            <span className="orderKpiLabel">Critical / Urgent</span>
+            <span className="orderKpiVal criticalVal">{counts.critical + counts.high}</span>
+          </div>
+        </div>
+
+        <div
+          className={`orderKpiCard ${filter === 'needs_attention' ? 'activeCard' : ''}`}
+          onClick={() => setFilter('needs_attention')}
+          role="button"
+          tabIndex={0}
+        >
+          <div className="orderKpiIcon attentionIcon">
+            <ShieldAlert size={18} />
+          </div>
+          <div className="orderKpiContent">
+            <span className="orderKpiLabel">Needs Attention</span>
+            <span className="orderKpiVal attentionVal">{counts.needsAttention}</span>
+          </div>
+        </div>
+
+        <div
+          className={`orderKpiCard ${filter === 'verification_pending' ? 'activeCard' : ''}`}
+          onClick={() => setFilter('verification_pending')}
+          role="button"
+          tabIndex={0}
+        >
+          <div className="orderKpiIcon paymentIcon">
+            <Clock size={18} />
+          </div>
+          <div className="orderKpiContent">
+            <span className="orderKpiLabel">Payment Verification</span>
+            <span className="orderKpiVal paymentVal">{counts.paymentPending}</span>
+          </div>
+        </div>
+
+        <div
+          className={`orderKpiCard ${filter === 'making' ? 'activeCard' : ''}`}
+          onClick={() => setFilter('making')}
+          role="button"
+          tabIndex={0}
+        >
+          <div className="orderKpiIcon makingIcon">
+            <Sparkles size={18} />
+          </div>
+          <div className="orderKpiContent">
+            <span className="orderKpiLabel">In Production</span>
+            <span className="orderKpiVal makingVal">{counts.inProduction}</span>
+          </div>
+        </div>
+
+        <div
+          className={`orderKpiCard ${filter === 'packing' ? 'activeCard' : ''}`}
+          onClick={() => setFilter('packing')}
+          role="button"
+          tabIndex={0}
+        >
+          <div className="orderKpiIcon packingIcon">
+            <Box size={18} />
+          </div>
+          <div className="orderKpiContent">
+            <span className="orderKpiLabel">Ready to Ship</span>
+            <span className="orderKpiVal packingVal">{counts.readyToShip}</span>
+          </div>
+        </div>
+
+        <div
+          className={`orderKpiCard ${filter === 'shipped' ? 'activeCard' : ''}`}
+          onClick={() => setFilter('shipped')}
+          role="button"
+          tabIndex={0}
+        >
+          <div className="orderKpiIcon shippedIcon">
+            <Truck size={18} />
+          </div>
+          <div className="orderKpiContent">
+            <span className="orderKpiLabel">In Transit</span>
+            <span className="orderKpiVal shippedVal">{counts.shipped}</span>
+          </div>
+        </div>
+
+        <div
+          className={`orderKpiCard ${filter === 'delivered' ? 'activeCard' : ''}`}
+          onClick={() => setFilter('delivered')}
+          role="button"
+          tabIndex={0}
+        >
+          <div className="orderKpiIcon deliveredIcon">
+            <CheckCircle2 size={18} />
+          </div>
+          <div className="orderKpiContent">
+            <span className="orderKpiLabel">Delivered</span>
+            <span className="orderKpiVal deliveredVal">{counts.delivered}</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ========================================================================= */}
+      {/* 2. OPERATIONAL QUEUES (TABS)                                              */}
+      {/* ========================================================================= */}
+      <div className="operationalQueuesBar" ref={tabsBarRef}>
+        <button
+          type="button"
+          className={`queueTabBtn ${filter === 'all' ? 'active' : ''}`}
+          onClick={() => setFilter('all')}
+        >
+          All Orders <span className="tabCountBadge">{counts.total}</span>
+        </button>
+
+        <button
+          type="button"
+          className={`queueTabBtn tabAttention ${filter === 'needs_attention' ? 'active' : ''} ${counts.needsAttention > 0 ? 'hasAction' : ''}`}
+          onClick={() => setFilter('needs_attention')}
+        >
+          ⚡ Needs Attention
+          {counts.needsAttention > 0 && (
+            <span className="tabCountBadge badgeAmber">{counts.needsAttention}</span>
+          )}
+        </button>
+
+        <button
+          type="button"
+          className={`queueTabBtn tabUrgent ${filter === 'urgent_critical' ? 'active' : ''} ${(counts.critical + counts.high) > 0 ? 'hasCritical' : ''}`}
+          onClick={() => setFilter('urgent_critical')}
+        >
+          🚨 Urgent & Critical
+          {(counts.critical + counts.high) > 0 && (
+            <span className="tabCountBadge badgeRed">{counts.critical + counts.high}</span>
+          )}
+        </button>
+
+        <button
+          type="button"
+          className={`queueTabBtn ${filter === 'verification_pending' ? 'active' : ''}`}
+          onClick={() => setFilter('verification_pending')}
+        >
+          ⚠️ Payment Verification
+          {counts.paymentPending > 0 && (
+            <span className="tabCountBadge badgeAmber">{counts.paymentPending}</span>
+          )}
+        </button>
+
+        <button
+          type="button"
+          className={`queueTabBtn ${filter === 'to_process' ? 'active' : ''}`}
+          onClick={() => setFilter('to_process')}
+        >
+          ✦ Confirmed <span className="tabCountBadge">{counts.toProcess}</span>
+        </button>
+
+        <button
+          type="button"
+          className={`queueTabBtn ${filter === 'making' ? 'active' : ''}`}
+          onClick={() => setFilter('making')}
+        >
+          ✨ In Production <span className="tabCountBadge">{counts.inProduction}</span>
+        </button>
+
+        <button
+          type="button"
+          className={`queueTabBtn ${filter === 'packing' ? 'active' : ''}`}
+          onClick={() => setFilter('packing')}
+        >
+          📦 Ready to Ship <span className="tabCountBadge">{counts.readyToShip}</span>
+        </button>
+
+        <button
+          type="button"
+          className={`queueTabBtn ${filter === 'shipped' ? 'active' : ''}`}
+          onClick={() => setFilter('shipped')}
+        >
+          🚚 In Transit <span className="tabCountBadge">{counts.shipped}</span>
+        </button>
+
+        <button
+          type="button"
+          className={`queueTabBtn ${filter === 'delivered' ? 'active' : ''}`}
+          onClick={() => setFilter('delivered')}
+        >
+          ✓ Delivered <span className="tabCountBadge">{counts.delivered}</span>
+        </button>
+
+        <button
+          type="button"
+          className={`queueTabBtn ${filter === 'cancelled' ? 'active' : ''}`}
+          onClick={() => setFilter('cancelled')}
+        >
+          ✕ Cancelled <span className="tabCountBadge">{counts.cancelled}</span>
+        </button>
+
+        {counts.cancellationRequests > 0 && (
+          <button
+            type="button"
+            className={`queueTabBtn tabDanger ${filter === 'cancellation_requested' ? 'active' : ''}`}
+            onClick={() => setFilter('cancellation_requested')}
+          >
+            🚨 Cancellation Review
+          </button>
+        )}
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 3. CONTROLS TOOLBAR: SEARCH & ADVANCED FILTERS                            */}
+      {/* ========================================================================= */}
+      <div className="orderControlsToolbar">
+        <div className="orderSearchWrap">
+          <Search size={16} className="searchMagnifier" />
           <input
             type="text"
-            placeholder="Search customer, phone, #order, piece, Tx ID..."
+            className="orderSearchInput"
+            placeholder="Search by #order, customer name, phone, email, piece, Tx ID, tracking ID…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="searchInput"
           />
           {searchQuery && (
             <button
+              type="button"
               className="clearSearchBtn"
               onClick={() => setSearchQuery('')}
-              type="button"
               title="Clear search"
             >
               ✕
@@ -255,521 +629,350 @@ export default function AdminOrderList({
           )}
         </div>
 
-        {/* Sorting Dropdown */}
-        <div className="sortControlWrap">
-          <ArrowUpDown size={14} className="sortIcon" />
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="sortSelect"
-          >
-            <option value="newest">Sort: Newest First</option>
-            <option value="oldest">Sort: Oldest First</option>
-            <option value="age_desc">Sort: Order Age (Highest)</option>
-            <option value="priority_first">Sort: Priority Orders (15+ Days)</option>
-          </select>
-        </div>
+        <div className="orderFilterDropdownsRow">
+          {/* Priority Filter */}
+          <div className="filterItemWrap">
+            <span className="filterItemLabel">Priority:</span>
+            <AdminDropdown
+              value={priorityFilter}
+              onChange={setPriorityFilter}
+              options={priorityDropdownOptions}
+              minWidth="160px"
+              placeholder="All Priorities"
+            />
+          </div>
 
-        {onOpenCreateAssistedOrder && (
-          <button
-            type="button"
-            className="goldBtn createAssistedOrderBtn"
-            onClick={onOpenCreateAssistedOrder}
-            title="Create or correct an assisted order for a customer"
-          >
-            <Sparkles size={14} />
-            <span>+ ASSISTED CHECKOUT</span>
-          </button>
-        )}
+          {/* Order Type Filter */}
+          <div className="filterItemWrap">
+            <span className="filterItemLabel">Type:</span>
+            <AdminDropdown
+              value={orderTypeFilter}
+              onChange={setOrderTypeFilter}
+              options={orderTypeDropdownOptions}
+              minWidth="170px"
+              placeholder="All Types"
+            />
+          </div>
+
+          {/* Sort By Dropdown */}
+          <div className="filterItemWrap">
+            <span className="filterItemLabel">Sort:</span>
+            <AdminDropdown
+              value={sortBy}
+              onChange={setSortBy}
+              options={sortOptions}
+              minWidth="190px"
+              placeholder="Sort By"
+            />
+          </div>
+
+          {/* Assisted Order Action Button */}
+          {onOpenCreateAssistedOrder && (
+            <button
+              type="button"
+              className="goldBtn assistedActionBtn"
+              onClick={onOpenCreateAssistedOrder}
+              title="Create assisted checkout order for a customer"
+            >
+              <Sparkles size={14} />
+              <span>+ Assisted Order</span>
+            </button>
+          )}
+
+          {/* Reset Filters Button */}
+          {hasActiveSecondaryFilters && (
+            <button
+              type="button"
+              className="resetOrderFiltersBtn"
+              onClick={resetAllFilters}
+              title="Reset all filters and search"
+            >
+              <X size={13} />
+              <span>Reset</span>
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="filterPills">
-        <button
-          type="button"
-          className={`filterPill ${filter === 'all' ? 'active' : ''}`}
-          onClick={() => setFilter('all')}
-        >
-          All Orders <span className="pillBadge">{orders.length}</span>
-        </button>
+      {/* ========================================================================= */}
+      {/* 4. ORDERS TABLE / CARDS CONTAINER                                         */}
+      {/* ========================================================================= */}
+      <div className="orderTableCardContainer" ref={ordersContainerRef}>
+        <div className="orderTableHeaderMeta">
+          <div className="orderHeaderTitleGroup">
+            <h3>
+              {filter === 'all'
+                ? 'All Orders Database'
+                : filter === 'needs_attention'
+                ? 'Orders Requiring Attention'
+                : filter === 'urgent_critical'
+                ? 'Urgent & Critical Orders'
+                : filter === 'verification_pending'
+                ? 'Awaiting Payment Verification'
+                : filter === 'to_process'
+                ? 'To Be Processed (Confirmed)'
+                : filter === 'making'
+                ? 'In Production (Artisan Crafting)'
+                : filter === 'packing'
+                ? 'Ready to Ship (Packaging)'
+                : filter === 'shipped'
+                ? 'Dispatched & In Transit'
+                : filter === 'delivered'
+                ? 'Delivered Orders'
+                : `${filter.toUpperCase()} Orders`}
+            </h3>
+            <span className="orderQueueSubText">
+              Real-time SLA monitoring · Automatic production delay detection · Guaranteed isolation
+            </span>
+          </div>
 
-        <button
-          type="button"
-          className={`filterPill ${filter === 'verification_pending' ? 'active' : ''} ${
-            pendingVerificationTotal > 0 ? 'pillAlert' : ''
-          }`}
-          onClick={() => setFilter('verification_pending')}
-        >
-          ⚠️ Pending Verification
-          {pendingVerificationTotal > 0 && (
-            <span className="pillBadge badgeAmber">{pendingVerificationTotal}</span>
-          )}
-        </button>
-
-        <button
-          type="button"
-          className={`filterPill ${filter === 'assisted' ? 'active' : ''}`}
-          onClick={() => setFilter('assisted')}
-        >
-          ✦ Assisted Orders
-        </button>
-
-        <button
-          type="button"
-          className={`filterPill ${filter === 'cancellation_requested' ? 'active' : ''} ${
-            cancellationRequestsCount > 0 ? 'pillDanger' : ''
-          }`}
-          onClick={() => setFilter('cancellation_requested')}
-        >
-          🚨 Cancellation Requests
-          {cancellationRequestsCount > 0 && (
-            <span className="pillBadge badgeRed">{cancellationRequestsCount}</span>
-          )}
-        </button>
-
-        <button
-          type="button"
-          className={`filterPill ${filter === 'priority' ? 'active' : ''} ${
-            priorityCount > 0 ? 'pillPriority' : ''
-          }`}
-          onClick={() => setFilter('priority')}
-        >
-          🔴 Urgent (&gt;15d)
-          {priorityCount > 0 && (
-            <span className="pillBadge badgeRed">{priorityCount}</span>
-          )}
-        </button>
-
-        <button
-          type="button"
-          className={`filterPill ${filter === 'confirmed' ? 'active' : ''}`}
-          onClick={() => setFilter('confirmed')}
-        >
-          Confirmed
-        </button>
-
-        <button
-          type="button"
-          className={`filterPill ${filter === 'making' ? 'active' : ''}`}
-          onClick={() => setFilter('making')}
-        >
-          ✨ Artisan Crafting
-        </button>
-
-        <button
-          type="button"
-          className={`filterPill ${filter === 'packing' ? 'active' : ''}`}
-          onClick={() => setFilter('packing')}
-        >
-          📦 QC & Packed
-        </button>
-
-        <button
-          type="button"
-          className={`filterPill ${filter === 'shipped' ? 'active' : ''}`}
-          onClick={() => setFilter('shipped')}
-        >
-          🚚 Dispatched
-        </button>
-
-        <button
-          type="button"
-          className={`filterPill ${filter === 'delivered' ? 'active' : ''}`}
-          onClick={() => setFilter('delivered')}
-        >
-          ✓ Delivered
-        </button>
-      </div>
-
-      {/* Main Orders Display Card */}
-      <div className="adminCard tableCard">
-        <div className="tableHeaderStats">
-          <h3>
-            {filter === 'all'
-              ? 'All Orders'
-              : filter === 'verification_pending'
-              ? 'Payment Verification Pending'
-              : filter === 'cancellation_requested'
-              ? 'Cancellation Requests'
-              : filter === 'priority'
-              ? 'Priority Orders (>15 Days Old)'
-              : `${filter.toUpperCase()} Orders`}
-          </h3>
-          <span className="resultsCountText">
-            Showing <b>{Math.min(visibleCount, filteredOrders.length)}</b> of{' '}
-            <b>{filteredOrders.length}</b> orders
-          </span>
+          <div className="orderHeaderResultCount">
+            Showing <b>{(safeCurrentPage - 1) * pageSize + 1}</b>–
+            <b>{Math.min(safeCurrentPage * pageSize, totalItems)}</b> of <b>{totalItems}</b> orders
+            {totalItems !== orders.length && (
+              <span className="filteredTotalNote"> (filtered from {orders.length})</span>
+            )}
+          </div>
         </div>
 
-        {filteredOrders.length > 0 ? (
+        {paginatedOrders.length > 0 ? (
           <>
-            {/* 1. Desktop Operational Table (>= 850px) */}
-            <div className="ordersTableContainer desktopOnlyTable">
-              <table className="ordersOperationalTable">
+            {/* DESKTOP ORDERS TABLE (>= 768px) */}
+            <div className="orderTableScrollWrap desktopOnlyTable">
+              <table className="enterpriseOrderTable">
                 <thead>
                   <tr>
-                    <th>Order #</th>
-                    <th>Customer</th>
-                    <th>Contact</th>
-                    <th>Product</th>
-                    <th>Product Code</th>
-                    <th>Amount</th>
-                    <th>Placed</th>
-                    <th>Aging</th>
-                    <th>Shipment Group</th>
-                    <th>Payment</th>
-                    <th>Status</th>
-                    <th>Cancellation</th>
-                    <th style={{ textAlign: 'right' }}>Actions</th>
+                    <th className="thOrderNo">Order Details</th>
+                    <th className="thCustomer">Customer</th>
+                    <th className="thItems">Items & Value</th>
+                    <th className="thTimeline">Aging & SLA</th>
+                    <th className="thStage">Current Stage</th>
+                    <th className="thPriority">Priority Status</th>
+                    <th className="thNextAction">Next Action</th>
+                    <th className="thActions" style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {visibleOrders.map((o) => {
+                  {paginatedOrders.map((o) => {
+                    const meta = o._priorityMeta;
+                    const cleanPhone = formatWhatsAppPhone(o.phone);
+                    const itemsCount = (o.items || []).length;
+                    const firstItem = o.items?.[0] || { name: 'Handcrafted Piece' };
+                    const { dateStr, timeStr } = formatOrderDate(o.created_at || o.createdAt);
+                    const isCustom = o.order_type === 'custom' || o.orderType === 'custom';
+                    const isAssisted = o.assisted_order?.is_assisted || o.assistedOrder?.isAssisted;
+                    const isGift = Boolean(o.is_gift || o.isGift);
                     const isVerified =
                       o.payment_status === 'verified' ||
                       o.paymentStatus === 'verified' ||
                       o.payment_status === 'paid';
-                    const cleanPhone = formatWhatsAppPhone(o.phone);
-                    const itemsCount = (o.items || []).length;
-                    const firstItem = o.items?.[0] || { name: 'Handcrafted Piece' };
-
-                    // Date & Aging Calculations
-                    const createdAt = o.created_at || o.createdAt;
-                    const { dateStr, timeStr, fullStr } = formatOrderDate(createdAt);
-                    const orderAgeDays = getOrderAgeInDays(createdAt);
-                    const isPriority = orderAgeDays > 15;
-
-                    const isCancelRequested =
-                      o.cancellation_status === 'cancellation_requested' ||
-                      o.cancellationStatus === 'cancellation_requested';
-                    const isCancelApproved =
-                      o.cancellation_status === 'cancellation_approved' ||
-                      o.cancellationStatus === 'cancellation_approved';
-                    const isRefundCompleted =
-                      o.cancellation_status === 'refund' || o.refund_status === 'refund';
-
-                    const groupCode = o.shipment_group_code || o.shipmentGroupCode || null;
 
                     return (
                       <tr
                         key={o.id || o.order_no}
-                        className={`${!isVerified ? 'rowNeedsVerification' : ''} ${
-                          isCancelRequested ? 'rowNeedsCancellationReview' : ''
-                        } ${isPriority ? 'rowPriority' : ''}`}
+                        className={`orderTableRow ${meta.level === PRIORITY_LEVELS.CRITICAL ? 'rowCritical' : ''} ${meta.level === PRIORITY_LEVELS.HIGH ? 'rowHigh' : ''} ${meta.isDelivered ? 'rowDelivered' : ''}`}
+                        onClick={() => onViewOrderClick && onViewOrderClick(o)}
                       >
-                        {/* 1. Order No */}
-                        <td className="orderNoCell">
-                          <b>#{o.order_no}</b>
-                          {(o.order_type === 'custom' || o.orderType === 'custom') && (
-                            <span
-                              className="adminCustomOrderBadge"
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 3,
-                                fontSize: 10,
-                                fontWeight: 800,
-                                color: '#92400e',
-                                background: '#fef3c7',
-                                border: '1px solid #f59e0b',
-                                padding: '1px 6px',
-                                borderRadius: 4,
-                                marginTop: 2,
-                                textTransform: 'uppercase'
-                              }}
-                              title="Custom Handcrafted Order"
-                            >
-                              ✨ Custom Order
-                            </span>
-                          )}
-                        {(o.assisted_order?.is_assisted || o.assistedOrder?.isAssisted || o.order_status === 'payment_pending' || o.orderStatus === 'payment_pending') && (
-                            <span className="adminAssistedOrderBadge" title="Assisted order created/corrected by admin">
-                              ✦ Assisted Order
-                            </span>
-                          )}
-                          {Boolean(
-                            o.customization?.requested ||
-                            (o.customization?.details && o.customization.details.trim()) ||
-                            o.customization?.referenceImage ||
-                            o.customization?.reference_image
-                          ) && (
-                            <span
-                              className="adminCustomizationBadge"
-                              title={`Customization Request: ${o.customization?.details || 'Reference image attached'}`}
-                            >
-                              🎨 Customization
-                            </span>
-                          )}
-                        </td>
-
-                        {/* 2. Customer */}
-                        <td className="customerCell">
-                          <b>{o.recipient_name || o.recipientName || o.name}</b>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', marginTop: 2 }}>
-                            <small className="userBadge">
-                              {o.user_id ? 'Registered' : 'Guest'}
-                            </small>
-                            {(o.is_gift || o.isGift) && (
-                              <span
-                                style={{
-                                  background: '#fce7f3',
-                                  color: '#9d174d',
-                                  fontSize: '10px',
-                                  fontWeight: 700,
-                                  padding: '1px 5px',
-                                  borderRadius: 3
-                                }}
-                                title={`Gift from: ${o.customer_name || o.customerName || 'Customer'}`}
-                              >
-                                🎁 Gift
-                              </span>
-                            )}
-                          </div>
-                        </td>
-
-                        {/* 3. Contact */}
-                        <td className="contactCell">
-                          <span className="phoneText">{o.phone}</span>
-                          {cleanPhone && (
-                            <a
-                              href={`https://wa.me/${cleanPhone}?text=Hi%20${encodeURIComponent(
-                                o.name
-                              )}%2C%20regarding%20your%20Nathshikha%20order%20%23${o.order_no}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="waIconBtn"
-                              title="Chat on WhatsApp"
-                            >
-                              <MessageSquare size={13} />
-                            </a>
-                          )}
-                        </td>
-
-                        {/* 4. Product Name */}
-                        <td className="productNameCell">
-                          <span className="productNameText" title={firstItem.name}>
-                            {firstItem.name}
-                          </span>
-                          {(() => {
-                            const customParams = (o.items || []).flatMap((item) =>
-                              getParameterEntries(item.selectedParameters || item.selectedOptions).filter((p) => p.isCustom)
-                            );
-                            if (customParams.length === 0) return null;
-                            return (
-                              <div style={{ marginTop: 3, display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                                {customParams.map((p, pIdx) => (
-                                  <span
-                                    key={pIdx}
-                                    style={{
-                                      fontSize: 10,
-                                      fontWeight: 700,
-                                      background: '#fef3c7',
-                                      border: '1px solid #f59e0b',
-                                      color: '#78350f',
-                                      padding: '1px 5px',
-                                      borderRadius: 3,
-                                      display: 'inline-flex',
-                                      alignItems: 'center',
-                                      gap: 2
-                                    }}
-                                    title={`Customized: ${p.name}: ${p.value}`}
-                                  >
-                                    ✍️ {p.name}: <b>{p.value}</b>
-                                  </span>
-                                ))}
-                              </div>
-                            );
-                          })()}
-                          {itemsCount > 1 && (
-                            <small className="totalItemsCount">
-                              Total {o.items.reduce((a, i) => a + (i.qty || 1), 0)} items
-                            </small>
-                          )}
-                        </td>
-
-                        {/* 5. Product Code */}
-                        <td className="productCodeCell">
-                          <code>{getProductCode(firstItem, o, 0)}</code>
-                          {itemsCount > 1 && (
-                            <span
-                              className="multiItemBadge"
-                              title={o.items.map((i) => i.name).join(', ')}
-                            >
-                              +{itemsCount - 1} more
-                            </span>
-                          )}
-                        </td>
-
-                        {/* 6. Amount */}
-                        <td className="amountCell">
-                          <b>{money(o.total)}</b>
-                          <small>{(o.payment_method || 'UPI').toUpperCase()}</small>
-                        </td>
-
-                        {/* 7. Placed Date */}
-                        <td className="orderDateCell" title={fullStr}>
-                          <div className="dateCellWrap">
-                            <span className="orderDateText">{dateStr}</span>
-                            {timeStr && (
-                              <small className="orderTimeText">{timeStr}</small>
-                            )}
-                          </div>
-                        </td>
-
-                        {/* 8. Order Age */}
-                        <td className="orderAgeCell">
-                          {isPriority ? (
-                            <span
-                              className="orderAgeBadge priorityBadge"
-                              title="Priority Order — More than 15 days old"
-                            >
-                              🔴 {formatOrderAge(orderAgeDays)} · Priority
-                            </span>
-                          ) : (
-                            <span className="orderAgeBadge normalAgeBadge">
-                              {formatOrderAge(orderAgeDays)}
-                            </span>
-                          )}
-                        </td>
-
-                        {/* 9. Shipment Group */}
-                        <td className="shipmentGroupCell">
-                          {groupCode ? (
-                            <div className="shipmentGroupWrap">
-                              <span className="adminShipmentGroupBadge" title={`Shipment Group #${groupCode}`}>
-                                <Boxes size={11} />
-                                <b>{groupCode}</b>
-                              </span>
-                              {o.co_shipped_orders && o.co_shipped_orders.length > 0 && (
-                                <small className="coShippedAdminList">
-                                  with #{o.co_shipped_orders.join(', #')}
-                                </small>
+                        {/* 1. Order Details & Badges */}
+                        <td className="tdOrderNo">
+                          <div className="orderIdentityGroup">
+                            <span className="orderNumberText">#{o.order_no || o.orderNo}</span>
+                            <div className="orderBadgesFlow">
+                              {isCustom && (
+                                <span className="badgeCustomOrder" title="Bespoke Custom Order">
+                                  ✨ Custom
+                                </span>
+                              )}
+                              {isAssisted && (
+                                <span className="badgeAssistedOrder" title="Assisted Checkout Order">
+                                  ✦ Assisted
+                                </span>
+                              )}
+                              {isGift && (
+                                <span className="badgeGiftOrder" title="Gift Wrapped Order">
+                                  🎁 Gift
+                                </span>
+                              )}
+                              {Boolean(o.customization?.requested || o.customization?.referenceImage) && (
+                                <span className="badgeCustomizationReq" title="Customization Attached">
+                                  🎨 Note
+                                </span>
                               )}
                             </div>
-                          ) : (
-                            <span className="singleShipmentText">—</span>
-                          )}
+                            {o.shipment_group_code && (
+                              <span className="shipmentGroupMiniTag" title={`Shipment Group: ${o.shipment_group_code}`}>
+                                <Boxes size={10} /> {o.shipment_group_code}
+                              </span>
+                            )}
+                          </div>
                         </td>
 
-                        {/* 10. Payment Status */}
-                        <td className="paymentStatusCell">
-                          {isVerified ? (
-                            <span className="verifiedPaymentBadge">
-                              <CheckCircle2 size={12} /> Verified
+                        {/* 2. Customer & Phone */}
+                        <td className="tdCustomer" onClick={(e) => e.stopPropagation()}>
+                          <div className="customerMetaGroup">
+                            <span className="customerNameText">
+                              {o.recipient_name || o.recipientName || o.name}
                             </span>
-                          ) : (o.order_status === 'payment_pending' || o.orderStatus === 'payment_pending') ? (
-                            (o.payment_transaction_id || o.upi_utr || o.assisted_order?.payment_claimed_at || o.assistedOrder?.paymentClaimedAt) ? (
-                              <span className="pendingPaymentBadge">
-                                <Clock size={12} /> Claimed (Verify)
-                              </span>
-                            ) : (
-                              <span className="adminPaymentPendingBadge">
-                                <Clock size={12} /> Awaiting Pay
-                              </span>
-                            )
-                          ) : (
-                            <span className="pendingPaymentBadge">
-                              <Clock size={12} /> Pending Verif.
-                            </span>
-                          )}
+                            <div className="customerContactRow">
+                              <span className="customerPhoneText">{o.phone}</span>
+                              {cleanPhone && (
+                                <a
+                                  href={`https://wa.me/${cleanPhone}?text=Hi%20${encodeURIComponent(
+                                    o.name || o.recipient_name
+                                  )}%2C%20regarding%20your%20Nathshikha%20order%20%23${o.order_no || o.orderNo}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="waQuickLinkBtn"
+                                  title="Chat on WhatsApp"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <MessageSquare size={12} />
+                                </a>
+                              )}
+                            </div>
+                          </div>
                         </td>
 
-                        {/* 11. Status Dropdown */}
-                        <td className="statusCell">
+                        {/* 3. Items & Amount */}
+                        <td className="tdItems">
+                          <div className="itemsValueGroup">
+                            <span className="primaryItemName" title={firstItem.name}>
+                              {firstItem.name}
+                            </span>
+                            <div className="itemsValueSub">
+                              <b className="orderTotalVal">{money(o.total)}</b>
+                              <span className="itemCountTag">
+                                ({itemsCount} {itemsCount === 1 ? 'item' : 'items'})
+                              </span>
+                              <span className="payMethodTag">
+                                {(o.payment_method || 'UPI').toUpperCase()}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* 4. Aging & SLA */}
+                        <td className="tdTimeline">
+                          <div className="timelineSlaGroup">
+                            <div className="orderAgeText">
+                              <span>Age: <b>{formatOrderAge(meta.orderAgeDays)}</b></span>
+                              <small className="placedDateSub">{dateStr}</small>
+                            </div>
+
+                            {/* Delivery SLA Status */}
+                            {!meta.isTerminal && (
+                              <div className="slaStatusWrap">
+                                {meta.isOverdue ? (
+                                  <span className="slaBadge overdue">
+                                    <AlertTriangle size={11} /> {meta.daysOverdue}d Overdue
+                                  </span>
+                                ) : meta.daysRemaining !== null ? (
+                                  <span className={`slaBadge ${meta.daysRemaining <= 3 ? 'dueSoon' : 'onTime'}`}>
+                                    <Clock size={11} /> {meta.daysRemaining}d to SLA
+                                  </span>
+                                ) : (
+                                  <span className="slaBadge pendingSla">SLA Pending</span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* 5. Current Stage Dropdown */}
+                        <td className="tdStage" onClick={(e) => e.stopPropagation()}>
                           <select
-                            value={o.order_status}
+                            value={o.order_status || o.orderStatus || 'placed'}
                             onChange={(e) => handleStatusChange(o, e.target.value)}
-                            className={`orderStatusSelect statusSelect_${o.order_status}`}
+                            className={`stageSelectDropdown stage_${o.order_status || o.orderStatus}`}
                           >
                             <option value="payment_pending">Payment Pending</option>
                             <option value="placed">Order Received</option>
-                            <option value="confirmed">Order Confirmed</option>
-                            <option value="making">Making</option>
-                            <option value="packing">QC & Packaging</option>
-                            <option value="shipped">Dispatched & In Transit</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="making">Artisan Crafting</option>
+                            <option value="packing">QC & Packed</option>
+                            <option value="shipped">Dispatched</option>
                             <option value="delivered">Delivered</option>
                             <option value="cancelled">Cancelled</option>
                           </select>
+                          {/* Payment status pill */}
+                          <div className="paymentStatusSubPill">
+                            {isVerified ? (
+                              <span className="verifiedPaymentText">
+                                <Check size={11} /> Verified
+                              </span>
+                            ) : (
+                              <span className="unverifiedPaymentText">
+                                <Clock size={11} /> Unverified
+                              </span>
+                            )}
+                          </div>
                         </td>
 
-                        {/* 12. Cancellation Status */}
-                        <td className="cancellationStatusCell">
-                          {isCancelRequested ? (
-                            <span className="cancelReqBadge" title={o.cancellation_reason || 'Requested'}>
-                              <AlertTriangle size={11} /> Requested
-                            </span>
-                          ) : isCancelApproved ? (
-                            <span className="cancelApprovedBadge">
-                              <CheckCircle2 size={11} /> Approved
-                            </span>
-                          ) : isRefundCompleted ? (
-                            <span className="cancelRefundedBadge">
-                              <CheckCircle2 size={11} /> Refunded
-                            </span>
-                          ) : (
-                            <span className="noCancelText">—</span>
-                          )}
+                        {/* 6. Dynamic Priority Status */}
+                        <td className="tdPriority" onClick={(e) => e.stopPropagation()}>
+                          <div
+                            className={`priorityStatusPill ${meta.badgeClass}`}
+                            title={`Priority: ${meta.level} — ${meta.reason}`}
+                            onClick={() => setPriorityModalOrder(o)}
+                            role="button"
+                            tabIndex={0}
+                          >
+                            <span className="priorityBullet" />
+                            <span className="priorityLabelText">{meta.label}</span>
+                            {meta.isManualApplied && (
+                              <span className="manualTagBadge" title="Manually assigned by admin">
+                                Manual
+                              </span>
+                            )}
+                          </div>
                         </td>
 
-                        {/* 13. Actions */}
-                        <td className="actionsCell">
-                          <div className="actionButtonsGroup">
-                            {isCancelRequested && onReviewCancellationClick && (
-                              <button
-                                type="button"
-                                className="goldBtn compact reviewCancelActionBtn"
-                                onClick={() => onReviewCancellationClick(o)}
-                                title="Review cancellation request"
-                              >
-                                <AlertTriangle size={12} />
-                                <span>Review</span>
-                              </button>
-                            )}
+                        {/* 7. Next Action Recommendation */}
+                        <td className="tdNextAction" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            className={`nextActionCtaBtn variant_${meta.nextAction.variant}`}
+                            onClick={(e) => handleNextActionClick(e, o, meta.nextAction)}
+                            title={`Recommended Next Action: ${meta.nextAction.label}`}
+                          >
+                            <span>{meta.nextAction.label}</span>
+                          </button>
+                        </td>
 
-                            {!isVerified && (
-                              <button
-                                type="button"
-                                className="goldBtn compact verifyBtn"
-                                onClick={() => onVerifyPaymentClick(o)}
-                                title="Verify payment for this order"
-                              >
-                                <ShieldCheck size={13} />
-                                <span>Verify</span>
-                              </button>
-                            )}
-
-                            {(o.order_status === 'shipped' || o.shipment_partner || o.tracking_id) && (
-                              <button
-                                type="button"
-                                className="outlineBtn compact editShipmentBtn"
-                                onClick={() => onOpenShipmentModal && onOpenShipmentModal(o, true)}
-                                title="Edit tracking & shipment details"
-                              >
-                                <span>Shipment</span>
-                              </button>
-                            )}
+                        {/* 8. Action Buttons */}
+                        <td className="tdActions" onClick={(e) => e.stopPropagation()}>
+                          <div className="tableActionBtns">
+                            <button
+                              type="button"
+                              className="orderActionBtn inspectBtn"
+                              onClick={() => onViewOrderClick && onViewOrderClick(o)}
+                              title="View full order details"
+                            >
+                              <Eye size={14} />
+                            </button>
 
                             <button
                               type="button"
-                              className="outlineBtn compact viewOrderBtn"
-                              onClick={() => onViewOrderClick(o)}
-                              title="View complete order details"
+                              className="orderActionBtn priorityBtn"
+                              onClick={() => setPriorityModalOrder(o)}
+                              title="Set priority or internal operational note"
                             >
-                              <Eye size={13} />
-                              <span>View</span>
+                              <Edit3 size={13} />
                             </button>
 
-                            {onDeleteOrder && (
-                              <button
-                                type="button"
-                                className="outlineBtn compact deleteOrderBtn"
-                                onClick={() => openDeleteModal(o)}
-                                title={`Move order #${o.order_no} to Deleted Orders`}
-                              >
-                                <Trash2 size={13} color="#dc2626" />
-                                <span>Delete</span>
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              className="orderActionBtn deleteBtn"
+                              onClick={() => {
+                                setDeleteModalOrder(o);
+                                setDeleteReasonType('Duplicate order');
+                                setCustomDeleteReason('');
+                                setDeleteReasonError('');
+                              }}
+                              title="Move order to Trash (Recoverable for 30 days)"
+                            >
+                              <Trash2 size={13} />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -779,232 +982,116 @@ export default function AdminOrderList({
               </table>
             </div>
 
-            {/* 2. Dedicated Mobile Order Cards (< 850px) */}
-            <div className="mobileOrdersList">
-              {visibleOrders.map((o) => {
-                const isVerified =
-                  o.payment_status === 'verified' ||
-                  o.paymentStatus === 'verified' ||
-                  o.payment_status === 'paid';
+            {/* MOBILE TOUCH CARDS VIEW (<= 640px) */}
+            <div className="orderMobileCardsList">
+              {paginatedOrders.map((o) => {
+                const meta = o._priorityMeta;
                 const cleanPhone = formatWhatsAppPhone(o.phone);
                 const itemsCount = (o.items || []).length;
                 const firstItem = o.items?.[0] || { name: 'Handcrafted Piece' };
-                const totalQty = (o.items || []).reduce((a, i) => a + (i.qty || 1), 0);
-
-                const createdAt = o.created_at || o.createdAt;
-                const { dateStr, timeStr } = formatOrderDate(createdAt);
-                const orderAgeDays = getOrderAgeInDays(createdAt);
-                const isPriority = orderAgeDays > 15;
-
-                const isCancelRequested =
-                  o.cancellation_status === 'cancellation_requested' ||
-                  o.cancellationStatus === 'cancellation_requested';
-                const isCancelApproved =
-                  o.cancellation_status === 'cancellation_approved' ||
-                  o.cancellationStatus === 'cancellation_approved';
-
-                const groupCode = o.shipment_group_code || o.shipmentGroupCode || null;
+                const isCustom = o.order_type === 'custom' || o.orderType === 'custom';
+                const isAssisted = o.assisted_order?.is_assisted || o.assistedOrder?.isAssisted;
+                const isGift = Boolean(o.is_gift || o.isGift);
 
                 return (
                   <div
                     key={o.id || o.order_no}
-                    className={`mobileOrderCard ${!isVerified ? 'cardNeedsVerification' : ''} ${
-                      isCancelRequested ? 'cardNeedsCancellationReview' : ''
-                    } ${isPriority ? 'cardPriority' : ''}`}
+                    className={`orderMobileCard ${meta.level === PRIORITY_LEVELS.CRITICAL ? 'mobileCritical' : ''} ${meta.isDelivered ? 'mobileDelivered' : ''}`}
+                    onClick={() => onViewOrderClick && onViewOrderClick(o)}
                   >
-                    {/* Card Header: Order No + Placed Date + Status Badge */}
+                    {/* Card Top Row */}
                     <div className="mobileCardHeader">
-                      <div className="mobileCardPrimaryInfo">
-                        <span className="mobileCardOrderNo">#{o.order_no}</span>
-                        <span className="mobileCardDate">{dateStr}</span>
-                        <span
-                          className={`mobileOrderAgeBadge ${isPriority ? 'priorityAgeBadge' : 'normalAgeBadge'}`}
-                          title={`Order Age: ${formatOrderAge(orderAgeDays)}${isPriority ? ' — Priority Order' : ''}`}
-                        >
-                          {isPriority ? `🔴 Age: ${formatOrderAge(orderAgeDays)}` : `Age: ${formatOrderAge(orderAgeDays)}`}
-                        </span>
-                        {(o.order_type === 'custom' || o.orderType === 'custom') && (
-                          <span className="adminCustomOrderBadge" style={{ fontSize: 10, fontWeight: 800, color: '#92400e', background: '#fef3c7', border: '1px solid #f59e0b', padding: '1px 5px', borderRadius: 4 }}>
-                            ✨ Custom
-                          </span>
-                        )}
-                        {(o.assisted_order?.is_assisted || o.assistedOrder?.isAssisted || o.order_status === 'payment_pending' || o.orderStatus === 'payment_pending') && (
-                          <span className="adminAssistedOrderBadge">✦ Assisted</span>
-                        )}
+                      <div className="mobileOrderNoBadge">
+                        <b>#{o.order_no || o.orderNo}</b>
+                        {isCustom && <span className="badgeCustomOrder">✨ Custom</span>}
+                        {isAssisted && <span className="badgeAssistedOrder">✦ Assisted</span>}
+                        {isGift && <span className="badgeGiftOrder">🎁 Gift</span>}
                       </div>
-                      <div className="mobileCardHeaderBadges">
-                        {Boolean(
-                          o.customization?.requested ||
-                          (o.customization?.details && o.customization.details.trim()) ||
-                          o.customization?.referenceImage ||
-                          o.customization?.reference_image
-                        ) && (
-                          <span
-                            className="mobileCustomizationBadge"
-                            title={`Customization Request: ${o.customization?.details || 'Reference image attached'}`}
-                          >
-                            🎨 Customization
-                          </span>
-                        )}
-                        <span className={`statusChip statusChip_${o.order_status}`}>
-                          {getStatusLabel(o.order_status)}
-                        </span>
+
+                      <div
+                        className={`priorityStatusPill ${meta.badgeClass}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPriorityModalOrder(o);
+                        }}
+                      >
+                        <span className="priorityBullet" />
+                        <span>{meta.label}</span>
                       </div>
                     </div>
 
-                    {/* Customer & Verification Row */}
-                    <div className="mobileCardCustomerRow">
-                      <div className="mobileCustomerMeta">
-                        <b className="mobileCustomerName">{o.name}</b>
-                        <span className="mobileCustomerPhone">{o.phone}</span>
-                      </div>
-                      <div className="mobileVerificationChipWrap">
-                        {isVerified ? (
-                          <span className="verifiedChip">🟢 Verified</span>
-                        ) : (
-                          <span className="pendingChip">🟡 Pending Verif.</span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Product & Total Summary Row */}
-                    <div className="mobileCardProductRow">
-                      <div className="mobileProductTitle">
-                        <span className="mobilePieceName">{firstItem.name}</span>
-                        {(() => {
-                          const customParams = (o.items || []).flatMap((item) =>
-                            getParameterEntries(item.selectedParameters || item.selectedOptions).filter((p) => p.isCustom)
-                          );
-                          if (customParams.length === 0) return null;
-                          return (
-                            <div style={{ marginTop: 3, display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                              {customParams.map((p, pIdx) => (
-                                <span
-                                  key={pIdx}
-                                  style={{
-                                    fontSize: 10,
-                                    fontWeight: 700,
-                                    background: '#fef3c7',
-                                    border: '1px solid #f59e0b',
-                                    color: '#78350f',
-                                    padding: '1px 5px',
-                                    borderRadius: 3,
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: 2
-                                  }}
-                                >
-                                  ✍️ {p.name}: <b>{p.value}</b>
-                                </span>
-                              ))}
-                            </div>
-                          );
-                        })()}
-                        {itemsCount > 1 && (
-                          <span className="mobileMoreItemsBadge">
-                            +{itemsCount - 1} more ({totalQty} total items)
-                          </span>
-                        )}
-                      </div>
-                      <div className="mobileAmountBlock">
+                    {/* Card Customer & Items Info */}
+                    <div className="mobileCardBody">
+                      <div className="mobileCustomerRow">
+                        <span className="mobileCustomerName">
+                          {o.recipient_name || o.recipientName || o.name}
+                        </span>
                         <b className="mobileOrderTotal">{money(o.total)}</b>
-                        <span className="mobilePaymentMethod">
-                          {(o.payment_method || 'UPI').toUpperCase()}
+                      </div>
+
+                      <p className="mobileItemSummary">
+                        {firstItem.name} {itemsCount > 1 ? `(+${itemsCount - 1} more)` : ''}
+                      </p>
+
+                      <div className="mobileTimelineMeta">
+                        <span>Age: <b>{formatOrderAge(meta.orderAgeDays)}</b></span>
+                        {!meta.isTerminal && (
+                          <span className={`mobileSlaTag ${meta.isOverdue ? 'overdue' : ''}`}>
+                            {meta.isOverdue
+                              ? `⚠️ ${meta.daysOverdue}d Overdue`
+                              : meta.daysRemaining !== null
+                              ? `⏱ ${meta.daysRemaining}d to SLA`
+                              : 'SLA Active'}
+                          </span>
+                        )}
+                        <span className="mobileStageTag">
+                          Stage: <b>{(o.order_status || o.orderStatus || 'placed').toUpperCase()}</b>
                         </span>
                       </div>
                     </div>
 
-                    {/* Shipment Group Pill if Grouped */}
-                    {groupCode && (
-                      <div className="mobileCardGroupRow">
-                        <span className="adminShipmentGroupBadge">
-                          <Boxes size={11} /> Group #{groupCode}
-                        </span>
-                        {o.co_shipped_orders && o.co_shipped_orders.length > 0 && (
-                          <small className="coShippedAdminList">
-                            Co-shipped with #{o.co_shipped_orders.join(', #')}
-                          </small>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Urgent Action Prompts */}
-                    {!isVerified && (
+                    {/* Card Actions & CTA */}
+                    <div className="mobileCardFooter" onClick={(e) => e.stopPropagation()}>
                       <button
                         type="button"
-                        className="mobileCardUrgentActionBtn"
-                        onClick={() => onVerifyPaymentClick(o)}
+                        className={`mobileNextActionBtn variant_${meta.nextAction.variant}`}
+                        onClick={(e) => handleNextActionClick(e, o, meta.nextAction)}
                       >
-                        <ShieldCheck size={14} />
-                        <span>Verify Customer Payment</span>
+                        <span>{meta.nextAction.label}</span>
                       </button>
-                    )}
 
-                    {isCancelRequested && onReviewCancellationClick && (
-                      <button
-                        type="button"
-                        className="mobileCardCancelActionBtn"
-                        onClick={() => onReviewCancellationClick(o)}
-                      >
-                        <AlertTriangle size={14} />
-                        <span>Review Cancellation Request</span>
-                      </button>
-                    )}
-
-                    {/* Card Actions Row: Status Select + WhatsApp + View Order + Delete */}
-                    <div className="mobileCardActionsRow">
-                      <div className="mobileStatusSelectWrap">
-                        <select
-                          value={o.order_status}
-                          onChange={(e) => handleStatusChange(o, e.target.value)}
-                          className={`orderStatusSelect statusSelect_${o.order_status}`}
-                        >
-                          <option value="payment_pending">Payment Pending</option>
-                          <option value="placed">Received</option>
-                          <option value="confirmed">Confirmed</option>
-                          <option value="making">Crafting</option>
-                          <option value="packing">QC / Packed</option>
-                          <option value="shipped">Dispatched</option>
-                          <option value="delivered">Delivered</option>
-                          <option value="cancelled">Cancelled</option>
-                        </select>
-                      </div>
-
-                      <div className="mobileCardQuickBtns">
+                      <div className="mobileSecondaryActions">
                         {cleanPhone && (
                           <a
                             href={`https://wa.me/${cleanPhone}?text=Hi%20${encodeURIComponent(
-                              o.name
-                            )}%2C%20regarding%20your%20Nathshikha%20order%20%23${o.order_no}`}
+                              o.name || o.recipient_name
+                            )}%2C%20regarding%20your%20Nathshikha%20order%20%23${o.order_no || o.orderNo}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="mobileCardWaLink"
-                            title="WhatsApp Customer"
+                            className="mobileWaBtn"
+                            title="Chat on WhatsApp"
                           >
-                            <MessageSquare size={15} />
+                            <MessageSquare size={13} />
                           </a>
                         )}
 
                         <button
                           type="button"
-                          className="goldBtn compact mobileCardDetailsBtn"
-                          onClick={() => onViewOrderClick(o)}
+                          className="mobileIconBtn"
+                          onClick={() => setPriorityModalOrder(o)}
+                          title="Priority"
                         >
-                          <Eye size={13} />
-                          <span>View Order</span>
+                          <Edit3 size={13} />
                         </button>
 
-                        {onDeleteOrder && (
-                          <button
-                            type="button"
-                            className="outlineBtn compact mobileCardDeleteBtn"
-                            onClick={() => openDeleteModal(o)}
-                            title={`Move order #${o.order_no} to Deleted Orders`}
-                            aria-label={`Move order #${o.order_no} to Deleted Orders`}
-                          >
-                            <Trash2 size={14} color="#dc2626" />
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          className="mobileIconBtn"
+                          onClick={() => onViewOrderClick && onViewOrderClick(o)}
+                          title="View Details"
+                        >
+                          <Eye size={14} />
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -1012,101 +1099,165 @@ export default function AdminOrderList({
               })}
             </div>
 
-            {/* Pagination Controls */}
-            {filteredOrders.length > visibleCount && (
-              <div className="adminPaginationBar">
-                <button
-                  type="button"
-                  className="goldBtn loadMoreBtn"
-                  onClick={() => setVisibleCount((prev) => prev + 6)}
-                  title="Load next 6 orders"
-                >
-                  <span>Load More Orders (+6)</span>
-                </button>
-                <button
-                  type="button"
-                  className="outlineBtn showAllBtn"
-                  onClick={() => setVisibleCount(filteredOrders.length)}
-                  title="Show all orders at once"
-                >
-                  <span>Show All ({filteredOrders.length})</span>
-                </button>
+            {/* ========================================================================= */}
+            {/* 5. ENTERPRISE PAGINATION CONTROLS                                         */}
+            {/* ========================================================================= */}
+            <footer className="orderPaginationBar">
+              <div className="orderPaginationInfo">
+                <span>
+                  Showing <b>{(safeCurrentPage - 1) * pageSize + 1}</b>–
+                  <b>{Math.min(safeCurrentPage * pageSize, totalItems)}</b> of <b>{totalItems}</b> orders
+                  {totalItems !== orders.length && (
+                    <span className="filteredHint"> (filtered from {orders.length})</span>
+                  )}
+                </span>
               </div>
-            )}
 
-            {filteredOrders.length <= visibleCount && filteredOrders.length > 6 && (
-              <div className="allOrdersLoadedNotice">
-                <span>✓ All {filteredOrders.length} orders are currently displayed</span>
+              <div className="orderPaginationControls">
+                <div className="pageSizePickerWrap">
+                  <span className="pageSizeLabel">Per page:</span>
+                  <AdminDropdown
+                    value={pageSize}
+                    onChange={(val) => setPageSize(Number(val))}
+                    options={pageSizeOptions}
+                    direction="up"
+                    minWidth="105px"
+                  />
+                </div>
+
+                <div className="orderPageNavButtons">
+                  <button
+                    type="button"
+                    className="orderNavBtn"
+                    disabled={safeCurrentPage <= 1}
+                    onClick={() => handlePageChange(Math.max(1, safeCurrentPage - 1))}
+                    title="Previous page"
+                    aria-label="Previous page"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+
+                  {totalPages > 1 && (
+                    <div className="orderPagePills">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter((p) => p === 1 || p === totalPages || Math.abs(p - safeCurrentPage) <= 1)
+                        .reduce((acc, p, idx, arr) => {
+                          if (idx > 0 && p - arr[idx - 1] > 1) {
+                            acc.push(-1 * idx);
+                          }
+                          acc.push(p);
+                          return acc;
+                        }, [])
+                        .map((p) =>
+                          p < 0 ? (
+                            <span key={`ellipsis-${p}`} className="pageEllipsis">…</span>
+                          ) : (
+                            <button
+                              key={`page-${p}`}
+                              type="button"
+                              className={`pagePillBtn ${p === safeCurrentPage ? 'active' : ''}`}
+                              onClick={() => handlePageChange(p)}
+                              aria-label={`Go to page ${p}`}
+                            >
+                              {p}
+                            </button>
+                          )
+                        )}
+                    </div>
+                  )}
+
+                  <span className="currentPageBadge">
+                    Page <b>{safeCurrentPage}</b> of <b>{totalPages}</b>
+                  </span>
+
+                  <button
+                    type="button"
+                    className="orderNavBtn"
+                    disabled={safeCurrentPage >= totalPages}
+                    onClick={() => handlePageChange(Math.min(totalPages, safeCurrentPage + 1))}
+                    title="Next page"
+                    aria-label="Next page"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
               </div>
-            )}
+            </footer>
           </>
         ) : (
-          <div className="empty small">
-            <Package size={36} color="var(--gold)" />
-            <p>No orders found matching your filter criteria.</p>
-            {(filter !== 'all' || searchQuery) && (
-              <button
-                type="button"
-                className="outlineBtn compact"
-                onClick={() => {
-                  setFilter('all');
-                  setSearchQuery('');
-                }}
-              >
-                Reset Filters
+          /* EMPTY STATE */
+          <div className="orderEmptyState">
+            <div className="emptyStateIcon">
+              <Package size={36} />
+            </div>
+            <h3>No orders found in this queue</h3>
+            <p>
+              {hasActiveSecondaryFilters
+                ? `No orders match your current search "${searchQuery}" or selected priority filters.`
+                : filter === 'needs_attention'
+                ? 'All active orders are on schedule with no pending operational actions!'
+                : filter === 'urgent_critical'
+                ? 'Great news! There are zero critical or overdue orders in the queue.'
+                : 'No orders available in this operational view.'}
+            </p>
+            {hasActiveSecondaryFilters && (
+              <button type="button" className="goldBtn emptyResetBtn" onClick={resetAllFilters}>
+                <X size={14} />
+                <span>Reset All Filters</span>
               </button>
             )}
           </div>
         )}
       </div>
 
-      {/* Move to Deleted Orders / Trash Confirmation Modal */}
+      {/* ========================================================================= */}
+      {/* 6. MODALS: PRIORITY & SOFT DELETE                                         */}
+      {/* ========================================================================= */}
+      {priorityModalOrder && (
+        <AdminOrderPriorityModal
+          order={priorityModalOrder}
+          isOpen={Boolean(priorityModalOrder)}
+          onClose={() => setPriorityModalOrder(null)}
+          onPriorityUpdated={(updatedOrder) => {
+            if (onOrderUpdated) {
+              onOrderUpdated(updatedOrder);
+            }
+          }}
+        />
+      )}
+
+      {/* Soft Delete Confirmation Modal (Preserved exactly) */}
       {deleteModalOrder && (
         <div
-          className="adminDeleteModalOverlay"
-          onClick={() => !isDeleting && setDeleteModalOrder(null)}
+          className="adminProductDetailOverlay"
+          onClick={() => setDeleteModalOrder(null)}
+          role="dialog"
+          aria-modal="true"
         >
           <div
-            className="adminDeleteModalContainer"
+            className="deleteSafetyDialog"
+            style={{ maxWidth: '520px', textAlign: 'left', alignItems: 'stretch' }}
             onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
           >
-            <div className="deleteModalIcon">
-              <Trash2 size={24} color="#dc2626" />
-            </div>
-            <h3>Move this order to Deleted Orders?</h3>
-            <p>
-              Order <b>#{deleteModalOrder.order_no || deleteModalOrder.orderNo}</b> will be moved to Deleted Orders (Trash). It will not be permanently deleted now and will remain fully recoverable for 30 days.
-            </p>
-
-            <div className="deleteOrderSummaryPreview">
-              <div className="deletePreviewRow">
-                <span>Order ID:</span>
-                <b>#{deleteModalOrder.order_no || deleteModalOrder.orderNo}</b>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid #fee2e2', paddingBottom: '12px' }}>
+              <div className="deleteSafetyIconWrap" style={{ width: '42px', height: '42px' }}>
+                <Trash2 size={20} />
               </div>
-              <div className="deletePreviewRow">
-                <span>Customer / Buyer:</span>
-                <b>{deleteModalOrder.customer_name || deleteModalOrder.customerName || deleteModalOrder.name}</b>
-              </div>
-              <div className="deletePreviewRow">
-                <span>Total Amount:</span>
-                <b>{money(deleteModalOrder.total)}</b>
-              </div>
-              <div className="deletePreviewRow">
-                <span>Current Status:</span>
-                <b>{getStatusLabel(deleteModalOrder.order_status || deleteModalOrder.orderStatus)}</b>
-              </div>
-              <div className="deletePreviewRow" style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px dashed #e2e8f0' }}>
-                <span style={{ color: '#10b981', fontWeight: 600 }}>Recovery Period:</span>
-                <b style={{ color: '#10b981' }}>Order will remain recoverable for 30 days.</b>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.15rem' }}>Move Order to Trash?</h3>
+                <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#64748b' }}>
+                  Order #{deleteModalOrder.order_no || deleteModalOrder.orderNo} ({deleteModalOrder.name})
+                </p>
               </div>
             </div>
 
-            {/* Deletion Reason Selector */}
-            <div className="deleteReasonForm" style={{ width: '100%', textAlign: 'left', marginTop: '6px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
-                Reason for deletion <span style={{ color: '#dc2626' }}>*</span>
+            <div style={{ padding: '14px 0', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', padding: '10px 12px', fontSize: '12px', color: '#991b1b', lineHeight: 1.4 }}>
+                <b>Safety Notice:</b> This order will be moved to the <b>Deleted Orders (Trash)</b> tab and hidden from active fulfillment. It can be restored at any time within <b>30 days</b> before permanent purge.
+              </div>
+
+              <label style={{ fontSize: '12px', fontWeight: 700, color: '#334155' }}>
+                Select Reason for Deletion *
               </label>
               <select
                 value={deleteReasonType}
@@ -1114,39 +1265,34 @@ export default function AdminOrderList({
                   setDeleteReasonType(e.target.value);
                   setDeleteReasonError('');
                 }}
-                className="deleteReasonSelect"
                 style={{
-                  width: '100%',
-                  padding: '7px 10px',
+                  height: '36px',
                   borderRadius: '6px',
                   border: '1px solid #cbd5e1',
-                  fontSize: '12.5px',
-                  background: '#f8fafc',
-                  marginBottom: '8px'
+                  padding: '0 10px',
+                  fontSize: '13px',
+                  background: '#ffffff',
+                  color: '#1e293b'
                 }}
               >
                 <option value="Duplicate order">Duplicate order</option>
-                <option value="Created by mistake">Created by mistake</option>
-                <option value="Customer requested cancellation">Customer requested cancellation</option>
-                <option value="Test order">Test order</option>
-                <option value="Other">Other (custom reason)</option>
+                <option value="Test / demo order placed by admin">Test / demo order placed by admin</option>
+                <option value="Customer requested cancellation before payment">Customer requested cancellation before payment</option>
+                <option value="Spam / fraudulent / unverified attempt">Spam / fraudulent / unverified attempt</option>
+                <option value="Payment failed permanently / abandoned">Payment failed permanently / abandoned</option>
+                <option value="Other">Other reason (specify below)</option>
               </select>
 
               <textarea
+                rows={2}
+                placeholder={deleteReasonType === 'Other' ? 'Please specify why this order is being deleted *' : 'Optional notes or reference details…'}
                 value={customDeleteReason}
                 onChange={(e) => {
-                  setCustomDeleteReason(e.target.value.slice(0, 500));
+                  setCustomDeleteReason(e.target.value);
                   setDeleteReasonError('');
                 }}
-                placeholder={
-                  deleteReasonType === 'Other'
-                    ? 'Please enter custom deletion reason (required, max 500 chars)...'
-                    : 'Optional additional notes (max 500 chars)...'
-                }
                 maxLength={500}
-                rows={2}
                 style={{
-                  width: '100%',
                   padding: '7px 10px',
                   borderRadius: '6px',
                   border: deleteReasonError ? '1px solid #dc2626' : '1px solid #cbd5e1',
@@ -1166,18 +1312,18 @@ export default function AdminOrderList({
               </div>
             </div>
 
-            <div className="adminDeleteModalActions">
+            <div className="adminDeleteModalActions" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
               <button
                 type="button"
-                className="outlineBtn cancelDeleteBtn"
+                className="safetyCancelBtn"
                 onClick={() => setDeleteModalOrder(null)}
                 disabled={isDeleting}
               >
-                CANCEL
+                Cancel
               </button>
               <button
                 type="button"
-                className="dangerDeleteBtn"
+                className="safetyDeleteConfirmBtn"
                 onClick={async () => {
                   if (!onDeleteOrder) return;
 
@@ -1212,17 +1358,7 @@ export default function AdminOrderList({
                 }}
                 disabled={isDeleting}
               >
-                {isDeleting ? (
-                  <>
-                    <Loader2 size={14} className="spinIcon" />
-                    <span>MOVING TO TRASH…</span>
-                  </>
-                ) : (
-                  <>
-                    <Trash2 size={14} />
-                    <span>MOVE TO TRASH</span>
-                  </>
-                )}
+                {isDeleting ? 'Moving to Trash…' : 'Move to Trash'}
               </button>
             </div>
           </div>

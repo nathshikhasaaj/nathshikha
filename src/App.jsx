@@ -80,7 +80,7 @@ export default function App() {
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) =>
-      `${p.name} ${p.category}`.toLowerCase().includes(query.toLowerCase())
+      `${p.name} ${p.mainCategory || ''} ${p.category}`.toLowerCase().includes(query.toLowerCase())
     );
   }, [products, query]);
 

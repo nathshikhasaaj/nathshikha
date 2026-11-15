@@ -1145,3 +1145,17 @@
     justify-content: center;
   }
 }
+
+.mainCategoryMissingWarning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff8eb;
+  border: 1px solid #fed7aa;
+  color: #b45309;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}

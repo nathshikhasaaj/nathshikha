@@ -20,9 +20,13 @@ import {
   ChevronRight,
   X,
   Sparkles,
-  Check
+  Check,
+  Boxes
 } from 'lucide-react';
+import { api } from '../../services/api';
+import { useToast } from '../../context/ToastContext';
 import { money } from '../../utils/formatters';
+import { MAIN_CATEGORIES } from '../../utils/parameterHelpers';
 import AdminProductDetailsModal from './AdminProductDetailsModal';
 import AdminDropdown from './AdminDropdown';
 import AdminRowActionMenu from './AdminRowActionMenu';
@@ -39,8 +43,11 @@ export default function AdminProductList({
   onRefresh,
   refreshing = false
 }) {
+  const { setToast } = useToast();
+
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedMainCategory, setSelectedMainCategory] = useState('ALL');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [selectedStatus, setSelectedStatus] = useState('ALL'); // ALL, LIVE, HIDDEN
   const [selectedStock, setSelectedStock] = useState('ALL'); // ALL, IN_STOCK, LOW_STOCK, OUT_OF_STOCK
@@ -50,6 +57,12 @@ export default function AdminProductList({
   // Pagination State
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Bulk Main Category Assignment State
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkMainCategory, setBulkMainCategory] = useState('Traditional');
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [showBulkConfirmModal, setShowBulkConfirmModal] = useState(false);
 
   // Modals state
   const [viewingProduct, setViewingProduct] = useState(null);
@@ -69,20 +82,44 @@ export default function AdminProductList({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Compute Master Categories list from props and products
+  // Compute Master Categories list from props and products (Excludes Traditional and Signature)
   const availableCategories = useMemo(() => {
     const set = new Set();
     if (Array.isArray(categoriesList)) {
       categoriesList.forEach((c) => {
         const name = typeof c === 'string' ? c : c.name;
-        if (name) set.add(name);
+        if (name && name !== 'Traditional' && name !== 'Signature') set.add(name);
       });
     }
     allProducts.forEach((p) => {
-      if (p.category) set.add(p.category);
+      if (p.category && p.category !== 'Traditional' && p.category !== 'Signature') {
+        set.add(p.category);
+      }
     });
+    if (!set.has('Nath')) {
+      set.add('Nath');
+    }
     return Array.from(set).sort();
   }, [categoriesList, allProducts]);
+
+  // Main Category dropdown options
+  const mainCategoryOptions = useMemo(() => {
+    const unassignedCount = allProducts.filter((p) => !p.mainCategory).length;
+    return [
+      { value: 'ALL', label: `All Main Categories (${allProducts.length})` },
+      ...MAIN_CATEGORIES.map((m) => {
+        const count = allProducts.filter(
+          (p) => (p.mainCategory || '').toLowerCase() === m.toLowerCase()
+        ).length;
+        return { value: m, label: m, count };
+      }),
+      {
+        value: 'UNASSIGNED',
+        label: `Needs Assignment (${unassignedCount})`,
+        color: '#b45309'
+      }
+    ];
+  }, [allProducts]);
 
   // Memoized options for AdminDropdown selectors
   const categoryOptions = useMemo(() => {
@@ -134,10 +171,15 @@ export default function AdminProductList({
     let outOfStock = 0;
     let lowStock = 0;
     let bestsellers = 0;
+    let unassignedMainCategory = 0;
 
     allProducts.forEach((p) => {
       if (p.active) live++;
       else hidden++;
+
+      if (!p.mainCategory) {
+        unassignedMainCategory++;
+      }
 
       const stock = Number(p.stock !== undefined ? p.stock : 10);
       if (stock === 0) outOfStock++;
@@ -154,7 +196,8 @@ export default function AdminProductList({
       hidden,
       outOfStock,
       lowStock,
-      bestsellers
+      bestsellers,
+      unassignedMainCategory
     };
   }, [allProducts]);
 
@@ -167,6 +210,7 @@ export default function AdminProductList({
       if (query) {
         const name = String(p.name || '').toLowerCase();
         const id = String(p.id || p._id || '').toLowerCase();
+        const mainCat = String(p.mainCategory || '').toLowerCase();
         const cat = String(p.category || '').toLowerCase();
         const tag = String(p.tag || '').toLowerCase();
         const desc = String(p.description || '').toLowerCase();
@@ -174,6 +218,7 @@ export default function AdminProductList({
         const matches =
           name.includes(query) ||
           id.includes(query) ||
+          mainCat.includes(query) ||
           cat.includes(query) ||
           tag.includes(query) ||
           desc.includes(query);
@@ -181,7 +226,18 @@ export default function AdminProductList({
         if (!matches) return false;
       }
 
-      // 2. Category Filter
+      // 2. Main Category Filter
+      if (selectedMainCategory !== 'ALL') {
+        if (selectedMainCategory === 'UNASSIGNED') {
+          if (p.mainCategory) return false;
+        } else {
+          if ((p.mainCategory || '').toLowerCase() !== selectedMainCategory.toLowerCase()) {
+            return false;
+          }
+        }
+      }
+
+      // 3. Category Filter
       if (selectedCategory !== 'ALL' && p.category !== selectedCategory) {
         return false;
       }
@@ -204,7 +260,7 @@ export default function AdminProductList({
 
       return true;
     });
-  }, [allProducts, searchQuery, selectedCategory, selectedStatus, selectedStock, selectedBestseller]);
+  }, [allProducts, searchQuery, selectedMainCategory, selectedCategory, selectedStatus, selectedStock, selectedBestseller]);
 
   // Sorting Logic
   const sortedProducts = useMemo(() => {
@@ -245,7 +301,7 @@ export default function AdminProductList({
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedCategory, selectedStatus, selectedStock, selectedBestseller, sortBy, pageSize]);
+  }, [searchQuery, selectedMainCategory, selectedCategory, selectedStatus, selectedStock, selectedBestseller, sortBy, pageSize]);
 
   // Pagination calculation
   const totalItems = sortedProducts.length;
@@ -259,6 +315,7 @@ export default function AdminProductList({
 
   const hasActiveFilters =
     Boolean(searchQuery.trim()) ||
+    selectedMainCategory !== 'ALL' ||
     selectedCategory !== 'ALL' ||
     selectedStatus !== 'ALL' ||
     selectedStock !== 'ALL' ||
@@ -267,12 +324,52 @@ export default function AdminProductList({
 
   const clearAllFilters = () => {
     setSearchQuery('');
+    setSelectedMainCategory('ALL');
     setSelectedCategory('ALL');
     setSelectedStatus('ALL');
     setSelectedStock('ALL');
     setSelectedBestseller('ALL');
     setSortBy('newest');
     setCurrentPage(1);
+  };
+
+  // Bulk Selection Handlers
+  const toggleSelectProduct = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    const visibleIds = paginatedProducts.map((p) => p.id || p._id);
+    const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
+    if (allVisibleSelected) {
+      setSelectedIds((prev) => prev.filter((id) => !visibleIds.includes(id)));
+    } else {
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...visibleIds])));
+    }
+  };
+
+  const handleExecuteBulkAssignment = async () => {
+    if (selectedIds.length === 0 || !bulkMainCategory) return;
+    setBulkLoading(true);
+    try {
+      const res = await api('/admin/products/bulk-main-category', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          productIds: selectedIds,
+          mainCategory: bulkMainCategory
+        })
+      });
+      setToast(`✓ Successfully assigned "${bulkMainCategory}" to ${res.modifiedCount || selectedIds.length} product(s).`);
+      setSelectedIds([]);
+      setShowBulkConfirmModal(false);
+      if (onRefresh) await onRefresh();
+    } catch (err) {
+      setToast(err.message || 'Failed to bulk assign Main Category');
+    } finally {
+      setBulkLoading(false);
+    }
   };
 
   // Quick stat card click filter
@@ -416,6 +513,27 @@ export default function AdminProductList({
         </div>
       </section>
 
+      {/* 2B. UNASSIGNED MAIN CATEGORY ALERT BANNER */}
+      {stats.unassignedMainCategory > 0 && (
+        <div className="unassignedAlertBanner">
+          <div className="unassignedAlertText">
+            <AlertCircle size={16} />
+            <span>
+              <b>{stats.unassignedMainCategory}</b> existing product{stats.unassignedMainCategory === 1 ? '' : 's'} have no Main Category assigned.
+            </span>
+          </div>
+          <div className="unassignedAlertActions">
+            <button
+              type="button"
+              className="filterUnassignedBtn"
+              onClick={() => setSelectedMainCategory(selectedMainCategory === 'UNASSIGNED' ? 'ALL' : 'UNASSIGNED')}
+            >
+              {selectedMainCategory === 'UNASSIGNED' ? 'Show All Products' : 'Filter Unassigned Products →'}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 3. SEARCH & FILTER TOOLBAR */}
       <section className="productControlsToolbar">
         {/* Search Bar */}
@@ -425,7 +543,7 @@ export default function AdminProductList({
             ref={searchInputRef}
             type="text"
             className="productSearchInput"
-            placeholder="Search by name, ID / SKU, category, tag, or description… (Press '/' to focus)"
+            placeholder="Search by name, ID / SKU, collection, category, tag, or description… (Press '/' to focus)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -443,6 +561,18 @@ export default function AdminProductList({
 
         {/* Filter & Sort Controls */}
         <div className="productFiltersRow">
+          {/* Main Category (Collection) Dropdown */}
+          <div className="filterControlWrap">
+            <label className="filterInlineLabel">Main Category:</label>
+            <AdminDropdown
+              value={selectedMainCategory}
+              onChange={setSelectedMainCategory}
+              options={mainCategoryOptions}
+              minWidth="180px"
+              placeholder="All Main Categories"
+            />
+          </div>
+
           {/* Category Dropdown */}
           <div className="filterControlWrap">
             <label className="filterInlineLabel">Category:</label>
@@ -540,12 +670,66 @@ export default function AdminProductList({
       <div className="productTableCard">
         {paginatedProducts.length > 0 ? (
           <>
+            {/* BULK ACTION BAR */}
+            {selectedIds.length > 0 && (
+              <div className="productBulkActionBar">
+                <div className="bulkBarLeft">
+                  <span className="bulkSelectedBadge">
+                    <Boxes size={15} />
+                    <b>{selectedIds.length}</b> {selectedIds.length === 1 ? 'product' : 'products'} selected
+                  </span>
+                  <button
+                    type="button"
+                    className="bulkClearSelectionBtn"
+                    onClick={() => setSelectedIds([])}
+                  >
+                    Clear Selection
+                  </button>
+                </div>
+
+                <div className="bulkBarRight">
+                  <span className="bulkActionLabel">Assign Main Category:</span>
+                  <div className="bulkDropdownWrap">
+                    <AdminDropdown
+                      value={bulkMainCategory}
+                      onChange={setBulkMainCategory}
+                      options={MAIN_CATEGORIES.map((m) => ({ value: m, label: m }))}
+                      minWidth="175px"
+                      placeholder="Select Main Category"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="goldBtn compact bulkApplyBtn"
+                    onClick={() => setShowBulkConfirmModal(true)}
+                    disabled={bulkLoading}
+                  >
+                    {bulkLoading ? 'Applying…' : 'Apply to Selected'}
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* DESKTOP TABLE VIEW */}
             <div className="productTableWrap">
               <table className="adminProductTable">
                 <thead>
                   <tr>
+                    <th className="thSelect" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        className="productHeaderCheckbox"
+                        checked={
+                          paginatedProducts.length > 0 &&
+                          paginatedProducts.every((p) => selectedIds.includes(p.id || p._id))
+                        }
+                        onChange={toggleSelectAll}
+                        aria-label="Select all visible products"
+                        title="Select or deselect all visible products on this page"
+                      />
+                    </th>
                     <th className="thProduct">Product</th>
+                    <th className="thMainCategory">Main Category</th>
                     <th className="thCategory">Category</th>
                     <th className="thPrice">Price</th>
                     <th className="thStock">Stock Status</th>
@@ -573,12 +757,25 @@ export default function AdminProductList({
                         })
                       : '—';
 
+                    const isSelected = selectedIds.includes(p.id || p._id);
+
                     return (
                       <tr
                         key={p.id || p._id}
-                        className={`productTableRow ${!isLive ? 'isRowHidden' : ''}`}
+                        className={`productTableRow ${!isLive ? 'isRowHidden' : ''} ${isSelected ? 'isRowSelected' : ''}`}
                         onClick={() => setViewingProduct(p)}
                       >
+                        {/* 0. Row Selection Checkbox */}
+                        <td className="tdSelect" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            className="productRowCheckbox"
+                            checked={isSelected}
+                            onChange={() => toggleSelectProduct(p.id || p._id)}
+                            aria-label={`Select ${p.name}`}
+                          />
+                        </td>
+
                         {/* 1. Product Thumbnail & Name */}
                         <td className="tdProduct">
                           <div className="productThumbMetaWrap">
@@ -587,6 +784,13 @@ export default function AdminProductList({
                                 src={p.img || p.images?.[0] || '/assets/nath-category.jpg'}
                                 alt={p.name}
                                 loading="lazy"
+                                onError={(e) => {
+                                  if (p.img && e.target.src !== p.img) {
+                                    e.target.src = p.img;
+                                  } else if (!e.target.src.includes('/assets/nath-category.jpg')) {
+                                    e.target.src = '/assets/nath-category.jpg';
+                                  }
+                                }}
                               />
                               {imgCount > 1 && (
                                 <span className="tablePhotoBadge">+{imgCount - 1}</span>
@@ -610,9 +814,18 @@ export default function AdminProductList({
                           </div>
                         </td>
 
-                        {/* 2. Category */}
+                        {/* 2. Main Category */}
+                        <td className="tdMainCategory">
+                          {p.mainCategory ? (
+                            <span className="tableMainCategoryBadge">{p.mainCategory}</span>
+                          ) : (
+                            <span className="tableMainCategoryBadge unassigned">⚠️ Needs Assignment</span>
+                          )}
+                        </td>
+
+                        {/* 3. Category */}
                         <td className="tdCategory">
-                          <span className="tableCategoryPill">{p.category || 'Traditional'}</span>
+                          <span className="tableCategoryPill">{p.category || 'Nath'}</span>
                         </td>
 
                         {/* 3. Price */}
@@ -726,18 +939,36 @@ export default function AdminProductList({
                 const isBestseller = Boolean(p.isBestseller || p.is_bestseller || p.tag === 'BESTSELLER');
                 const stock = Number(p.stock !== undefined ? p.stock : 10);
                 const isLive = Boolean(p.active);
+                const isSelected = selectedIds.includes(p.id || p._id);
 
                 return (
                   <div
                     key={p.id || p._id}
-                    className={`productMobileCard ${!isLive ? 'isCardHidden' : ''}`}
+                    className={`productMobileCard ${!isLive ? 'isCardHidden' : ''} ${isSelected ? 'isCardSelected' : ''}`}
                     onClick={() => setViewingProduct(p)}
                   >
                     <div className="mobileCardTop">
+                      <div className="mobileSelectWrap" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          className="productRowCheckbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelectProduct(p.id || p._id)}
+                          aria-label={`Select ${p.name}`}
+                        />
+                      </div>
+
                       <div className="mobileCardThumb">
                         <img
                           src={p.img || p.images?.[0] || '/assets/nath-category.jpg'}
                           alt={p.name}
+                          onError={(e) => {
+                            if (p.img && e.target.src !== p.img) {
+                              e.target.src = p.img;
+                            } else if (!e.target.src.includes('/assets/nath-category.jpg')) {
+                              e.target.src = '/assets/nath-category.jpg';
+                            }
+                          }}
                         />
                         {imgCount > 1 && (
                           <span className="mobilePhotoBadge">+{imgCount - 1}</span>
@@ -746,7 +977,12 @@ export default function AdminProductList({
 
                       <div className="mobileCardInfo">
                         <div className="mobileCardMetaTop">
-                          <span className="mobileCategoryPill">{p.category || 'Traditional'}</span>
+                          {p.mainCategory ? (
+                            <span className="mobileMainCategoryBadge">{p.mainCategory}</span>
+                          ) : (
+                            <span className="mobileMainCategoryBadge unassigned">⚠️ Needs Assignment</span>
+                          )}
+                          <span className="mobileCategoryPill">{p.category || 'Nath'}</span>
                           <span className={`mobileStatusPill ${isLive ? 'isLive' : 'isHidden'}`}>
                             {isLive ? '● Live' : '○ Hidden'}
                           </span>
@@ -949,6 +1185,48 @@ export default function AdminProductList({
                 }}
               >
                 Yes, Delete Permanently
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* BULK MAIN CATEGORY CONFIRMATION MODAL */}
+      {showBulkConfirmModal && (
+        <div
+          className="adminProductDetailOverlay"
+          onClick={() => setShowBulkConfirmModal(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="bulkSafetyDialog" onClick={(e) => e.stopPropagation()}>
+            <div className="bulkSafetyIconWrap">
+              <Boxes size={26} />
+            </div>
+            <h3>Assign Main Category</h3>
+            <p>
+              Are you sure you want to assign Main Category <b>"{bulkMainCategory}"</b> to <b>{selectedIds.length}</b> selected product{selectedIds.length === 1 ? '' : 's'}?
+            </p>
+            <div className="bulkSafetyNotice">
+              <Check size={15} />
+              <span>Only the <b>Main Category</b> field will be updated. Existing Category, Badge, price, images, stock, and parameters will remain unchanged.</span>
+            </div>
+            <div className="deleteSafetyBtnGroup">
+              <button
+                type="button"
+                className="safetyCancelBtn"
+                onClick={() => setShowBulkConfirmModal(false)}
+                disabled={bulkLoading}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="goldBtn"
+                style={{ padding: '8px 18px', fontSize: '13px' }}
+                onClick={handleExecuteBulkAssignment}
+                disabled={bulkLoading}
+              >
+                {bulkLoading ? 'Updating…' : `Yes, Update ${selectedIds.length} Products`}
               </button>
             </div>
           </div>

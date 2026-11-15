@@ -1,0 +1,297 @@
+/* ==========================================================================
+   ADMIN ORDER PRIORITY MODAL STYLES
+   ========================================================================== */
+
+.adminPriorityOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(18, 10, 10, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: priorityModalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+@keyframes priorityModalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.adminPriorityDialog {
+  max-width: 540px;
+  width: 100%;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #ebdcc6;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: priorityModalSlideUp 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+@keyframes priorityModalSlideUp {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.adminPriorityHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #4a050e 0%, #6d1b29 100%);
+  color: #ffffff;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.priorityHeaderTitle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.priorityIconBadge {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(212, 175, 55, 0.2);
+  border: 1px solid #d4af37;
+  color: #ffd700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.priorityHeaderTitle h3 {
+  margin: 0;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.priorityHeaderTitle p {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  color: #fde68a;
+}
+
+.priorityCloseBtn {
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: #ffffff;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.priorityCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.adminPriorityForm {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-sizing: border-box;
+}
+
+.priorityDiagnosticBanner {
+  background: #fdfaf6;
+  border: 1px solid #ebdcc6;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.diagnosticTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.diagnosticLabel {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #6b5e58;
+}
+
+.diagnosticReason {
+  margin: 0;
+  font-size: 12px;
+  color: #7d6b63;
+  line-height: 1.4;
+}
+
+.priorityErrorBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.priorityFieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.priorityFieldLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: #4a3b34;
+}
+
+.priorityOptionsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 480px) {
+  .priorityOptionsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.priorityRadioCard {
+  border: 1.5px solid #ebdcc6;
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #ffffff;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.priorityRadioCard input {
+  margin-top: 3px;
+}
+
+.priorityRadioCard:hover {
+  background: #fdfbf7;
+  border-color: #d4af37;
+}
+
+.priorityRadioCard.selected {
+  border-color: #6d1b29;
+  background: #faf2f4;
+  box-shadow: 0 0 0 2px rgba(109, 27, 41, 0.12);
+}
+
+.priorityRadioCard.criticalCard.selected {
+  border-color: #b91c1c;
+  background: #fef2f2;
+  box-shadow: 0 0 0 2px rgba(185, 28, 28, 0.12);
+}
+
+.priorityRadioCard.highCard.selected {
+  border-color: #d97706;
+  background: #fffbeb;
+  box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.12);
+}
+
+.radioCardContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.radioCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.radioCardTitle {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #3b2820;
+}
+
+.radioCardDesc {
+  margin: 3px 0 0;
+  font-size: 11px;
+  color: #78665f;
+  line-height: 1.35;
+}
+
+.radioCheck {
+  color: #6d1b29;
+}
+
+.priorityNoteTextarea {
+  width: 100%;
+  border-radius: 8px;
+  border: 1.5px solid #d8cab5;
+  background: #fdfbf7;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #2b1f1a;
+  font-family: inherit;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.priorityNoteTextarea:focus {
+  outline: none;
+  border-color: #b8860b;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.15);
+}
+
+.priorityCharCount {
+  align-self: flex-end;
+  font-size: 10.5px;
+  color: #8c7d75;
+}
+
+.priorityActionRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.priorityCancelBtn {
+  padding: 9px 16px;
+  border-radius: 6px;
+  border: 1px solid #d8cab5;
+  background: #ffffff;
+  color: #594640;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.prioritySaveBtn {
+  padding: 9px 20px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  min-height: 38px;
+}
+

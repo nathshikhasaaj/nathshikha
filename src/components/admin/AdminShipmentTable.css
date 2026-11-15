@@ -432,3 +432,173 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   SHIPMENT SEARCH CONTROLS & PAGINATION
+   ========================================================================== */
+
+.shipmentHeaderControls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.shipmentSearchWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 260px;
+}
+
+.shipmentSearchMagnifier {
+  position: absolute;
+  left: 10px;
+  color: #8c7d75;
+  pointer-events: none;
+}
+
+.shipmentSearchInput {
+  width: 100%;
+  height: 34px;
+  padding: 0 30px 0 32px;
+  border-radius: 6px;
+  border: 1px solid #d8cab5;
+  background: #ffffff;
+  font-size: 12.5px;
+  color: #2b1f1a;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+}
+
+.shipmentSearchInput:focus {
+  outline: none;
+  border-color: #b8860b;
+  box-shadow: 0 0 0 2px rgba(184, 134, 11, 0.15);
+}
+
+.shipmentClearSearchBtn {
+  position: absolute;
+  right: 8px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #f1ede6;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #6b5e58;
+  padding: 0;
+}
+
+.shipmentClearSearchBtn:hover {
+  background: #e2d6c3;
+  color: #2b1f1a;
+}
+
+/* Shipment Pagination Bar */
+.shipmentPaginationBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  background: #fdfbf7;
+  border-top: 1px solid #ebdcc5;
+  gap: 14px;
+  flex-wrap: wrap;
+  box-sizing: border-box;
+}
+
+.shipmentPaginationInfo {
+  font-size: 12px;
+  color: #6b5e58;
+}
+
+.filteredShipmentHint {
+  color: #8c7d75;
+}
+
+.shipmentPaginationControls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.shipmentPageNavButtons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.shipmentPagePills {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.shipmentNavBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid #d8cab5;
+  background: #ffffff;
+  color: #594640;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.shipmentNavBtn:hover:not(:disabled) {
+  background: #fdfbf7;
+  border-color: #6d1b29;
+  color: #6d1b29;
+}
+
+.shipmentNavBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.emptyShipmentClearBtn {
+  margin-top: 10px;
+}
+
+@media (max-width: 850px) {
+  .shipmentHeaderControls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .shipmentSearchWrap {
+    flex: 1;
+    min-width: 180px;
+  }
+
+  .shipmentPaginationBar {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 10px;
+    background: #ffffff;
+    border: 1px solid #ebdcc5;
+    border-radius: 8px;
+    margin-top: 10px;
+  }
+
+  .shipmentPaginationControls {
+    width: 100%;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .shipmentPageNavButtons {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}
+

@@ -374,12 +374,62 @@ app.use('/api/translate', translateRoutes);
 const dist = path.resolve(__dirname, '../dist');
 app.use('/assets', express.static(path.resolve(__dirname, '../public/assets')));
 app.use('/uploads', express.static(uploadsDir));
+
+// Development image recovery & fallback proxy
+// If an uploaded image is missing on localhost, transparently fetch it from the live storage,
+// stream it to the client with correct headers, and cache it to public/uploads on disk.
+app.use('/uploads', async (req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    return next();
+  }
+
+  const rawName = path.basename(req.path);
+  if (!rawName || rawName.includes('..') || !/\.(jpe?g|png|webp|gif|svg|avif|jfif)$/i.test(rawName)) {
+    return res.status(404).json({ error: 'Image not found' });
+  }
+
+  const localFile = path.join(uploadsDir, rawName);
+  if (fs.existsSync(localFile)) {
+    return res.sendFile(localFile);
+  }
+
+  const upstreamBase = process.env.APP_BASE_URL || 'https://nathshikha.in';
+  const upstreamUrl = `${upstreamBase.replace(/\/+$/, '')}/uploads/${encodeURIComponent(rawName)}`;
+
+  try {
+    const upstreamRes = await fetch(upstreamUrl);
+    if (upstreamRes.ok) {
+      const contentType = upstreamRes.headers.get('content-type') || 'image/jpeg';
+      const buffer = Buffer.from(await upstreamRes.arrayBuffer());
+
+      try {
+        fs.writeFileSync(localFile, buffer);
+      } catch (cacheErr) {
+        console.warn(`Could not cache uploaded image locally (${rawName}):`, cacheErr.message);
+      }
+
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      return res.send(buffer);
+    }
+  } catch (err) {
+    console.warn(`Upstream media fetch failed for ${rawName}:`, err.message);
+  }
+
+  return res.status(404).json({ error: 'Image not found' });
+});
+
 app.use(express.static(dist));
 
 // SPA fallback
 app.use((req, res, next) => {
-  if (req.path.startsWith('/api/')) {
-    return res.status(404).json({ error: 'API endpoint not found' });
+  // Never return index.html for missing API, upload, or asset routes
+  if (
+    req.path.startsWith('/api/') ||
+    req.path.startsWith('/uploads/') ||
+    req.path.startsWith('/assets/')
+  ) {
+    return res.status(404).json({ error: 'Resource not found' });
   }
   const indexPath = path.join(dist, 'index.html');
   if (fs.existsSync(indexPath)) {

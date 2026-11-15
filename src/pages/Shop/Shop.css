@@ -69,3 +69,49 @@
   color: #8b7d73;
   margin: 0;
 }
+
+/* Main Category Active Filter Banner */
+.mainCategoryActiveBanner {
+  display: flex;
+  justify-content: center;
+  margin: -10px 0 20px;
+}
+
+.activeFilterPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fdf8ef;
+  border: 1px solid #e7d7b3;
+  color: #78350f;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  box-shadow: 0 2px 8px rgba(120, 53, 15, 0.05);
+}
+
+.activeFilterPill b {
+  color: #5b1420;
+}
+
+.clearFilterBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #ffffff;
+  border: 1px solid #d9c9a9;
+  border-radius: 12px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #8c7d75;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: 6px;
+}
+
+.clearFilterBtn:hover {
+  background: #5b1420;
+  color: #ffffff;
+  border-color: #5b1420;
+}

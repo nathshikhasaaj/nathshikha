@@ -30,8 +30,6 @@ export async function ensureDefaultCategories() {
       'Kolhapuri Saaj',
       'Tanmani',
       'Pearl',
-      'Traditional',
-      'Signature',
       'Mangalsutra',
       'Bugadi',
       'Chinchpeti',
@@ -175,6 +173,12 @@ const handleAdminCreate = async (req, res) => {
       return res.status(400).json({ error: 'Category name contains invalid characters or markup.' });
     }
 
+    if (trimmedName.toLowerCase() === 'traditional' || trimmedName.toLowerCase() === 'signature') {
+      return res.status(400).json({
+        error: `"${trimmedName}" is reserved for Main Categories and cannot be created as an individual product Category.`
+      });
+    }
+
     // Check duplicate category name (case-insensitive)
     const existingByName = await Category.findOne({
       name: new RegExp(`^${escapeRegex(trimmedName)}$`, 'i')
@@ -244,6 +248,11 @@ const handleAdminUpdate = async (req, res) => {
       }
       if (/<[a-z][\s\S]*>/i.test(trimmedName)) {
         return res.status(400).json({ error: 'Category name contains invalid characters or markup.' });
+      }
+      if (trimmedName.toLowerCase() === 'traditional' || trimmedName.toLowerCase() === 'signature') {
+        return res.status(400).json({
+          error: `"${trimmedName}" is reserved for Main Categories and cannot be used as an individual product Category.`
+        });
       }
 
       if (trimmedName.toLowerCase() !== category.name.toLowerCase()) {

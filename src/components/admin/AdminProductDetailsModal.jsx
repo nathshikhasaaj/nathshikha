@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   X,
   Pencil,
@@ -42,9 +42,20 @@ export default function AdminProductDetailsModal({
 
   if (!product) return null;
 
-  const images = Array.isArray(product.images) && product.images.length > 0
-    ? product.images.filter(Boolean)
-    : (product.img ? [product.img.trim()].filter(Boolean) : []);
+  const images = useMemo(() => {
+    if (!product) return [];
+    let list = [];
+    if (Array.isArray(product.images)) {
+      list = product.images.filter(Boolean);
+    } else if (typeof product.images === 'string' && product.images.trim()) {
+      list = product.images.split(',').map((s) => s.trim()).filter(Boolean);
+    }
+
+    if (list.length === 0 && product.img && typeof product.img === 'string') {
+      list = product.img.split(',').map((s) => s.trim()).filter(Boolean);
+    }
+    return list;
+  }, [product]);
 
   const activeImage = images[selectedImgIndex] || product.img || '/assets/nath-category.jpg';
   const isBestseller = Boolean(product.isBestseller || product.is_bestseller || product.tag === 'BESTSELLER');
@@ -116,9 +127,21 @@ export default function AdminProductDetailsModal({
             {/* LEFT COLUMN: IMAGES */}
             <div className="productDetailGalleryCol">
               <div className="productDetailMainImgWrap">
-                <img src={activeImage} alt={product.name} className="productDetailMainImg" />
+                <img
+                  src={activeImage}
+                  alt={product.name}
+                  className="productDetailMainImg"
+                  loading="eager"
+                  onError={(e) => {
+                    if (product.img && e.target.src !== product.img) {
+                      e.target.src = product.img;
+                    } else if (!e.target.src.includes('/assets/nath-category.jpg')) {
+                      e.target.src = '/assets/nath-category.jpg';
+                    }
+                  }}
+                />
                 {images.length > 1 && (
-                  <span className="galleryCounterBadge">
+                  <span className="adminProductGalleryCounterBadge">
                     {selectedImgIndex + 1} / {images.length}
                   </span>
                 )}
@@ -133,7 +156,15 @@ export default function AdminProductDetailsModal({
                       className={`galleryThumbBtn ${idx === selectedImgIndex ? 'isActiveThumb' : ''}`}
                       onClick={() => setSelectedImgIndex(idx)}
                     >
-                      <img src={imgUrl} alt={`${product.name} thumb ${idx + 1}`} />
+                      <img
+                        src={imgUrl}
+                        alt={`${product.name} thumb ${idx + 1}`}
+                        onError={(e) => {
+                          if (!e.target.src.includes('/assets/nath-category.jpg')) {
+                            e.target.src = '/assets/nath-category.jpg';
+                          }
+                        }}
+                      />
                     </button>
                   ))}
                 </div>
@@ -172,13 +203,22 @@ export default function AdminProductDetailsModal({
                 </div>
 
                 <div className="detailStatItem">
-                  <span className="detailStatLabel">Category</span>
-                  <span className="detailCategoryPill">{product.category || 'Traditional'}</span>
+                  <span className="detailStatLabel">Main Category</span>
+                  {product.mainCategory ? (
+                    <span className="detailCategoryPill mainCategoryPill">{product.mainCategory}</span>
+                  ) : (
+                    <span className="detailCategoryPill unassignedMainCategoryPill">⚠️ Needs Assignment</span>
+                  )}
                 </div>
 
                 <div className="detailStatItem">
-                  <span className="detailStatLabel">Product Tag</span>
-                  <span className="detailTagPill">{product.tag || 'NEW'}</span>
+                  <span className="detailStatLabel">Category</span>
+                  <span className="detailCategoryPill">{product.category || 'Nath'}</span>
+                </div>
+
+                <div className="detailStatItem">
+                  <span className="detailStatLabel">Badge</span>
+                  <span className="detailTagPill">{product.tag || 'New'}</span>
                 </div>
               </div>
 
@@ -255,7 +295,7 @@ export default function AdminProductDetailsModal({
 
         {/* Modal Sticky Footer Actions */}
         <footer className="productDetailFooter">
-          <div className="footerQuickActions">
+          <div className="footerSecondaryGroup">
             {onToggleActive && (
               <button
                 type="button"
@@ -264,7 +304,7 @@ export default function AdminProductDetailsModal({
                 title={isLive ? 'Hide from storefront' : 'Make live in storefront'}
               >
                 {isLive ? <EyeOff size={14} /> : <Eye size={14} />}
-                <span>{isLive ? 'Hide from Store' : 'Make Live in Store'}</span>
+                <span>{isLive ? 'Hide from Store' : 'Make Live'}</span>
               </button>
             )}
 
@@ -276,7 +316,7 @@ export default function AdminProductDetailsModal({
                 title={isBestseller ? 'Remove from Bestsellers' : 'Add to Bestsellers'}
               >
                 <Star size={14} fill={isBestseller ? '#d97706' : 'none'} />
-                <span>{isBestseller ? 'Remove Bestseller' : 'Make Bestseller'}</span>
+                <span>{isBestseller ? 'Remove Bestseller' : 'Bestseller'}</span>
               </button>
             )}
 
@@ -296,10 +336,11 @@ export default function AdminProductDetailsModal({
             )}
           </div>
 
-          <div className="footerPrimaryActions">
+          <div className="footerPrimaryGroup">
             <button type="button" className="detailFooterCancelBtn" onClick={onClose}>
               Close
             </button>
+
             <button
               type="button"
               className="detailFooterEditBtn"

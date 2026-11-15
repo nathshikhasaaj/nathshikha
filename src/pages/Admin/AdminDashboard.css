@@ -6,11 +6,15 @@
 .controlCenterView,
 .adminOrdersView,
 .adminShipmentsView,
+.adminTrashView,
 .adminParametersView {
   display: flex;
   flex-direction: column;
   gap: 24px;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   animation: fadeInAdmin 0.25s ease-out;
 }
 
@@ -31,6 +35,10 @@
   flex-direction: column;
   gap: 14px;
   margin-top: 8px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .sectionBlockHeader {
@@ -40,6 +48,10 @@
   gap: 16px;
   flex-wrap: wrap;
   padding: 0 4px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .sectionBlockTitle {

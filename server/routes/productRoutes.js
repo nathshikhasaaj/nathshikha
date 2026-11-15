@@ -12,6 +12,7 @@ const router = express.Router();
 
 function computeRelevanceScore(product, cleanSearch, searchTokens) {
   const name = String(product.name || '').toLowerCase();
+  const mainCategory = String(product.mainCategory || '').toLowerCase();
   const category = String(product.category || '').toLowerCase();
   const tag = String(product.tag || '').toLowerCase();
   const description = String(product.description || '').toLowerCase();
@@ -28,13 +29,20 @@ function computeRelevanceScore(product, cleanSearch, searchTokens) {
     score += 60;
   }
 
-  // Token matching in name, category, tag, description
+  if (mainCategory === q) {
+    score += 40;
+  }
+
+  // Token matching in name, mainCategory, category, tag, description
   let tokensInNameCount = 0;
   for (const token of searchTokens) {
     const t = token.toLowerCase();
     if (name.includes(t)) {
       score += 25;
       tokensInNameCount++;
+    }
+    if (mainCategory.includes(t)) {
+      score += 20;
     }
     if (category.includes(t)) {
       score += 20;
@@ -75,8 +83,13 @@ function computeRelevanceScore(product, cleanSearch, searchTokens) {
 // Get active products with category & search filtering + genuine review stats
 router.get('/', async (req, res) => {
   try {
-    const { category, search, sort } = req.query;
+    const { category, mainCategory, main_category, search, sort } = req.query;
     const filter = { active: 1 };
+
+    const effectiveMainCat = String(mainCategory || main_category || '').trim();
+    if (effectiveMainCat && effectiveMainCat.toLowerCase() !== 'all') {
+      filter.mainCategory = new RegExp(`^${escapeRegex(effectiveMainCat)}$`, 'i');
+    }
 
     if (category && category !== 'all') {
       const trimmedCategory = String(category).trim().slice(0, 100);
@@ -105,6 +118,7 @@ router.get('/', async (req, res) => {
 
       const orClauses = [
         { name: fullRegex },
+        { mainCategory: fullRegex },
         { category: fullRegex },
         { tag: fullRegex },
         { description: fullRegex },
@@ -117,6 +131,7 @@ router.get('/', async (req, res) => {
         const tokenRegex = new RegExp(escapeRegex(token), 'i');
         orClauses.push(
           { name: tokenRegex },
+          { mainCategory: tokenRegex },
           { category: tokenRegex },
           { tag: tokenRegex },
           { description: tokenRegex },

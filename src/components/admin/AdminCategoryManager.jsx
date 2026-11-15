@@ -149,6 +149,8 @@ export default function AdminCategoryManager({ onCategoriesUpdated }) {
 
     if (!trimmedName) {
       errors.name = 'Category name is required.';
+    } else if (trimmedName.toLowerCase() === 'traditional' || trimmedName.toLowerCase() === 'signature') {
+      errors.name = 'Traditional and Signature are reserved for Main Categories and cannot be used as product Category options.';
     } else if (/<[a-z][\s\S]*>/i.test(trimmedName)) {
       errors.name = 'Category name contains invalid characters or markup.';
     } else {

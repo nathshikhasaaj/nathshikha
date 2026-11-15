@@ -21,11 +21,11 @@ import {
   Type
 } from 'lucide-react';
 import { api } from '../../services/api';
-import { ALL_CATEGORIES } from '../../utils/parameterHelpers';
+import { ALL_CATEGORIES, MAIN_CATEGORIES } from '../../utils/parameterHelpers';
 import AdminDropdown from './AdminDropdown';
 import './AdminProductForm.css';
 
-const POPULAR_TAGS = ['NEW', 'BESTSELLER', 'BRIDAL', 'TRENDING', 'FEATURED', 'HANDMADE'];
+const POPULAR_TAGS = ['New', 'Trending', 'Handmade', 'Bestsellers', 'Bridal', 'Featured'];
 
 export default function AdminProductForm({
   form,
@@ -75,11 +75,18 @@ export default function AdminProductForm({
   }, []);
 
   const effectiveCategories = useMemo(() => {
-    const list = categoriesList.length > 0 ? categoriesList : (form.category ? [form.category] : []);
-    if (form.category && !list.includes(form.category)) {
-      return [form.category, ...list];
+    const rawList = categoriesList.length > 0 ? categoriesList : ALL_CATEGORIES;
+    // Remove Traditional and Signature from selectable Category options
+    let filtered = rawList.filter((c) => c !== 'Traditional' && c !== 'Signature');
+    // Ensure 'Nath' is always available
+    if (!filtered.includes('Nath')) {
+      filtered = ['Nath', ...filtered];
     }
-    return list;
+    // If current product has an existing legacy category assignment, preserve it (unless Traditional or Signature)
+    if (form.category && form.category !== 'Traditional' && form.category !== 'Signature' && !filtered.includes(form.category)) {
+      filtered = [form.category, ...filtered];
+    }
+    return filtered;
   }, [categoriesList, form.category]);
 
   const imagesList = Array.isArray(form.images) && form.images.length > 0
@@ -413,12 +420,49 @@ export default function AdminProductForm({
           </div>
         </div>
 
-        {/* Category Selection with Quick Chips */}
+        {/* 1. Main Category (Overall Collection) */}
+        <div className="formFieldGroup">
+          <div className="fieldLabelWithChips">
+            <label className="fieldLabel">
+              <Sparkles size={13} />
+              <span>Main Category *</span>
+            </label>
+            <div className="quickChipsList">
+              {MAIN_CATEGORIES.map((mCat) => (
+                <button
+                  key={mCat}
+                  type="button"
+                  className={`chipBtn ${form.mainCategory === mCat ? 'active' : ''}`}
+                  onClick={() => setForm({ ...form, mainCategory: mCat })}
+                >
+                  {mCat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {editing && !form.mainCategory && (
+            <div className="mainCategoryMissingWarning">
+              <AlertCircle size={14} />
+              <span>Needs Assignment: This existing product has no Main Category assigned yet. Please select one.</span>
+            </div>
+          )}
+
+          <AdminDropdown
+            value={form.mainCategory || ''}
+            onChange={(val) => setForm({ ...form, mainCategory: val })}
+            options={MAIN_CATEGORIES.map((m) => ({ value: m, label: m }))}
+            fullWidth
+            placeholder="Select Main Category (Required) *"
+          />
+        </div>
+
+        {/* 2. Category (Product Type) */}
         <div className="formFieldGroup">
           <div className="fieldLabelWithChips">
             <label className="fieldLabel">
               <Layers size={13} />
-              <span>Category *</span>
+              <span>Category (Product Type) *</span>
             </label>
             <div className="quickChipsList">
               {effectiveCategories.slice(0, 12).map((cat) => (
@@ -433,38 +477,47 @@ export default function AdminProductForm({
               ))}
             </div>
           </div>
+          {(form.category === 'Traditional' || form.category === 'Signature') && (
+            <div className="legacyCategoryWarning" style={{ margin: '6px 0 8px', padding: '6px 10px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '6px', fontSize: '12px', color: '#b45309', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <AlertCircle size={14} style={{ flexShrink: 0 }} />
+              <span>Legacy category is set to "{form.category}". Traditional and Signature are reserved for Main Categories. Please select a specific product category below (e.g. Nath, Necklace).</span>
+            </div>
+          )}
           <AdminDropdown
-            value={form.category || (effectiveCategories[0] || 'Traditional')}
+            value={form.category || (effectiveCategories[0] || 'Nath')}
             onChange={(val) => setForm({ ...form, category: val })}
             options={effectiveCategories.map((c) => ({ value: c, label: c }))}
             fullWidth
-            placeholder="Select product category"
+            placeholder="Select product category (e.g. Nath, Hathphool, Necklace...)"
           />
         </div>
 
-        {/* Tag Selection with Quick Chips */}
+        {/* 3. Badge (Product Tag) */}
         <div className="formFieldGroup">
           <div className="fieldLabelWithChips">
             <label className="fieldLabel">
               <TagIcon size={13} />
-              <span>Badge Tag</span>
+              <span>Badge</span>
             </label>
             <div className="quickChipsList">
-              {POPULAR_TAGS.map((tag) => (
-                <button
-                  key={tag}
-                  type="button"
-                  className={`chipBtn ${form.tag === tag ? 'active' : ''}`}
-                  onClick={() => setForm({ ...form, tag: tag })}
-                >
-                  {tag}
-                </button>
-              ))}
+              {POPULAR_TAGS.map((tag) => {
+                const isActive = (form.tag || '').toLowerCase() === tag.toLowerCase();
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    className={`chipBtn ${isActive ? 'active' : ''}`}
+                    onClick={() => setForm({ ...form, tag: isActive ? '' : tag })}
+                  >
+                    {tag}
+                  </button>
+                );
+              })}
             </div>
           </div>
           <input
             type="text"
-            placeholder="NEW, BESTSELLER, BRIDAL..."
+            placeholder="New, Trending, Handmade, Bestsellers..."
             value={form.tag || ''}
             onChange={(e) => setForm({ ...form, tag: e.target.value })}
           />

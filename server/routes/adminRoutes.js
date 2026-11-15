@@ -32,6 +32,7 @@ import {
 import { uploadSingle, uploadMultiple, uploadsDir } from '../middleware/uploadMiddleware.js';
 import { isValidEmail, isValidPhone, isValidPincode } from '../middleware/securityMiddleware.js';
 import { generateOrderNo } from '../services/orderIdService.js';
+import { calculateOrderPriority } from '../services/orderPriorityService.js';
 
 const router = express.Router();
 
@@ -238,11 +239,21 @@ function sanitizeProductParameters(rawParams) {
     });
 }
 
+const ALLOWED_MAIN_CATEGORIES = [
+  'Traditional',
+  'Signature',
+  'Wedding Special',
+  'Nath Collection',
+  'Other'
+];
+
 // Create product
 router.post('/products', async (req, res) => {
   const {
     name,
     price,
+    mainCategory,
+    main_category,
     category,
     tag,
     img,
@@ -266,13 +277,28 @@ router.post('/products', async (req, res) => {
       .json({ error: 'Name, price, and at least one image are required' });
   }
 
+  const chosenMainCategory = String(mainCategory || main_category || '').trim();
+  if (!chosenMainCategory || !ALLOWED_MAIN_CATEGORIES.includes(chosenMainCategory)) {
+    return res.status(400).json({
+      error: `Main Category is required for new products. Must be one of: ${ALLOWED_MAIN_CATEGORIES.join(', ')}`
+    });
+  }
+
+  const cleanCategory = String(category || 'Nath').trim();
+  if (cleanCategory.toLowerCase() === 'traditional' || cleanCategory.toLowerCase() === 'signature') {
+    return res.status(400).json({
+      error: `"${cleanCategory}" is reserved for Main Categories and cannot be used as an individual product Category.`
+    });
+  }
+
   try {
     const cleanParams = sanitizeProductParameters(productParameters || parameters);
 
     const product = await Product.create({
       name: name.trim(),
       price: Number(price),
-      category: category ? category.trim() : 'Traditional',
+      mainCategory: chosenMainCategory,
+      category: cleanCategory,
       tag: tag || (isBestseller ? 'BESTSELLER' : 'NEW'),
       img: primaryImg,
       images: normalizedImages.length > 0 ? normalizedImages : [primaryImg],
@@ -302,7 +328,34 @@ router.patch('/products/:id', async (req, res) => {
     if (updateData.stock !== undefined) updateData.stock = Number(updateData.stock);
     if (updateData.active !== undefined) updateData.active = Number(updateData.active);
     if (updateData.isBestseller !== undefined) updateData.isBestseller = Boolean(updateData.isBestseller);
-    if (updateData.category !== undefined) updateData.category = String(updateData.category || 'Traditional').trim();
+    if (updateData.category !== undefined) {
+      const cleanCat = String(updateData.category || '').trim();
+      if (!cleanCat) {
+        return res.status(400).json({ error: 'Category cannot be empty.' });
+      }
+      if (cleanCat.toLowerCase() === 'traditional' || cleanCat.toLowerCase() === 'signature') {
+        return res.status(400).json({
+          error: `"${cleanCat}" is reserved for Main Categories and cannot be used as an individual product Category.`
+        });
+      }
+      updateData.category = cleanCat;
+    }
+
+    if (updateData.mainCategory !== undefined || updateData.main_category !== undefined) {
+      const rawMain = updateData.mainCategory !== undefined ? updateData.mainCategory : updateData.main_category;
+      if (rawMain === null || rawMain === '') {
+        updateData.mainCategory = null;
+      } else {
+        const cleanMain = String(rawMain).trim();
+        if (!ALLOWED_MAIN_CATEGORIES.includes(cleanMain)) {
+          return res.status(400).json({
+            error: `Invalid Main Category. Must be one of: ${ALLOWED_MAIN_CATEGORIES.join(', ')}`
+          });
+        }
+        updateData.mainCategory = cleanMain;
+      }
+      delete updateData.main_category;
+    }
 
     if (updateData.productParameters !== undefined || updateData.parameters !== undefined) {
       updateData.productParameters = sanitizeProductParameters(updateData.productParameters || updateData.parameters);
@@ -326,6 +379,45 @@ router.patch('/products/:id', async (req, res) => {
     res.json(product);
   } catch (err) {
     res.status(500).json({ error: err.message || 'Failed to update product' });
+  }
+});
+
+// Bulk Assign Main Category across multiple products
+router.patch('/products/bulk-main-category', async (req, res) => {
+  const { productIds, mainCategory, main_category } = req.body;
+  if (!Array.isArray(productIds) || productIds.length === 0) {
+    return res.status(400).json({ error: 'productIds array is required and must not be empty.' });
+  }
+
+  const targetMain = String(mainCategory || main_category || '').trim();
+  if (!ALLOWED_MAIN_CATEGORIES.includes(targetMain)) {
+    return res.status(400).json({
+      error: `Invalid Main Category. Must be one of: ${ALLOWED_MAIN_CATEGORIES.join(', ')}`
+    });
+  }
+
+  try {
+    const validIds = productIds
+      .filter((id) => mongoose.Types.ObjectId.isValid(id))
+      .map((id) => new mongoose.Types.ObjectId(id));
+
+    if (validIds.length === 0) {
+      return res.status(400).json({ error: 'No valid product ObjectIds provided.' });
+    }
+
+    const result = await Product.updateMany(
+      { _id: { $in: validIds } },
+      { $set: { mainCategory: targetMain } }
+    );
+
+    res.json({
+      ok: true,
+      message: `Successfully assigned Main Category "${targetMain}" to ${result.modifiedCount} product(s).`,
+      modifiedCount: result.modifiedCount,
+      mainCategory: targetMain
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Failed to bulk assign Main Category' });
   }
 });
 
@@ -461,7 +553,37 @@ router.get('/orders', async (req, res) => {
           shipment_partner: o.shipmentPartner,
           tracking_id: o.trackingId,
           shipped_at: o.shippedAt,
-          delivered_at: o.deliveredAt,
+          delivered_at: o.deliveredAt || null,
+          deliveredAt: o.deliveredAt || null,
+          manual_priority: {
+            level: o.manualPriority?.level || 'auto',
+            note: o.manualPriority?.note || null,
+            assigned_by: o.manualPriority?.assignedBy || null,
+            assigned_at: o.manualPriority?.assignedAt || null
+          },
+          manualPriority: {
+            level: o.manualPriority?.level || 'auto',
+            note: o.manualPriority?.note || null,
+            assigned_by: o.manualPriority?.assignedBy || null,
+            assigned_at: o.manualPriority?.assignedAt || null
+          },
+          status_timestamps: {
+            placed_at: o.statusTimestamps?.placedAt || o.createdAt || null,
+            confirmed_at: o.statusTimestamps?.confirmedAt || o.confirmedAt || null,
+            making_started_at: o.statusTimestamps?.makingStartedAt || null,
+            packing_started_at: o.statusTimestamps?.packingStartedAt || null,
+            shipped_at: o.statusTimestamps?.shippedAt || o.shippedAt || null,
+            delivered_at: o.statusTimestamps?.deliveredAt || o.deliveredAt || null
+          },
+          statusTimestamps: {
+            placedAt: o.statusTimestamps?.placedAt || o.createdAt || null,
+            confirmedAt: o.statusTimestamps?.confirmedAt || o.confirmedAt || null,
+            makingStartedAt: o.statusTimestamps?.makingStartedAt || null,
+            packingStartedAt: o.statusTimestamps?.packingStartedAt || null,
+            shippedAt: o.statusTimestamps?.shippedAt || o.shippedAt || null,
+            deliveredAt: o.statusTimestamps?.deliveredAt || o.deliveredAt || null
+          },
+          priority_meta: calculateOrderPriority(o),
           payment_transaction_id: o.paymentTransactionId || o.upiUtr,
           payment_app: o.paymentApp,
           verified_at: o.verifiedAt,
@@ -1882,9 +2004,25 @@ router.patch('/orders/:id', async (req, res) => {
     const previousStatus = order.orderStatus;
     if (orderStatus) {
       order.orderStatus = orderStatus;
-      if (orderStatus === 'confirmed' && !order.confirmedAt) {
-        order.confirmedAt = new Date();
-        order.expectedDeliveryDate = new Date(order.confirmedAt.getTime() + 20 * 24 * 60 * 60 * 1000);
+      order.statusTimestamps = order.statusTimestamps || {};
+
+      if (orderStatus === 'confirmed') {
+        if (!order.confirmedAt) {
+          order.confirmedAt = new Date();
+          order.expectedDeliveryDate = new Date(order.confirmedAt.getTime() + 20 * 24 * 60 * 60 * 1000);
+        }
+        order.statusTimestamps.confirmedAt = order.confirmedAt;
+      } else if (orderStatus === 'making') {
+        if (!order.statusTimestamps.makingStartedAt) {
+          order.statusTimestamps.makingStartedAt = new Date();
+        }
+      } else if (orderStatus === 'packing' || orderStatus === 'processing') {
+        if (!order.statusTimestamps.packingStartedAt) {
+          order.statusTimestamps.packingStartedAt = new Date();
+        }
+      } else if (orderStatus === 'delivered') {
+        order.deliveredAt = order.deliveredAt || new Date();
+        order.statusTimestamps.deliveredAt = order.deliveredAt;
       }
     }
     if (paymentStatus) order.paymentStatus = paymentStatus;
@@ -1901,6 +2039,51 @@ router.patch('/orders/:id', async (req, res) => {
     res.json(order);
   } catch (err) {
     res.status(500).json({ error: err.message || 'Failed to update order' });
+  }
+});
+
+// Update Manual Priority level & internal notes on an active order
+router.patch('/orders/:id/priority', async (req, res) => {
+  const { id } = req.params;
+  const { level, note } = req.body;
+
+  const validLevels = ['auto', 'normal', 'medium', 'high', 'critical'];
+  const cleanLevel = String(level || 'auto').toLowerCase();
+
+  if (!validLevels.includes(cleanLevel)) {
+    return res.status(400).json({
+      error: `Invalid priority level. Must be one of: ${validLevels.join(', ')}`
+    });
+  }
+
+  try {
+    const order = await findOrderByIdOrNo(id);
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const adminUser = req.user?.name || req.user?.email || 'Admin';
+
+    order.manualPriority = {
+      level: cleanLevel,
+      note: note ? String(note).trim().slice(0, 1000) : null,
+      assignedBy: adminUser,
+      assignedAt: new Date()
+    };
+
+    // Record in edit history
+    order.editHistory = order.editHistory || [];
+    order.editHistory.push({
+      editedAt: new Date(),
+      editedBy: adminUser,
+      changedFields: ['manualPriority'],
+      notes: `Set priority to ${cleanLevel.toUpperCase()}${note ? `: "${note}"` : ''}`
+    });
+
+    await order.save();
+    res.json({ ok: true, order });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Failed to update order priority' });
   }
 });
 
@@ -1970,6 +2153,8 @@ router.post('/orders/:id/ship', async (req, res) => {
       order.trackingId = cleanTracking;
       order.shippedAt = shippedTimestamp;
       order.shippedBy = adminUser;
+      order.statusTimestamps = order.statusTimestamps || {};
+      order.statusTimestamps.shippedAt = shippedTimestamp;
       await order.save();
 
       // Send Shipped notification email
@@ -2014,6 +2199,8 @@ router.post('/orders/:id/verify-payment', async (req, res) => {
     order.verifiedBy = req.user?.name || req.user?.email || 'Admin';
 
     order.confirmedAt = order.confirmedAt || new Date();
+    order.statusTimestamps = order.statusTimestamps || {};
+    order.statusTimestamps.confirmedAt = order.confirmedAt;
     const confTime = new Date(order.confirmedAt).getTime();
     order.expectedDeliveryDate = new Date(confTime + 20 * 24 * 60 * 60 * 1000);
 

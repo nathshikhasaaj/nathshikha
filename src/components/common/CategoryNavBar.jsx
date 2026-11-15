@@ -38,8 +38,13 @@ export default function CategoryNavBar({ activeCategory }) {
           <span>{t('all_jewellery_nav', 'All Jewellery')}</span>
         </Link>
 
-        {/* 2. Dynamic Active Categories from Database */}
-        {categories.map((cat) => {
+        {/* 2. Dynamic Active Categories from Database (Excludes Traditional and Signature) */}
+        {categories
+          .filter((c) => {
+            const name = String(c.name || '').trim().toLowerCase();
+            return name !== 'traditional' && name !== 'signature';
+          })
+          .map((cat) => {
           const catSlug = cat.slug || cat.name;
           const catPath = `/category/${catSlug}`;
           const isSelected =

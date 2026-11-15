@@ -1,1411 +1,1246 @@
+/* ==========================================================================
+   ENTERPRISE ORDER OPERATIONS DASHBOARD STYLES
+   Royal Nathshikha Theme: Deep Maroon (#6d1b29), Gold (#d4af37), Cream (#fdfbf7)
+   ========================================================================== */
+
 .adminOrdersSection {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
+  width: 100%;
   max-width: 100%;
-  width: 100%;
-  margin: 0;
+  min-width: 0;
   box-sizing: border-box;
 }
 
-/* Control Bar */
-.ordersControlBar {
-  display: flex;
+/* ==========================================================================
+   1. SMART SUMMARY PRIORITY DASHBOARD (KPI CARDS)
+   ========================================================================== */
+
+.orderSummaryKpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
   width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
 }
 
-.searchBox {
-  position: relative;
-  flex: 1;
-  max-width: 480px;
-  min-width: 240px;
-  box-sizing: border-box;
+@media (min-width: 1750px) {
+  .orderSummaryKpiGrid {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 10px;
+  }
 }
 
-.searchIcon {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #a89a90;
-  pointer-events: none;
-  z-index: 2;
+@media (max-width: 1024px) {
+  .orderSummaryKpiGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
 }
 
-.searchInput {
-  width: 100%;
-  height: 42px;
-  padding: 0 38px 0 42px !important;
-  border: 1px solid #dfcfb2;
-  border-radius: 6px;
+@media (max-width: 480px) {
+  .orderSummaryKpiGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+}
+
+@media (max-width: 340px) {
+  .orderSummaryKpiGrid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+.orderKpiCard {
   background: #ffffff;
-  font-size: 13px;
-  color: var(--char);
-  outline: none;
-  transition: all 0.2s ease;
-  box-sizing: border-box;
-}
-
-.searchInput:focus {
-  border-color: var(--maroon);
-  box-shadow: 0 0 0 2px rgba(91, 42, 26, 0.1);
-}
-
-.clearSearchBtn {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  border: none;
-  background: transparent;
-  color: #a89a90;
+  border-radius: 10px;
+  border: 1px solid #e8ded1;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   cursor: pointer;
-  padding: 6px;
-  font-size: 12px;
+  transition: all 0.18s ease;
+  user-select: none;
+  box-sizing: border-box;
+  touch-action: manipulation;
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.orderKpiCard:hover {
+  transform: translateY(-2px);
+  border-color: #d4af37;
+  box-shadow: 0 6px 16px rgba(44, 22, 16, 0.08);
+}
+
+.orderKpiCard.activeCard {
+  border-color: #6d1b29;
+  background: #fdfbf7;
+  box-shadow: 0 0 0 2px rgba(109, 27, 41, 0.15);
+}
+
+.orderKpiIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2;
+  flex-shrink: 0;
 }
 
-.sortControlWrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  position: relative;
+.totalIcon {
+  background: #f3f4f6;
+  color: #374151;
 }
 
-.sortIcon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #7d6e64;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.sortSelect {
-  height: 42px;
-  padding: 0 14px 0 36px !important;
-  border: 1px solid #dfcfb2;
-  border-radius: 6px;
-  background: #ffffff;
-  font-size: 12.5px;
-  color: var(--char);
-  outline: none;
-  cursor: pointer;
-  box-sizing: border-box;
-}
-
-/* Filter Pills */
-.filterPills {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  align-items: center;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.filterPill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 13px;
-  border-radius: 20px;
-  border: 1px solid #dfcfb2;
-  background: #fdfaf4;
-  color: #6a5952;
-  font-size: 11.5px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-}
-
-.filterPill:hover {
-  background: #f7eedc;
-  color: var(--maroon);
-  border-color: var(--gold);
-}
-
-.filterPill.active {
-  background: var(--maroon, #5b1420);
-  color: #ffffff;
-  border-color: var(--maroon, #5b1420);
-}
-
-.filterPill.pillAlert {
-  border-color: #f1c08d;
-  background: #fffdfa;
-  color: #c2410c;
-}
-
-.filterPill.pillAlert.active {
-  background: #ea580c;
-  color: #ffffff;
-  border-color: #ea580c;
-}
-
-.filterPill.pillDanger {
-  border-color: #fca5a5;
-  background: #fff5f5;
-  color: #dc2626;
-}
-
-.filterPill.pillDanger.active {
-  background: #dc2626;
-  color: #ffffff;
-  border-color: #dc2626;
-}
-
-.filterPill.pillPriority {
-  border-color: #fca5a5;
-  background: #fff5f5;
+.criticalIcon {
+  background: #fee2e2;
   color: #b91c1c;
 }
 
-.filterPill.pillPriority.active {
-  background: #b91c1c;
-  color: #ffffff;
-  border-color: #b91c1c;
+.attentionIcon {
+  background: #fffbeb;
+  color: #b45309;
 }
 
-.filterPill .pillBadge {
+.paymentIcon {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.makingIcon {
+  background: #faeff1;
+  color: #6d1b29;
+}
+
+.packingIcon {
+  background: #fef9c3;
+  color: #a16207;
+}
+
+.shippedIcon {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.deliveredIcon {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.kpiAlertPulsing {
+  animation: criticalPulse 1.8s infinite;
+  border-color: #ef4444;
+}
+
+@keyframes criticalPulse {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.orderKpiContent {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  flex: 1;
+}
+
+.orderKpiLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #78665f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  width: 100%;
+}
+
+.orderKpiVal {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #2b1f1a;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.criticalVal { color: #b91c1c; }
+.attentionVal { color: #b45309; }
+.paymentVal { color: #d97706; }
+.makingVal { color: #6d1b29; }
+.packingVal { color: #854d0e; }
+.shippedVal { color: #4338ca; }
+.deliveredVal { color: #15803d; }
+
+/* ==========================================================================
+   2. OPERATIONAL QUEUES (TABS)
+   ========================================================================== */
+
+.operationalQueuesBar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 4px 2px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: #d8cab5 transparent;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.queueTabBtn {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: 10px;
-  font-size: 10px;
-  font-weight: 700;
-  background: rgba(0, 0, 0, 0.08);
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1px solid #d8cab5;
+  background: #ffffff;
+  color: #594640;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  user-select: none;
+  touch-action: manipulation;
 }
 
-.filterPill.active .pillBadge {
+.queueTabBtn:hover {
+  background: #fdfbf7;
+  border-color: #b8860b;
+  color: #6d1b29;
+}
+
+.queueTabBtn.active {
+  background: #6d1b29;
+  border-color: #6d1b29;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(109, 27, 41, 0.25);
+}
+
+.tabCountBadge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.08);
+  color: inherit;
+}
+
+.queueTabBtn.active .tabCountBadge {
   background: rgba(255, 255, 255, 0.25);
   color: #ffffff;
 }
 
-.badgeAmber {
-  background: #fef3c7 !important;
-  color: #b45309 !important;
+.tabCountBadge.badgeRed {
+  background: #fee2e2;
+  color: #b91c1c;
 }
 
-.badgeRed {
-  background: #fee2e2 !important;
-  color: #b91c1c !important;
+.tabCountBadge.badgeAmber {
+  background: #fef3c7;
+  color: #b45309;
 }
 
-/* Table Card */
-.tableCard {
+.queueTabBtn.tabAttention.hasAction {
+  border-color: #f59e0b;
+}
+
+.queueTabBtn.tabUrgent.hasCritical {
+  border-color: #ef4444;
+}
+
+/* ==========================================================================
+   3. CONTROLS TOOLBAR: SEARCH & ADVANCED FILTERS
+   ========================================================================== */
+
+.orderControlsToolbar {
   background: #ffffff;
-  border: 1px solid #ebdcc5;
-  border-radius: 10px;
-  padding: 16px;
-  box-shadow: 0 2px 10px rgba(79, 61, 56, 0.04);
-  width: 100%;
+  border: 1px solid #e8ded1;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 1px 3px rgba(44, 22, 16, 0.03);
   box-sizing: border-box;
 }
 
-.tableHeaderStats {
+.orderSearchWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.searchMagnifier {
+  position: absolute;
+  left: 14px;
+  color: #8c7d75;
+  pointer-events: none;
+}
+
+.orderSearchInput {
+  width: 100%;
+  height: 42px;
+  padding: 0 38px 0 42px;
+  border-radius: 8px;
+  border: 1.5px solid #d8cab5;
+  background: #fdfbf7;
+  font-size: 13.5px;
+  color: #2b1f1a;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+}
+
+.orderSearchInput:focus {
+  outline: none;
+  border-color: #b8860b;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.15);
+}
+
+.orderFilterDropdownsRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filterItemWrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filterItemLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b5e58;
+  white-space: nowrap;
+}
+
+.assistedActionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  margin-left: auto;
+  white-space: nowrap;
+  touch-action: manipulation;
+}
+
+.resetOrderFiltersBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px dashed #d97706;
+  background: #fffdf8;
+  color: #92400e;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.resetOrderFiltersBtn:hover {
+  background: #fef3c7;
+}
+
+/* ==========================================================================
+   4. ORDERS TABLE / CARDS CONTAINER
+   ========================================================================== */
+
+.orderTableCardContainer {
+  background: #ffffff;
+  border: 1px solid #e8ded1;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(44, 22, 16, 0.04);
+  box-sizing: border-box;
+}
+
+.orderTableHeaderMeta {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  padding: 16px 20px;
+  background: #fcf9f5;
+  border-bottom: 1px solid #ebdcc6;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
-.tableHeaderStats h3 {
-  font-family: var(--font-serif);
-  font-size: 17px;
-  color: var(--maroon);
+.orderHeaderTitleGroup h3 {
   margin: 0;
-}
-
-.tableHeaderStats span {
-  font-size: 12px;
-  color: #7a6b65;
-}
-
-/* Desktop Table View */
-.ordersTableContainer {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  display: block;
-  box-sizing: border-box;
-  margin: 0;
-  padding-bottom: 6px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--gold, #d4af37) #fbf7ee;
-}
-
-.ordersTableContainer::-webkit-scrollbar {
-  height: 8px;
-}
-
-.ordersTableContainer::-webkit-scrollbar-track {
-  background: #fbf7ee;
-  border-radius: 4px;
-}
-
-.ordersTableContainer::-webkit-scrollbar-thumb {
-  background: var(--gold, #d4af37);
-  border-radius: 4px;
-  border: 1.5px solid #fbf7ee;
-}
-
-.ordersOperationalTable {
-  width: 100%;
-  min-width: 1100px;
-  border-collapse: collapse;
-  font-size: 12px;
-  text-align: left;
-}
-
-.ordersOperationalTable th {
-  background: #f9f4ea;
-  padding: 10px 12px;
-  font-size: 10.5px;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.25rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  color: #6a5952;
-  border-bottom: 1px solid #e7ddc8;
-  white-space: nowrap;
+  color: #3b141c;
 }
 
-.ordersOperationalTable td {
-  padding: 10px 12px;
-  border-bottom: 1px solid #f0e6d6;
-  vertical-align: middle;
-}
-
-.ordersOperationalTable tbody tr:hover {
-  background: #fffdfa;
-}
-
-.rowNeedsVerification {
-  background: #fffdf7;
-}
-
-.rowNeedsVerification:hover {
-  background: #fff9ed !important;
-}
-
-.rowPriority {
-  background: #fffafa;
-}
-
-.rowPriority:hover {
-  background: #fff1f1 !important;
-}
-
-/* Table Cells */
-.orderNoCell b {
-  color: var(--maroon);
+.orderQueueSubText {
   display: block;
-  font-size: 12.5px;
-}
-
-.customerCell b {
-  display: block;
-  color: #3b2d28;
-}
-
-.userBadge {
-  color: #8c7d76;
-  font-size: 10px;
-}
-
-.contactCell {
-  white-space: nowrap;
-}
-
-.phoneText {
-  color: #4a3c36;
-  font-weight: 500;
-}
-
-.waIconBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: #25d366;
-  color: #fff;
-  padding: 3px 5px;
-  border-radius: 3px;
-  margin-left: 6px;
-  vertical-align: middle;
-}
-
-.productNameCell {
-  max-width: 150px;
-}
-
-.productNameText {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-weight: 600;
-  color: #3b2d28;
-}
-
-.totalItemsCount {
-  display: block;
-  font-size: 10px;
-  color: #8c7d76;
-}
-
-.productCodeCell code {
-  background: #f4ecdf;
-  color: var(--maroon);
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-size: 11px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.multiItemBadge {
-  display: block;
-  font-size: 10px;
-  color: #8c7d76;
-  font-weight: 600;
+  font-size: 11.5px;
+  color: #8c7d75;
   margin-top: 2px;
 }
 
-.amountCell b {
-  color: var(--char);
+.orderHeaderResultCount {
   font-size: 12.5px;
-  display: block;
+  color: #6b5e58;
 }
 
-.amountCell small {
-  color: #8c7d76;
-  font-size: 10px;
+.filteredTotalNote {
+  color: #8c7d75;
 }
 
-.orderDateCell {
-  white-space: nowrap;
-}
-
-.dateCellWrap {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.orderDateText {
-  font-weight: 600;
-  color: #3f322d;
-  font-size: 11.5px;
-}
-
-.orderTimeText {
-  color: #8c7d76;
-  font-size: 10px;
-}
-
-.orderAgeCell {
-  white-space: nowrap;
-}
-
-.orderAgeBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1;
-}
-
-.normalAgeBadge {
-  background: #f4eee1;
-  color: #6a5952;
-  border: 1px solid #e2d6c1;
-}
-
-.priorityBadge {
-  background: #fee2e2;
-  color: #991b1b;
-  border: 1.5px solid #f87171;
-  font-weight: 700;
-  box-shadow: 0 1px 4px rgba(220, 38, 38, 0.15);
-}
-
-.verifiedPaymentBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: #dcfce7;
-  color: #15803d;
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 700;
-  border: 1px solid #bbf7d0;
-  white-space: nowrap;
-}
-
-.pendingPaymentBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: #fef3c7;
-  color: #92400e;
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 700;
-  border: 1px solid #fde68a;
-  white-space: nowrap;
-}
-
-.statusCell select {
-  padding: 5px 7px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 600;
-  border: 1px solid #d4c4a8;
-  cursor: pointer;
-  outline: none;
-  background: #ffffff;
-}
-
-.statusSelect_placed {
-  color: #b45309;
-  background: #fffbeb !important;
-  border-color: #fde68a !important;
-}
-
-.statusSelect_confirmed {
-  color: #15803d;
-  background: #f0fdf4 !important;
-  border-color: #bbf7d0 !important;
-}
-
-.statusSelect_making {
-  color: #b45309;
-  background: #fffbeb !important;
-  border-color: #fde68a !important;
-}
-
-.statusSelect_packing {
-  color: #854d0e;
-  background: #fefce8 !important;
-  border-color: #fef08a !important;
-}
-
-.statusSelect_shipped {
-  color: #6d28d9;
-  background: #f5f3ff !important;
-  border-color: #ddd6fe !important;
-}
-
-.statusSelect_delivered {
-  color: #047857;
-  background: #ecfdf5 !important;
-  border-color: #a7f3d0 !important;
-}
-
-.statusSelect_cancelled {
-  color: #b91c1c;
-  background: #fef2f2 !important;
-  border-color: #fecaca !important;
-}
-
-.cancelReqBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  color: #b45309;
-  font-weight: 700;
-  padding: 3px 7px;
-  border-radius: 4px;
-  white-space: nowrap;
-}
-
-.cancelApprovedBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #1d4ed8;
-  font-weight: 600;
-  padding: 3px 7px;
-  border-radius: 4px;
-  white-space: nowrap;
-}
-
-.cancelRefundedBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #15803d;
-  font-weight: 700;
-  padding: 3px 7px;
-  border-radius: 4px;
-  white-space: nowrap;
-}
-
-.noCancelText {
-  color: #9e8e86;
-  font-size: 11px;
-}
-
-.actionsCell {
-  text-align: right;
-  white-space: nowrap;
-}
-
-.actionButtonsGroup {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  justify-content: flex-end;
-}
-
-.verifyBtn {
-  display: inline-flex !important;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px !important;
-  padding: 5px 8px !important;
-  white-space: nowrap;
-}
-
-.viewOrderBtn {
-  display: inline-flex !important;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px !important;
-  padding: 5px 8px !important;
-}
-
-.deleteOrderBtn {
-  display: inline-flex !important;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px !important;
-  padding: 5px 8px !important;
-  color: #dc2626 !important;
-  border-color: #fca5a5 !important;
-  background: #fffafa !important;
-  white-space: nowrap;
-  transition: all 0.15s ease;
-}
-
-.deleteOrderBtn:hover {
-  background: #fee2e2 !important;
-  border-color: #ef4444 !important;
-  color: #b91c1c !important;
-}
-
-.mobileCardDeleteBtn {
-  padding: 0 8px !important;
-  height: 32px !important;
-  border-color: #fca5a5 !important;
-  background: #fffafa !important;
-  color: #dc2626 !important;
-  display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
-  border-radius: 5px;
-  flex-shrink: 0;
-  transition: all 0.15s ease;
-}
-
-.mobileCardDeleteBtn:hover {
-  background: #fee2e2 !important;
-  border-color: #ef4444 !important;
-}
-
-/* Delete Confirmation Modal */
-.adminDeleteModalOverlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(18, 11, 8, 0.75);
-  backdrop-filter: blur(6px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1400;
-  padding: 16px;
-  animation: fadeInModal 0.2s ease-out;
-  box-sizing: border-box;
-}
-
-.adminDeleteModalContainer {
-  background: #ffffff;
-  border: 1px solid #ebdcc6;
-  border-radius: 12px;
-  padding: 24px;
-  max-width: 440px;
+/* DESKTOP TABLE */
+.orderTableScrollWrap {
   width: 100%;
-  text-align: center;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  animation: slideUpModal 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  box-sizing: border-box;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-.adminDeleteModalContainer .deleteModalIcon {
-  background: #fee2e2;
-  padding: 12px;
-  border-radius: 50%;
-  border: 1px solid #fca5a5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.adminDeleteModalContainer h3 {
-  margin: 0;
-  font-family: var(--font-serif, 'Cinzel', serif);
-  color: var(--maroon, #5b1420);
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.adminDeleteModalContainer p {
-  margin: 0;
-  font-size: 12.5px;
-  color: #5c4d44;
-  line-height: 1.5;
-}
-
-.deleteOrderSummaryPreview {
-  background: #fdfaf4;
-  border: 1px dashed #dfcfb2;
-  border-radius: 8px;
-  padding: 10px 14px;
+.enterpriseOrderTable {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  box-sizing: border-box;
-  margin-top: 4px;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
 }
 
-.deletePreviewRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 12px;
+.enterpriseOrderTable thead tr {
+  background: #fdfbf7;
+  border-bottom: 1.5px solid #ebdcc6;
 }
 
-.deletePreviewRow span {
-  color: #7d6e64;
+.enterpriseOrderTable th {
+  padding: 12px 14px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6e5e56;
+  white-space: nowrap;
 }
 
-.deletePreviewRow b {
-  color: #2b1f1a;
-}
-
-.adminDeleteModalActions {
-  display: flex;
-  gap: 10px;
-  width: 100%;
-  margin-top: 8px;
-}
-
-.adminDeleteModalActions button {
-  flex: 1;
-  height: 40px !important;
-  font-size: 12.5px !important;
-  font-weight: 700 !important;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  border-radius: 6px !important;
-}
-
-.dangerDeleteBtn {
-  background: #dc2626 !important;
-  color: #ffffff !important;
-  border: 1px solid #dc2626 !important;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.dangerDeleteBtn:hover:not(:disabled) {
-  background: #b91c1c !important;
-  border-color: #b91c1c !important;
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
-}
-
-.dangerDeleteBtn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.shipmentGroupCell {
+.enterpriseOrderTable td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f0e9df;
   vertical-align: middle;
 }
 
-.shipmentGroupWrap {
+.orderTableRow {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.orderTableRow:hover {
+  background: #faf7f0;
+}
+
+.orderTableRow.rowCritical {
+  background: #fef2f2;
+}
+
+.orderTableRow.rowCritical:hover {
+  background: #fee2e2;
+}
+
+.orderTableRow.rowHigh {
+  background: #fffbeb;
+}
+
+.orderTableRow.rowHigh:hover {
+  background: #fef3c7;
+}
+
+.orderTableRow.rowDelivered {
+  opacity: 0.9;
+}
+
+/* Cells styling */
+.orderIdentityGroup {
   display: flex;
   flex-direction: column;
   gap: 3px;
 }
 
-.adminShipmentGroupBadge {
-  display: inline-flex;
+.orderNumberText {
+  font-weight: 700;
+  color: #3b141c;
+  font-size: 13px;
+}
+
+.orderBadgesFlow {
+  display: flex;
   align-items: center;
   gap: 4px;
-  background: #fbf5ea;
-  color: #5b2a1a;
-  border: 1px solid #dfcfb2;
-  padding: 3px 7px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-family: monospace;
-  font-weight: 700;
-  width: fit-content;
-  white-space: nowrap;
-}
-
-.adminShipmentGroupBadge svg {
-  color: #d4af37;
-}
-
-.coShippedAdminList {
-  font-size: 10px;
-  color: #8c7d76;
-  white-space: nowrap;
-}
-
-.singleShipmentText {
-  color: #b0a39c;
-  font-size: 12px;
-}
-
-/* Mobile View Elements */
-.desktopOnlyTable {
-  display: block;
-}
-
-.mobileOrdersList {
-  display: none;
-}
-
-/* Dedicated Mobile Order Cards (< 850px) */
-.mobileOrderCard {
-  background: #ffffff;
-  border: 1px solid #ebdcc5;
-  border-radius: 8px;
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  box-shadow: 0 1px 4px rgba(79, 61, 56, 0.04);
-  position: relative;
-  overflow: hidden;
-  box-sizing: border-box;
-  width: 100%;
-}
-
-.mobileOrderCard.cardNeedsVerification {
-  border-left: 3px solid #ea580c;
-  background: #fffdfa;
-}
-
-.mobileOrderCard.cardNeedsCancellationReview {
-  border-left: 3px solid #dc2626;
-  background: #fffafa;
-}
-
-.mobileOrderCard.cardPriority {
-  border-color: #fca5a5;
-}
-
-/* Card Header */
-.mobileCardHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.mobileCardPrimaryInfo {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
   flex-wrap: wrap;
 }
 
-.mobileCardOrderNo {
-  font-family: var(--font-serif);
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--maroon, #7a1a28);
-  white-space: nowrap;
+.badgeCustomOrder {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  padding: 1px 5px;
+  border-radius: 4px;
+  text-transform: uppercase;
 }
 
-.mobileCardDate {
+.badgeAssistedOrder {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #1e40af;
+  background: #dbeafe;
+  border: 1px solid #93c5fd;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.badgeGiftOrder {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #9d174d;
+  background: #fce7f3;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.badgeCustomizationReq {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #6b21a8;
+  background: #f3e8ff;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.shipmentGroupMiniTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #4b5563;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  padding: 1px 5px;
+  border-radius: 4px;
+  margin-top: 2px;
+}
+
+/* Customer Cell */
+.customerMetaGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.customerNameText {
+  font-weight: 700;
+  color: #2b1f1a;
+}
+
+.customerContactRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.customerPhoneText {
+  font-size: 11.5px;
+  color: #6b5e58;
+}
+
+.waQuickLinkBtn {
+  color: #16a34a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.waQuickLinkBtn:hover {
+  transform: scale(1.15);
+}
+
+/* Items & Value Cell */
+.itemsValueGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 200px;
+}
+
+.primaryItemName {
+  font-weight: 600;
+  color: #3b2820;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.itemsValueSub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.orderTotalVal {
+  color: #4a050e;
+  font-weight: 800;
+}
+
+.itemCountTag {
   font-size: 11px;
   color: #8c7d75;
 }
 
-.mobileOrderAgeBadge {
+.payMethodTag {
   font-size: 10px;
   font-weight: 700;
-  padding: 1.5px 6px;
-  border-radius: 10px;
-  line-height: 1.2;
+  background: #f3f4f6;
+  color: #4b5563;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+/* Timeline & SLA Cell */
+.timelineSlaGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.orderAgeText {
+  font-size: 12px;
+  color: #3b2820;
+}
+
+.placedDateSub {
+  display: block;
+  font-size: 10.5px;
+  color: #8c7d75;
+}
+
+.slaBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
   white-space: nowrap;
+}
+
+.slaBadge.overdue {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.slaBadge.dueSoon {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.slaBadge.onTime {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.slaBadge.pendingSla {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+/* Current Stage Dropdown Cell */
+.stageSelectDropdown {
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid #d8cab5;
+  background: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  color: #3b2820;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.stageSelectDropdown:focus {
+  outline: none;
+  border-color: #b8860b;
+}
+
+.paymentStatusSubPill {
+  margin-top: 3px;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.verifiedPaymentText {
+  color: #15803d;
   display: inline-flex;
   align-items: center;
   gap: 2px;
 }
 
-.mobileOrderAgeBadge.normalAgeBadge {
-  background: #f4eee1;
-  color: #6a5952;
-  border: 1px solid #e2d6c1;
+.unverifiedPaymentText {
+  color: #b45309;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
 }
 
-.mobileOrderAgeBadge.priorityAgeBadge {
-  background: #fee2e2;
-  color: #991b1b;
-  border: 1.5px solid #f87171;
-  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.12);
-}
-
-.mobileCardHeaderBadges {
-  flex-shrink: 0;
-}
-
-.statusChip {
-  font-size: 9.5px;
+/* Priority Status Pill */
+.priorityStatusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-size: 11.5px;
   font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 10px;
-  line-height: 1.2;
+  cursor: pointer;
+  transition: all 0.15s ease;
   white-space: nowrap;
 }
 
-.statusChip_placed {
-  background: #fffbeb;
-  color: #b45309;
-  border: 1px solid #fde68a;
+.priorityBullet {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
 }
 
-.statusChip_confirmed {
-  background: #f0fdf4;
-  color: #15803d;
-  border: 1px solid #bbf7d0;
-}
-
-.statusChip_making {
-  background: #fefce8;
-  color: #a16207;
-  border: 1px solid #fef08a;
-}
-
-.statusChip_packing,
-.statusChip_processing {
-  background: #faf5ff;
-  color: #7e22ce;
-  border: 1px solid #e9d5ff;
-}
-
-.statusChip_shipped {
-  background: #eff6ff;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
-}
-
-.statusChip_delivered {
-  background: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
-}
-
-.statusChip_cancelled {
-  background: #fef2f2;
+.priorityCritical {
+  background: #fee2e2;
   color: #b91c1c;
   border: 1px solid #fecaca;
 }
 
-/* Customer & Verification Row */
-.mobileCardCustomerRow {
+.priorityHigh {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.priorityMedium {
+  background: #fffbeb;
+  color: #a16207;
+  border: 1px solid #fef08a;
+}
+
+.priorityNormal {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.priorityNoAction {
+  background: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+}
+
+.manualTagBadge {
+  font-size: 9px;
+  background: rgba(0, 0, 0, 0.1);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+/* Next Action Recommendation CTA */
+.nextActionCtaBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  touch-action: manipulation;
+}
+
+.nextActionCtaBtn.variant_danger {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.nextActionCtaBtn.variant_danger:hover {
+  background: #b91c1c;
+}
+
+.nextActionCtaBtn.variant_warning {
+  background: #d97706;
+  color: #ffffff;
+}
+
+.nextActionCtaBtn.variant_warning:hover {
+  background: #b45309;
+}
+
+.nextActionCtaBtn.variant_primary {
+  background: #6d1b29;
+  color: #ffffff;
+}
+
+.nextActionCtaBtn.variant_primary:hover {
+  background: #4a050e;
+}
+
+.nextActionCtaBtn.variant_gold {
+  background: linear-gradient(135deg, #b8860b 0%, #d4af37 100%);
+  color: #1a080c;
+  font-weight: 800;
+}
+
+.nextActionCtaBtn.variant_gold:hover {
+  background: linear-gradient(135deg, #a0740a 0%, #c49e2e 100%);
+}
+
+.nextActionCtaBtn.variant_secondary {
+  background: #475569;
+  color: #ffffff;
+}
+
+.nextActionCtaBtn.variant_secondary:hover {
+  background: #334155;
+}
+
+.nextActionCtaBtn.variant_completed {
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: default;
+}
+
+/* Actions buttons in row */
+.tableActionBtns {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.orderActionBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid #d8cab5;
+  background: #ffffff;
+  color: #594640;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.orderActionBtn:hover {
+  background: #fdfbf7;
+  border-color: #6d1b29;
+  color: #6d1b29;
+  transform: translateY(-1px);
+}
+
+.orderActionBtn.deleteBtn:hover {
+  background: #fee2e2;
+  border-color: #ef4444;
+  color: #b91c1c;
+}
+
+/* ==========================================================================
+   5. MOBILE TOUCH CARDS VIEW (<= 640px)
+   ========================================================================== */
+
+.orderMobileCardsList {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  padding: 10px;
+}
+
+.orderMobileCard {
+  background: #ffffff;
+  border: 1px solid #e8ded1;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 1px 3px rgba(44, 22, 16, 0.04);
+}
+
+.orderMobileCard.mobileCritical {
+  border-color: #fca5a5;
+  background: #fffafa;
+}
+
+.mobileCardHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  width: 100%;
-  box-sizing: border-box;
 }
 
-.mobileCustomerMeta {
+.mobileOrderNoBadge {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 6px;
-  min-width: 0;
   flex-wrap: wrap;
+}
+
+.mobileOrderNoBadge b {
+  font-size: 13.5px;
+  color: #3b141c;
+}
+
+.mobileCardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mobileCustomerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .mobileCustomerName {
-  font-size: 12.5px;
+  font-weight: 700;
+  font-size: 13.5px;
   color: #2b1f1a;
+}
+
+.mobileOrderTotal {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #4a050e;
+}
+
+.mobileItemSummary {
+  margin: 0;
+  font-size: 12.5px;
+  color: #6b5e58;
+}
+
+.mobileTimelineMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  color: #78665f;
+  margin-top: 2px;
+}
+
+.mobileSlaTag {
+  font-size: 10.5px;
   font-weight: 700;
-}
-
-.mobileCustomerPhone {
-  font-size: 11px;
-  color: #7d6e64;
-}
-
-.mobileVerificationChipWrap {
-  flex-shrink: 0;
-}
-
-.verifiedChip {
-  font-size: 10px;
   color: #15803d;
-  font-weight: 700;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  padding: 1px 6px;
-  border-radius: 8px;
+  background: #dcfce7;
+  padding: 1px 5px;
+  border-radius: 4px;
 }
 
-.pendingChip {
-  font-size: 10px;
-  color: #b45309;
-  font-weight: 700;
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  padding: 1px 6px;
-  border-radius: 8px;
+.mobileSlaTag.overdue {
+  color: #b91c1c;
+  background: #fee2e2;
 }
 
-/* Product & Price Row */
-.mobileCardProductRow {
+.mobileStageTag {
+  font-size: 11px;
+}
+
+.mobileCardFooter {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  background: #fbf7ee;
-  border: 1px solid #eedfc9;
+  border-top: 1px solid #f0e9df;
+  padding-top: 10px;
+}
+
+.mobileNextActionBtn {
+  flex: 1;
+  min-height: 36px;
   border-radius: 6px;
-  padding: 6px 8px;
-  width: 100%;
+  font-size: 12.5px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+}
+
+.mobileSecondaryActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mobileIconBtn,
+.mobileWaBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  border: 1px solid #d8cab5;
+  background: #ffffff;
+  color: #594640;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobileWaBtn {
+  color: #16a34a;
+}
+
+/* ==========================================================================
+   6. ENTERPRISE PAGINATION CONTROLS
+   ========================================================================== */
+
+.orderPaginationBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: #ffffff;
+  border-top: 1px solid #ebdcc6;
+  gap: 16px;
+  flex-wrap: wrap;
   box-sizing: border-box;
 }
 
-.mobileProductTitle {
+.orderPaginationInfo {
+  font-size: 12.5px;
+  color: #6b5e58;
+}
+
+.filteredHint {
+  color: #8c7d75;
+}
+
+.orderPaginationControls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.pageSizePickerWrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pageSizeLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b5e58;
+  white-space: nowrap;
+}
+
+.orderPageNavButtons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.orderPagePills {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pagePillBtn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 6px;
+  border-radius: 6px;
+  border: 1px solid #d8cab5;
+  background: #ffffff;
+  color: #594640;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagePillBtn:hover:not(.active) {
+  background: #fdfbf7;
+  border-color: #6d1b29;
+  color: #6d1b29;
+}
+
+.pagePillBtn.active {
+  background: #6d1b29;
+  border-color: #6d1b29;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(109, 27, 41, 0.25);
+}
+
+.pageEllipsis {
+  font-size: 13px;
+  color: #8c7d75;
+  padding: 0 4px;
+  user-select: none;
+}
+
+.orderNavBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  border: 1px solid #d8cab5;
+  background: #ffffff;
+  color: #594640;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.orderNavBtn:hover:not(:disabled) {
+  background: #fdfbf7;
+  border-color: #6d1b29;
+  color: #6d1b29;
+}
+
+.orderNavBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.currentPageBadge {
+  font-size: 12px;
+  color: #594640;
+  padding: 0 4px;
+  white-space: nowrap;
+}
+
+/* EMPTY STATE */
+.orderEmptyState {
+  padding: 60px 24px;
+  text-align: center;
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  min-width: 0;
-}
-
-.mobilePieceName {
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #3b2d28;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.mobileMoreItemsBadge {
-  font-size: 9.5px;
-  color: #8c734e;
-  font-weight: 600;
-}
-
-.mobileAmountBlock {
-  text-align: right;
-  flex-shrink: 0;
-}
-
-.mobileOrderTotal {
-  font-family: var(--font-serif);
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--maroon, #7a1a28);
-  display: block;
-  line-height: 1.1;
-}
-
-.mobilePaymentMethod {
-  font-size: 8.5px;
-  color: #8c7d75;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-}
-
-.mobilePriorityTag {
-  background: #fee2e2;
-  color: #991b1b;
-  padding: 1px 5px;
-  border-radius: 8px;
-  font-size: 9.5px;
-  font-weight: 700;
-}
-
-.mobileCardGroupRow {
-  display: flex;
   align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-/* Urgent Triggers */
-.mobileCardUrgentActionBtn {
-  width: 100%;
-  height: 32px;
-  background: #fff7ed;
-  border: 1px solid #ea580c;
-  color: #c2410c;
-  border-radius: 5px;
-  font-size: 11px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  cursor: pointer;
-  touch-action: manipulation;
-  box-sizing: border-box;
-}
-
-.mobileCardCancelActionBtn {
-  width: 100%;
-  height: 32px;
-  background: #fef2f2;
-  border: 1px solid #dc2626;
-  color: #b91c1c;
-  border-radius: 5px;
-  font-size: 11px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  cursor: pointer;
-  touch-action: manipulation;
-  box-sizing: border-box;
-}
-
-/* Actions Row */
-.mobileCardActionsRow {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding-top: 4px;
-  border-top: 1px dashed #eedfc9;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.mobileStatusSelectWrap {
-  flex: 1;
-  min-width: 0;
-}
-
-.mobileStatusSelectWrap .orderStatusSelect {
-  width: 100%;
-  height: 32px;
-  font-size: 11.5px;
-  padding: 0 6px;
-  border-radius: 5px;
-  box-sizing: border-box;
-  font-weight: 600;
-  border: 1px solid #d4c4a8;
-  background: #fff;
-}
-
-.mobileCardQuickBtns {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
-}
-
-.mobileCardWaLink {
-  width: 32px;
-  height: 32px;
-  background: #25d366;
-  color: #ffffff !important;
-  border-radius: 5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  flex-shrink: 0;
-  touch-action: manipulation;
-  transition: transform 0.15s ease;
-}
-
-.mobileCardWaLink:active {
-  transform: scale(0.92);
-}
-
-.mobileCardDetailsBtn {
-  height: 32px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 4px;
-  padding: 0 10px !important;
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  border-radius: 5px !important;
-  white-space: nowrap;
-}
-
-/* Pagination Bar */
-.adminPaginationBar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   gap: 10px;
-  padding: 16px 0 6px;
-  width: 100%;
-  box-sizing: border-box;
 }
 
-.loadMoreBtn {
-  height: 40px !important;
-  padding: 0 20px !important;
-  font-size: 12px !important;
-  font-weight: 700 !important;
-  box-shadow: 0 2px 8px rgba(184, 134, 11, 0.2);
+.emptyStateIcon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #fbf5e6;
+  color: #b8860b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.showAllBtn {
-  height: 40px !important;
-  padding: 0 16px !important;
-  font-size: 12px !important;
-  font-weight: 600 !important;
+.orderEmptyState h3 {
+  margin: 0;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.3rem;
+  color: #4a050e;
 }
 
-.allOrdersLoadedNotice {
-  text-align: center;
-  padding: 12px 0 4px;
-  font-size: 11.5px;
-  color: #15803d;
-  font-weight: 600;
-  width: 100%;
+.orderEmptyState p {
+  margin: 0;
+  font-size: 13.5px;
+  color: #7d6b63;
+  max-width: 440px;
+  line-height: 1.5;
 }
 
-/* Customization Request Indicator Badges */
-.adminCustomizationBadge {
+.emptyResetBtn {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  color: #92400e;
-  border: 1px solid #f59e0b;
-  font-size: 10px;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 9px 18px;
+  border-radius: 6px;
+  font-size: 13px;
   font-weight: 700;
-  padding: 1px 6px;
-  border-radius: 4px;
-  margin-top: 3px;
-  white-space: nowrap;
 }
 
-.mobileCustomizationBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  color: #92400e;
-  border: 1px solid #f59e0b;
-  font-size: 9.5px;
-  font-weight: 700;
-  padding: 1.5px 6px;
-  border-radius: 4px;
-  margin-right: 4px;
-}
+/* ==========================================================================
+   7. RESPONSIVE BREAKPOINTS
+   ========================================================================== */
 
-/* Responsive Media Queries */
 @media (max-width: 850px) {
   .desktopOnlyTable {
     display: none !important;
   }
 
-  .mobileOrdersList {
-    display: flex;
+  .orderMobileCardsList {
+    display: flex !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .orderControlsToolbar {
+    padding: 12px;
+  }
+
+  .assistedActionBtn {
+    margin-left: 0;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .orderPaginationBar {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .orderPaginationControls {
+    width: 100%;
     flex-direction: column;
     gap: 10px;
+  }
+
+  .pageSizePickerWrap,
+  .orderPageNavButtons {
     width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-
-  .adminOrdersSection {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-
-  .tableCard {
-    padding: 0;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-
-  .tableHeaderStats {
-    margin-bottom: 10px;
-    padding: 0 2px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .tableHeaderStats h3 {
-    font-size: 15px;
-  }
-
-  .ordersControlBar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-    margin-bottom: 8px;
-  }
-
-  .searchBox {
-    max-width: 100%;
-    width: 100%;
-    min-width: 0;
-    box-sizing: border-box;
-  }
-
-  .searchInput {
-    height: 40px;
-    font-size: 13px;
-    width: 100%;
-    padding: 0 36px 0 40px !important;
-    box-sizing: border-box;
-  }
-
-  .sortControlWrap {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-    position: relative;
-  }
-
-  .sortSelect {
-    width: 100%;
-    height: 38px;
-    padding: 0 14px 0 36px !important;
-    font-size: 12px;
-    box-sizing: border-box;
-  }
-
-  .filterPills {
-    overflow-x: auto;
-    white-space: nowrap;
-    flex-wrap: nowrap;
-    padding-bottom: 6px;
-    gap: 6px;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    box-sizing: border-box;
-    margin-bottom: 10px;
-  }
-
-  .filterPills::-webkit-scrollbar {
-    display: none;
-  }
-
-  .filterPill {
-    font-size: 11px;
-    padding: 6px 11px;
-    border-radius: 20px;
-    flex-shrink: 0;
-    white-space: nowrap;
+    justify-content: center;
+    flex-wrap: wrap;
   }
 }
-
-/* Assisted Checkout Action Button & Badges */
-.createAssistedOrderBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: linear-gradient(135deg, var(--maroon, #5b1420) 0%, #3e0b14 100%) !important;
-  color: #fff !important;
-  border: 1px solid var(--gold, #d4af37) !important;
-  font-size: 12px !important;
-  font-weight: 700 !important;
-  padding: 0 16px !important;
-  height: 42px;
-  border-radius: 6px;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(91, 20, 32, 0.2);
-  white-space: nowrap;
-  transition: all 0.2s ease;
-}
-
-.createAssistedOrderBtn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(91, 20, 32, 0.35);
-}
-
-.adminAssistedOrderBadge {
-  display: inline-block;
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  color: #92400e;
-  border: 1px solid #f59e0b;
-  font-size: 10px;
-  font-weight: 800;
-  padding: 2px 6px;
-  border-radius: 4px;
-  margin-top: 3px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.adminPaymentPendingBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: #fefce8;
-  color: #a16207;
-  border: 1px solid #fde047;
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
