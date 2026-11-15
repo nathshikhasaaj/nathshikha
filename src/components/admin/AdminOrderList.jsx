@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Package,
   ShieldCheck,
@@ -15,7 +15,9 @@ import {
   Boxes,
   Calendar,
   Trash2,
-  Loader2
+  Loader2,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import {
   money,
@@ -220,19 +222,51 @@ export default function AdminOrderList({
     });
   }, [orders, filter, searchQuery, sortBy]);
 
-  const [visibleCount, setVisibleCount] = useState(6);
+  // Operational Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const ordersSectionRef = useRef(null);
 
-  // Auto-reset to 6 when filters, search or sort change
-  React.useEffect(() => {
-    setVisibleCount(6);
-  }, [filter, searchQuery, sortBy]);
+  // Auto-reset to page 1 whenever filter, search query, sorting, or pageSize changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, searchQuery, sortBy, pageSize]);
 
-  const visibleOrders = useMemo(() => {
-    return filteredOrders.slice(0, visibleCount);
-  }, [filteredOrders, visibleCount]);
+  // Calculate pagination boundaries
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  const paginatedOrders = useMemo(() => {
+    const start = (safeCurrentPage - 1) * pageSize;
+    return filteredOrders.slice(start, start + pageSize);
+  }, [filteredOrders, safeCurrentPage, pageSize]);
+
+  const startItem = filteredOrders.length === 0 ? 0 : (safeCurrentPage - 1) * pageSize + 1;
+  const endItem = Math.min(safeCurrentPage * pageSize, filteredOrders.length);
+
+  const handlePageChange = (newPage) => {
+    const target = Math.max(1, Math.min(newPage, totalPages));
+    setCurrentPage(target);
+    if (ordersSectionRef.current) {
+      ordersSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const getPageNumbers = () => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    if (safeCurrentPage <= 4) {
+      return [1, 2, 3, 4, 5, '...', totalPages];
+    }
+    if (safeCurrentPage >= totalPages - 3) {
+      return [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    }
+    return [1, '...', safeCurrentPage - 1, safeCurrentPage, safeCurrentPage + 1, '...', totalPages];
+  };
 
   return (
-    <div className="adminOrdersSection">
+    <div className="adminOrdersSection" ref={ordersSectionRef}>
       {/* Search, Filter & Sort Controls */}
       <div className="ordersControlBar">
         <div className="searchBox">
@@ -397,8 +431,11 @@ export default function AdminOrderList({
               : `${filter.toUpperCase()} Orders`}
           </h3>
           <span className="resultsCountText">
-            Showing <b>{Math.min(visibleCount, filteredOrders.length)}</b> of{' '}
+            Showing <b>{startItem}</b>–<b>{endItem}</b> of{' '}
             <b>{filteredOrders.length}</b> orders
+            {totalPages > 1 && (
+              <span className="headerPageLabel"> · Page {safeCurrentPage} of {totalPages}</span>
+            )}
           </span>
         </div>
 
@@ -425,7 +462,7 @@ export default function AdminOrderList({
                   </tr>
                 </thead>
                 <tbody>
-                  {visibleOrders.map((o) => {
+                  {paginatedOrders.map((o) => {
                     const isVerified =
                       o.payment_status === 'verified' ||
                       o.paymentStatus === 'verified' ||
@@ -782,7 +819,7 @@ export default function AdminOrderList({
 
             {/* 2. Dedicated Mobile Order Cards (< 850px) */}
             <div className="mobileOrdersList">
-              {visibleOrders.map((o) => {
+              {paginatedOrders.map((o) => {
                 const isVerified =
                   o.payment_status === 'verified' ||
                   o.paymentStatus === 'verified' ||
@@ -1013,31 +1050,88 @@ export default function AdminOrderList({
               })}
             </div>
 
-            {/* Pagination Controls */}
-            {filteredOrders.length > visibleCount && (
-              <div className="adminPaginationBar">
-                <button
-                  type="button"
-                  className="goldBtn loadMoreBtn"
-                  onClick={() => setVisibleCount((prev) => prev + 6)}
-                  title="Load next 6 orders"
-                >
-                  <span>Load More Orders (+6)</span>
-                </button>
-                <button
-                  type="button"
-                  className="outlineBtn showAllBtn"
-                  onClick={() => setVisibleCount(filteredOrders.length)}
-                  title="Show all orders at once"
-                >
-                  <span>Show All ({filteredOrders.length})</span>
-                </button>
-              </div>
-            )}
+            {/* Professional Responsive Pagination Controls */}
+            {filteredOrders.length > 0 && (
+              <div className="adminOrdersPaginationBar">
+                <div className="ordersPaginationInfo">
+                  <span>
+                    Showing <b>{startItem}</b>–<b>{endItem}</b> of <b>{filteredOrders.length}</b> orders
+                  </span>
+                  {totalPages > 1 && (
+                    <span className="ordersPageCountLabel">
+                      · Page <b>{safeCurrentPage}</b> of <b>{totalPages}</b>
+                    </span>
+                  )}
+                </div>
 
-            {filteredOrders.length <= visibleCount && filteredOrders.length > 6 && (
-              <div className="allOrdersLoadedNotice">
-                <span>✓ All {filteredOrders.length} orders are currently displayed</span>
+                <div className="ordersPaginationActions">
+                  <div className="ordersPageSizeSelectWrap">
+                    <label htmlFor="ordersPageSizeSelect">Rows per page:</label>
+                    <select
+                      id="ordersPageSizeSelect"
+                      value={pageSize}
+                      onChange={(e) => setPageSize(Number(e.target.value))}
+                      className="ordersPageSizeSelect"
+                    >
+                      <option value={10}>10 rows</option>
+                      <option value={25}>25 rows</option>
+                      <option value={50}>50 rows</option>
+                      <option value={100}>100 rows</option>
+                    </select>
+                  </div>
+
+                  {totalPages > 1 && (
+                    <div className="ordersPaginationNav">
+                      <button
+                        type="button"
+                        className="ordersPageNavBtn"
+                        disabled={safeCurrentPage <= 1}
+                        onClick={() => handlePageChange(safeCurrentPage - 1)}
+                        title="Previous Page"
+                        aria-label="Previous Page"
+                      >
+                        <ChevronLeft size={15} />
+                        <span className="pageNavText">Prev</span>
+                      </button>
+
+                      <div className="ordersPagePillsList">
+                        {getPageNumbers().map((item, idx) =>
+                          item === '...' ? (
+                            <span key={`dots-${idx}`} className="ordersPageDots">
+                              …
+                            </span>
+                          ) : (
+                            <button
+                              key={item}
+                              type="button"
+                              className={`ordersPagePill ${safeCurrentPage === item ? 'active' : ''}`}
+                              onClick={() => handlePageChange(item)}
+                              title={`Go to page ${item}`}
+                            >
+                              {item}
+                            </button>
+                          )
+                        )}
+                      </div>
+
+                      <div className="ordersMobilePageBadge">
+                        {safeCurrentPage} / {totalPages}
+                      </div>
+
+                      <button
+                        type="button"
+                        className="ordersPageNavBtn"
+                        disabled={safeCurrentPage >= totalPages}
+                        onClick={() => handlePageChange(safeCurrentPage + 1)}
+                        title="Next Page"
+                        aria-label="Next Page"
+                      >
+                        <span className="pageNavText">Next</span>
+                        <ChevronRight size={15} />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </>
