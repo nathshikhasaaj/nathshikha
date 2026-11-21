@@ -272,10 +272,16 @@ export default function Checkout() {
       body: JSON.stringify({
         items: cart.map((x) => ({
           id: x.id,
+          productId: x.productId || x.id,
+          price: x.price,
+          name: x.name,
           qty: x.qty,
           selectedOptions: x.selectedOptions || x.selectedParameters || {}
         })),
-        subtotal
+        subtotal,
+        customerEmail: form.email || buyerForm?.email || user?.email || '',
+        customerPhone: form.phone || buyerForm?.phone || user?.phone || '',
+        userId: user?._id || user?.id || null
       })
     })
       .then((res) => {
@@ -292,7 +298,7 @@ export default function Checkout() {
     return () => {
       isMounted = false;
     };
-  }, [cart, subtotal]);
+  }, [cart, subtotal, form.email, form.phone, buyerForm.email, buyerForm.phone, user]);
 
   // Handle PIN Code Lookup when 6 digits are entered (always on destination PIN)
   useEffect(() => {
@@ -394,7 +400,18 @@ export default function Checkout() {
         method: 'POST',
         body: JSON.stringify({
           code: codeToApply,
-          items: cart.map((x) => ({ id: x.id, qty: x.qty, selectedOptions: x.selectedOptions || x.selectedParameters || {} }))
+          items: cart.map((x) => ({
+            id: x.id,
+            productId: x.productId || x.id,
+            price: x.price,
+            name: x.name,
+            qty: x.qty,
+            selectedOptions: x.selectedOptions || x.selectedParameters || {}
+          })),
+          subtotal,
+          customerEmail: form.email || buyerForm?.email || user?.email || '',
+          customerPhone: form.phone || buyerForm?.phone || user?.phone || '',
+          userId: user?._id || user?.id || null
         })
       });
 
@@ -1535,7 +1552,9 @@ export default function Checkout() {
                     <b>{appliedCoupon.code}</b> applied ✓
                   </span>
                   <small className="appliedBadgeDiscount">
-                    {appliedCoupon.discountType === 'percent'
+                    {appliedCoupon.bulkPricingType === 'special_price'
+                      ? `Special Bulk Price`
+                      : appliedCoupon.discountType === 'percent'
                       ? `${appliedCoupon.discountValue}% OFF`
                       : `₹${appliedCoupon.discountValue} OFF`} · Saved {money(appliedCoupon.discount)}
                   </small>

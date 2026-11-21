@@ -15,7 +15,7 @@ import { ShipmentGroup } from '../models/ShipmentGroup.js';
 import { EmailEvent } from '../models/EmailEvent.js';
 import { auth, admin } from '../middleware/auth.js';
 import { calculateShippingCharge } from '../services/shippingService.js';
-import { isCouponExpired, calculateCouponDiscount } from './couponRoutes.js';
+import { isCouponExpired, calculateCouponDiscount, validateCoupon } from './couponRoutes.js';
 import { applyWatermark } from '../services/watermarkService.js';
 import {
   sendOrderConfirmedEmail,
@@ -856,20 +856,21 @@ router.post('/orders/assisted', async (req, res) => {
       if (!coupon) {
         throw new Error('Invalid coupon code.');
       }
-      if (!coupon.isActive) {
-        throw new Error('This coupon is currently inactive.');
-      }
-      if (isCouponExpired(coupon.expiryDate)) {
-        throw new Error('This coupon has expired.');
-      }
-      if (coupon.usageLimit && coupon.usageCount >= coupon.usageLimit) {
-        throw new Error('This coupon has reached its usage limit.');
-      }
-      if (coupon.minOrderValue > 0 && subtotal < coupon.minOrderValue) {
-        throw new Error(`Minimum order value of ₹${coupon.minOrderValue} is required to use coupon "${coupon.code}".`);
+
+      const validation = await validateCoupon(coupon, {
+        items: normalizedItems,
+        subtotal,
+        customerEmail: rawEmail,
+        customerPhone: rawPhone,
+        userId: null,
+        OrderModel: Order
+      });
+
+      if (!validation.valid) {
+        throw new Error(validation.error || 'Coupon validation failed.');
       }
 
-      couponDiscount = calculateCouponDiscount(coupon, subtotal);
+      couponDiscount = validation.discount;
 
       const updatedCoupon = await Coupon.findOneAndUpdate(
         {
@@ -1504,20 +1505,21 @@ router.post('/orders', async (req, res) => {
       if (!coupon) {
         throw new Error('Invalid coupon code.');
       }
-      if (!coupon.isActive) {
-        throw new Error('This coupon is currently inactive.');
-      }
-      if (isCouponExpired(coupon.expiryDate)) {
-        throw new Error('This coupon has expired.');
-      }
-      if (coupon.usageLimit && coupon.usageCount >= coupon.usageLimit) {
-        throw new Error('This coupon has reached its usage limit.');
-      }
-      if (coupon.minOrderValue > 0 && subtotal < coupon.minOrderValue) {
-        throw new Error(`Minimum order value of ₹${coupon.minOrderValue.toLocaleString('en-IN')} is required to use coupon "${coupon.code}".`);
+
+      const validation = await validateCoupon(coupon, {
+        items: normalizedItems,
+        subtotal,
+        customerEmail: rawEmail,
+        customerPhone: cleanCustomerPhone,
+        userId: null,
+        OrderModel: Order
+      });
+
+      if (!validation.valid) {
+        throw new Error(validation.error || 'Coupon validation failed.');
       }
 
-      couponDiscount = calculateCouponDiscount(coupon, subtotal);
+      couponDiscount = validation.discount;
 
       const updatedCoupon = await Coupon.findOneAndUpdate(
         {
@@ -3205,6 +3207,15 @@ router.get('/coupons', async (req, res) => {
 router.post('/coupons', async (req, res) => {
   const {
     code,
+    couponType = 'general',
+    applicableProductId = null,
+    applicableProductName = '',
+    minQuantity = 1,
+    bulkPricingType = 'discount',
+    specialPerPiecePrice = 0,
+    bulkApplyTo = 'all_units',
+    customerEligibility = 'all',
+    isPublic = true,
     discountType = 'percent',
     discountValue,
     minOrderValue = 0,
@@ -3220,17 +3231,45 @@ router.post('/coupons', async (req, res) => {
 
   const normalizedCode = String(code).trim().toUpperCase();
 
+  const validCouponTypes = ['general', 'product_specific', 'bulk_quantity'];
+  const effectiveCouponType = validCouponTypes.includes(couponType) ? couponType : 'general';
+
+  let resolvedProductId = null;
+  let resolvedProductName = applicableProductName ? String(applicableProductName).trim() : '';
+
+  if (['product_specific', 'bulk_quantity'].includes(effectiveCouponType)) {
+    if (!applicableProductId || !mongoose.Types.ObjectId.isValid(applicableProductId)) {
+      return res.status(400).json({ error: 'Please select a valid product for this coupon.' });
+    }
+    const product = await Product.findById(applicableProductId);
+    if (!product) {
+      return res.status(400).json({ error: 'Selected product was not found in catalog.' });
+    }
+    resolvedProductId = product._id;
+    resolvedProductName = product.name;
+  }
+
+  const numMinQuantity = Math.max(1, parseInt(minQuantity, 10) || 1);
+  const numSpecialPrice = Math.max(0, Number(specialPerPiecePrice) || 0);
+
+  if (effectiveCouponType === 'bulk_quantity' && bulkPricingType === 'special_price') {
+    if (isNaN(numSpecialPrice) || numSpecialPrice <= 0) {
+      return res.status(400).json({ error: 'Special price per piece must be greater than 0.' });
+    }
+  }
+
   if (!['percent', 'fixed'].includes(discountType)) {
     return res.status(400).json({ error: 'Discount type must be either Percent or Fixed.' });
   }
 
-  const numDiscountValue = Number(discountValue);
-  if (isNaN(numDiscountValue) || numDiscountValue <= 0) {
-    return res.status(400).json({ error: 'Discount value must be a positive number greater than 0.' });
-  }
-
-  if (discountType === 'percent' && numDiscountValue > 100) {
-    return res.status(400).json({ error: 'Percentage discount cannot exceed 100%.' });
+  const numDiscountValue = Number(discountValue !== undefined ? discountValue : 0);
+  if (effectiveCouponType !== 'bulk_quantity' || bulkPricingType !== 'special_price') {
+    if (isNaN(numDiscountValue) || numDiscountValue <= 0) {
+      return res.status(400).json({ error: 'Discount value must be a positive number greater than 0.' });
+    }
+    if (discountType === 'percent' && numDiscountValue > 100) {
+      return res.status(400).json({ error: 'Percentage discount cannot exceed 100%.' });
+    }
   }
 
   const numMinOrderValue = Number(minOrderValue || 0);
@@ -3266,6 +3305,15 @@ router.post('/coupons', async (req, res) => {
 
     const coupon = await Coupon.create({
       code: normalizedCode,
+      couponType: effectiveCouponType,
+      applicableProductId: resolvedProductId,
+      applicableProductName: resolvedProductName,
+      minQuantity: numMinQuantity,
+      bulkPricingType: ['discount', 'special_price'].includes(bulkPricingType) ? bulkPricingType : 'discount',
+      specialPerPiecePrice: numSpecialPrice,
+      bulkApplyTo: ['all_units', 'excess_units'].includes(bulkApplyTo) ? bulkApplyTo : 'all_units',
+      customerEligibility: ['all', 'existing_customers_only'].includes(customerEligibility) ? customerEligibility : 'all',
+      isPublic: Boolean(isPublic),
       discountType,
       discountValue: numDiscountValue,
       minOrderValue: numMinOrderValue,
@@ -3301,6 +3349,15 @@ router.patch('/coupons/:id', async (req, res) => {
 
   const {
     code,
+    couponType,
+    applicableProductId,
+    applicableProductName,
+    minQuantity,
+    bulkPricingType,
+    specialPerPiecePrice,
+    bulkApplyTo,
+    customerEligibility,
+    isPublic,
     discountType,
     discountValue,
     minOrderValue,
@@ -3330,6 +3387,63 @@ router.patch('/coupons/:id', async (req, res) => {
       }
     }
 
+    if (couponType !== undefined) {
+      if (['general', 'product_specific', 'bulk_quantity'].includes(couponType)) {
+        coupon.couponType = couponType;
+      }
+    }
+
+    if (applicableProductId !== undefined) {
+      if (!applicableProductId) {
+        coupon.applicableProductId = null;
+        coupon.applicableProductName = '';
+      } else if (mongoose.Types.ObjectId.isValid(applicableProductId)) {
+        const product = await Product.findById(applicableProductId);
+        if (product) {
+          coupon.applicableProductId = product._id;
+          coupon.applicableProductName = product.name;
+        }
+      }
+    } else if (applicableProductName !== undefined) {
+      coupon.applicableProductName = String(applicableProductName).trim();
+    }
+
+    if (minQuantity !== undefined) {
+      const mq = parseInt(minQuantity, 10);
+      if (!isNaN(mq) && mq >= 1) {
+        coupon.minQuantity = mq;
+      }
+    }
+
+    if (bulkPricingType !== undefined) {
+      if (['discount', 'special_price'].includes(bulkPricingType)) {
+        coupon.bulkPricingType = bulkPricingType;
+      }
+    }
+
+    if (specialPerPiecePrice !== undefined) {
+      const spp = Number(specialPerPiecePrice);
+      if (!isNaN(spp) && spp >= 0) {
+        coupon.specialPerPiecePrice = spp;
+      }
+    }
+
+    if (bulkApplyTo !== undefined) {
+      if (['all_units', 'excess_units'].includes(bulkApplyTo)) {
+        coupon.bulkApplyTo = bulkApplyTo;
+      }
+    }
+
+    if (customerEligibility !== undefined) {
+      if (['all', 'existing_customers_only'].includes(customerEligibility)) {
+        coupon.customerEligibility = customerEligibility;
+      }
+    }
+
+    if (isPublic !== undefined) {
+      coupon.isPublic = Boolean(isPublic);
+    }
+
     if (discountType !== undefined) {
       if (!['percent', 'fixed'].includes(discountType)) {
         return res.status(400).json({ error: 'Discount type must be either Percent or Fixed.' });
@@ -3339,13 +3453,15 @@ router.patch('/coupons/:id', async (req, res) => {
 
     if (discountValue !== undefined) {
       const val = Number(discountValue);
-      if (isNaN(val) || val <= 0) {
-        return res.status(400).json({ error: 'Discount value must be greater than 0.' });
+      if (coupon.couponType !== 'bulk_quantity' || coupon.bulkPricingType !== 'special_price') {
+        if (isNaN(val) || val <= 0) {
+          return res.status(400).json({ error: 'Discount value must be greater than 0.' });
+        }
+        if (coupon.discountType === 'percent' && val > 100) {
+          return res.status(400).json({ error: 'Percentage discount cannot exceed 100%.' });
+        }
       }
-      if (coupon.discountType === 'percent' && val > 100) {
-        return res.status(400).json({ error: 'Percentage discount cannot exceed 100%.' });
-      }
-      coupon.discountValue = val;
+      coupon.discountValue = Math.max(0, val || 0);
     }
 
     if (minOrderValue !== undefined) {

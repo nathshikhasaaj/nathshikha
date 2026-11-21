@@ -9,7 +9,7 @@ import { Product } from '../models/Product.js';
 import { Coupon } from '../models/Coupon.js';
 import { ShipmentGroup } from '../models/ShipmentGroup.js';
 import { auth, admin, optionalAuth } from '../middleware/auth.js';
-import { isCouponExpired, calculateCouponDiscount } from './couponRoutes.js';
+import { isCouponExpired, calculateCouponDiscount, validateCoupon } from './couponRoutes.js';
 import {
   calculateShippingCharge,
   resolvePincodeLocation,
@@ -440,30 +440,29 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
       const coupon = await Coupon.findOne({ code: normalizedCode });
 
       if (!coupon) {
-        throw new Error('Invalid coupon code.');
+        for (const deducted of deductedStockItems) {
+          await Product.findByIdAndUpdate(deducted.productId, { $inc: { stock: deducted.qty } }).catch(() => {});
+        }
+        return res.status(400).json({ error: 'Invalid coupon code.' });
       }
 
-      if (!coupon.isActive) {
-        throw new Error('This coupon is currently unavailable.');
+      const validation = await validateCoupon(coupon, {
+        items: normalizedItems,
+        subtotal,
+        customerEmail: customerEmail || email,
+        customerPhone: customerPhone || phone,
+        userId: user ? user._id : null,
+        OrderModel: Order
+      });
+
+      if (!validation.valid) {
+        for (const deducted of deductedStockItems) {
+          await Product.findByIdAndUpdate(deducted.productId, { $inc: { stock: deducted.qty } }).catch(() => {});
+        }
+        return res.status(400).json({ error: validation.error || 'Coupon validation failed.' });
       }
 
-      if (isCouponExpired(coupon.expiryDate)) {
-        throw new Error('This coupon has expired.');
-      }
-
-      if (coupon.usageLimit && coupon.usageCount >= coupon.usageLimit) {
-        throw new Error('This coupon has reached its usage limit.');
-      }
-
-      if (coupon.minOrderValue > 0 && subtotal < coupon.minOrderValue) {
-        throw new Error(
-          `Minimum order value of ₹${coupon.minOrderValue.toLocaleString(
-            'en-IN'
-          )} is required to use this coupon.`
-        );
-      }
-
-      couponDiscount = calculateCouponDiscount(coupon, subtotal);
+      couponDiscount = validation.discount;
 
       const updatedCoupon = await Coupon.findOneAndUpdate(
         {
@@ -476,7 +475,10 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
       );
 
       if (!updatedCoupon && coupon.usageLimit > 0) {
-        throw new Error('This coupon has reached its usage limit.');
+        for (const deducted of deductedStockItems) {
+          await Product.findByIdAndUpdate(deducted.productId, { $inc: { stock: deducted.qty } }).catch(() => {});
+        }
+        return res.status(400).json({ error: 'This coupon has reached its usage limit.' });
       }
 
       incrementedCouponId = coupon._id;

@@ -1255,7 +1255,9 @@ export default function AdminDashboard({ products = [], refreshProducts }) {
           {tab === 'coupons' && (
             <AdminCouponManager
               coupons={coupons}
+              products={products}
               onCouponUpdated={load}
+              onRefresh={load}
               setToast={setToast}
             />
           )}
